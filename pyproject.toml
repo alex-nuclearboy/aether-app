@@ -10,6 +10,7 @@ license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 dependencies = [
     "django>=6.1.2",
+    "django-environ>=0.14.0",
 ]
 
 [tool.uv]

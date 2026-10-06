@@ -1,0 +1,14 @@
+[project]
+name = "aether"
+version = "0.1.0"
+description = "A Django project for a modular personal digital assistant."
+authors = [
+    {name = "Alex", email = "alex.nuclearboy@gmail.com"}
+]
+requires-python = ">=3.12,<3.15"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
+dependencies = []
+
+[tool.uv]
+package = false

@@ -100,12 +100,58 @@ ASGI_APPLICATION = "config.asgi.application"
 # Database
 # ---------------------------------------------------------------------------
 
+DATABASE_URL = env("DATABASE_URL", default="").strip()
+
+if not DATABASE_URL:
+    raise ImproperlyConfigured(
+        "DATABASE_URL must not be empty."
+    )
+
+DATABASE_CONN_MAX_AGE = env.int(
+    "DATABASE_CONN_MAX_AGE",
+    default=0,
+)
+
+if DATABASE_CONN_MAX_AGE < 0:
+    raise ImproperlyConfigured(
+        "DATABASE_CONN_MAX_AGE must not be negative."
+    )
+
+DATABASE_CONN_HEALTH_CHECKS = env.bool(
+    "DATABASE_CONN_HEALTH_CHECKS",
+    default=False,
+)
+
+DATABASE_CONNECT_TIMEOUT = env.int(
+    "DATABASE_CONNECT_TIMEOUT",
+    default=5,
+)
+
+if DATABASE_CONNECT_TIMEOUT <= 0:
+    raise ImproperlyConfigured(
+        "DATABASE_CONNECT_TIMEOUT must be greater than zero."
+    )
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": env.db_url(
+        DATABASE_URL,
+    ),
 }
+
+DATABASES["default"].update(
+    {
+        "CONN_MAX_AGE": DATABASE_CONN_MAX_AGE,
+        "CONN_HEALTH_CHECKS": DATABASE_CONN_HEALTH_CHECKS,
+        "OPTIONS": {
+            "connect_timeout": DATABASE_CONNECT_TIMEOUT,
+        },
+    }
+)
+
+if DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql":
+    raise ImproperlyConfigured(
+        "DATABASE_URL must configure a PostgreSQL database."
+    )
 
 
 # ---------------------------------------------------------------------------

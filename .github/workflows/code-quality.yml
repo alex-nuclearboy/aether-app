@@ -1,0 +1,89 @@
+name: Code Quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Django checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      DJANGO_SECRET_KEY: "ci-only-secret-key-&j4=fd*8(a6!6xc-%==^b48r(%mqxnfa$&xyqg9)exr#q24p^9"
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+
+      POSTGRES_DB: aether
+      POSTGRES_USER: aether
+      POSTGRES_PASSWORD: ci-only-password-6nmHWDNn498d_uwOMUpm
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      DATABASE_CONN_MAX_AGE: "0"
+      DATABASE_CONN_HEALTH_CHECKS: "False"
+      DATABASE_CONNECT_TIMEOUT: "5"
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+
+        env:
+          POSTGRES_DB: aether
+          POSTGRES_USER: aether
+          POSTGRES_PASSWORD: ci-only-password-6nmHWDNn498d_uwOMUpm
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd "pg_isready -U aether -d aether"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      - name: Check lock file
+        run: uv lock --check
+
+      - name: Install dependencies
+        run: uv sync --locked --dev
+
+      - name: Run Django system checks
+        run: uv run python manage.py check
+
+      - name: Check for missing migrations
+        run: uv run python manage.py makemigrations --check --dry-run
+
+      - name: Apply migrations
+        run: uv run python manage.py migrate --noinput
+
+      - name: Run Pylint
+        run: uv run pylint config manage.py

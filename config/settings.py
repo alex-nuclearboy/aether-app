@@ -20,10 +20,6 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DATABASE_ENV_REFERENCE_PATTERN = re.compile(
-    r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}"
-)
-
 
 # ---------------------------------------------------------------------------
 # Environment
@@ -41,6 +37,11 @@ if env_file.exists():
 # Configuration helpers
 # ---------------------------------------------------------------------------
 
+DATABASE_ENV_REFERENCE_PATTERN = re.compile(
+    r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}"
+)
+
+
 def expand_database_url(database_url: str) -> str:
     """Expand braced environment references in a database URL."""
 
@@ -51,7 +52,8 @@ def expand_database_url(database_url: str) -> str:
             return os.environ[variable_name]
         except KeyError as exc:
             raise ImproperlyConfigured(
-                "DATABASE_URL contains unresolved environment variables."
+                f"DATABASE_URL references undefined environment variable "
+                f"{variable_name}."
             ) from exc
 
     return DATABASE_ENV_REFERENCE_PATTERN.sub(

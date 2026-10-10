@@ -268,7 +268,7 @@ Testing
 -------
 
 ``tests/``
-~~~~~~~~~
+~~~~~~~~~~
 
 Contains project-level automated tests for configuration, infrastructure, and
 Django project entry points.

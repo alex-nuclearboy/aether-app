@@ -85,8 +85,11 @@ jobs:
       - name: Apply migrations
         run: uv run python manage.py migrate --noinput
 
+      - name: Run tests
+        run: uv run pytest
+
       - name: Run Pylint
-        run: uv run pylint config manage.py docs/source/conf.py
+        run: uv run pylint config tests manage.py docs/source/conf.py
 
       - name: Build documentation
         run: uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html

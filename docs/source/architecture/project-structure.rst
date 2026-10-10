@@ -3,11 +3,13 @@ Project structure
 
 Aether is still at an early stage, so the repository is intentionally small.
 The current structure contains the Django project configuration, local
-development infrastructure, documentation, and code-quality tooling.
+development infrastructure, automated tests, documentation, and code-quality
+tooling.
 
-Application-specific Django apps, integrations, services, and tests will be
+Application-specific Django apps, integrations, and service layers will be
 added as the corresponding functionality is implemented rather than being
-created in advance.
+created in advance. Tests that belong to those components should be introduced
+together with the code they verify.
 
 Current structure
 -----------------
@@ -28,9 +30,23 @@ The repository currently has the following top-level structure:
    │   └── wsgi.py
    ├── docs/
    │   ├── source/
+   │   │   ├── architecture/
+   │   │   ├── deployment/
+   │   │   ├── development/
+   │   │   ├── getting-started/
+   │   │   ├── integrations/
+   │   │   ├── reference/
+   │   │   ├── security/
+   │   │   ├── conf.py
+   │   │   └── index.rst
    │   ├── Makefile
    │   ├── make.bat
    │   └── README.md
+   ├── tests/
+   │   ├── __init__.py
+   │   ├── test_database.py
+   │   ├── test_django_entrypoints.py
+   │   └── test_settings.py
    ├── .env.example
    ├── .gitignore
    ├── .python-version
@@ -157,11 +173,12 @@ It contains:
 * runtime dependencies;
 * development dependencies;
 * ``uv`` configuration;
+* pytest and coverage configuration;
 * Pylint configuration.
 
 Runtime dependencies are packages required by the application itself.
-Development-only tools such as Pylint and Sphinx belong to the development
-dependency group.
+Development-only tools such as pytest, pytest-django, pytest-cov, Pylint, and
+Sphinx belong to the development dependency group.
 
 ``uv.lock``
 ~~~~~~~~~~~
@@ -247,6 +264,42 @@ production environment uses managed PostgreSQL instead.
 See :doc:`../development/database` for the local database workflow and
 :doc:`../deployment/index` for the current production direction.
 
+Testing
+-------
+
+``tests/``
+~~~~~~~~~
+
+Contains project-level automated tests for configuration, infrastructure, and
+Django project entry points.
+
+The current package contains:
+
+``tests/test_settings.py``
+   Tests environment handling, PostgreSQL configuration, database URL
+   expansion, validation paths, connection options, and module-level settings
+   behaviour.
+
+``tests/test_database.py``
+   Contains integration tests that verify PostgreSQL as the configured database
+   backend and execute queries through Django's database connection.
+
+``tests/test_django_entrypoints.py``
+   Contains smoke tests for the ASGI application, WSGI application, and root
+   URL configuration.
+
+``tests/__init__.py``
+   Marks the root test directory as a Python package.
+
+The root ``tests/`` package is intended for project-wide configuration and
+infrastructure tests. Tests that belong to a specific Django application should
+normally live inside that application's own ``tests/`` package.
+
+Aether uses ``pytest`` and ``pytest-django`` for test execution and
+``pytest-cov`` for statement and branch coverage.
+
+See :doc:`../development/testing` for the testing strategy, PostgreSQL test
+database behaviour, coverage policy, and supported test commands.
 
 Continuous integration
 ----------------------
@@ -267,8 +320,13 @@ The workflow currently:
 * runs Django system checks;
 * checks for missing migrations;
 * applies committed migrations;
+* runs the automated test suite with coverage enforcement;
 * runs Pylint;
 * builds the Sphinx documentation in strict mode.
+
+The automated tests use the temporary PostgreSQL service provided by the
+workflow. The same coverage policy defined in ``pyproject.toml`` applies both
+locally and in continuous integration.
 
 The CI database is temporary and exists only for the duration of the workflow.
 
@@ -318,8 +376,8 @@ The documentation is organised by purpose rather than by Python package:
    Initial setup and local development onboarding.
 
 ``development/``
-   Development workflows such as PostgreSQL, code quality, CI, and
-   documentation maintenance.
+   Development workflows such as PostgreSQL, automated testing, code quality,
+   continuous integration, and documentation maintenance.
 
 ``architecture/``
    Explanations of the project structure, configuration model, and architectural
@@ -390,7 +448,7 @@ It provides:
 * a concise description of Aether;
 * local requirements;
 * the quick-start workflow;
-* basic development checks;
+* essential development and test commands;
 * documentation build instructions;
 * the current deployment direction.
 
@@ -433,6 +491,15 @@ Important examples include:
 ``docs/_build/``
    Generated Sphinx documentation.
 
+``.pytest_cache/``
+   Local pytest cache generated during test execution.
+
+``__pycache__/``
+   Generated Python bytecode cache directories.
+
+``.coverage``
+   Local coverage data generated while running the automated test suite.
+
 Docker volumes
    Persistent PostgreSQL data managed by Docker rather than stored inside the
    repository.
@@ -443,13 +510,16 @@ These artefacts are deliberately kept outside version control.
 Future growth
 -------------
 
-The current structure should expand only when the corresponding functionality
-is introduced.
+The current structure should expand only when corresponding functionality is
+introduced.
 
-Expected areas include Django applications for the product domain, tests,
-service layers, external integrations, and provider-specific infrastructure.
-Their final package structure should be driven by implementation needs rather
-than creating placeholder modules in advance.
+Expected areas include Django applications for the product domain, service
+layers, external integrations, and provider-specific infrastructure.
+Application-specific test packages should be introduced alongside the
+components they verify.
+
+The final package structure should be driven by implementation needs rather
+than by creating placeholder modules in advance.
 
 The architecture documentation should be updated whenever a structural change
 introduces a new long-lived project component.

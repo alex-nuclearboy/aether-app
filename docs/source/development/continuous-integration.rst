@@ -36,8 +36,14 @@ The workflow currently:
 #. runs Django system checks;
 #. checks for missing migrations;
 #. applies the committed migrations to PostgreSQL;
+#. runs the automated test suite with coverage enforcement;
 #. runs Pylint;
 #. builds the Sphinx documentation in strict mode.
 
-This makes the CI job a validation of both the project configuration and the
-real PostgreSQL migration path, rather than a lint-only workflow.
+The automated tests use the temporary PostgreSQL service created by the
+workflow. Coverage requirements come from ``pyproject.toml``, so local and CI
+test runs use the same coverage policy.
+
+This makes the CI job a validation of the project configuration, automated
+tests, and the real PostgreSQL migration path rather than a lint-only
+workflow.

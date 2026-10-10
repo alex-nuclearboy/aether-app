@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, Pylint, Sphinx documentation, and GitHub Actions.
+The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with pytest, Pylint, Sphinx documentation, and GitHub Actions.
 
 ## Requirements
 
@@ -148,14 +148,17 @@ uv lock --check
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
 uv run pylint config manage.py docs/source/conf.py
+uv run pytest
 uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html
 ```
 
-GitHub Actions runs the core checks against a temporary PostgreSQL instance for pushes and pull requests targeting `main`.
+GitHub Actions runs the core quality checks, automated tests with coverage enforcement, and documentation validation against a temporary PostgreSQL instance for pushes and pull requests targeting `main`.
+
+Additional quality checks, such as dependency auditing, will be introduced as the project grows.
 
 ## Documentation
 
-Detailed project documentation lives in [`docs/`](docs/README.md) and is built with Sphinx. It covers development workflows, PostgreSQL, architecture, configuration, CI, security, environment variables, commands, and the confirmed deployment and integration direction.
+Detailed project documentation lives in [`docs/`](docs/README.md) and is built with Sphinx. It covers development workflows, PostgreSQL, automated testing and coverage, architecture, configuration, CI, security, environment variables, commands, and the confirmed deployment and integration direction.
 
 Build the documentation from the repository root with:
 

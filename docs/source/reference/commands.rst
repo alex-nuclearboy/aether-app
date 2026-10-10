@@ -56,6 +56,21 @@ Run Django's development server::
 
    uv run python manage.py runserver
 
+Testing
+-------
+
+Run the complete test suite with coverage::
+
+   uv run pytest
+
+Run a specific test module::
+
+   uv run pytest tests/test_settings.py
+
+Run an individual test::
+
+   uv run pytest tests/test_settings.py::test_expand_database_url_without_references
+
 Quality checks
 --------------
 
@@ -65,7 +80,7 @@ Run Django system checks::
 
 Run Pylint::
 
-   uv run pylint config manage.py docs/source/conf.py
+   uv run pylint config tests manage.py docs/source/conf.py
 
 Documentation
 -------------

@@ -2,8 +2,8 @@ Code quality
 ============
 
 Aether currently uses lock-file validation, Django system checks, migration
-validation, Pylint, and a strict Sphinx build as its baseline local quality
-checks.
+validation, automated tests with coverage enforcement, Pylint, and a strict
+Sphinx build as its baseline local quality checks.
 
 Lock file
 ---------
@@ -23,6 +23,21 @@ Verify that model changes have not been left without migrations::
 
    uv run python manage.py makemigrations --check --dry-run
 
+Automated tests
+---------------
+
+Run the complete automated test suite::
+
+   uv run pytest
+
+The command also collects branch coverage and enforces the minimum coverage
+threshold configured in ``pyproject.toml``.
+
+Database-dependent tests require the local PostgreSQL service to be available.
+
+See :doc:`testing` for the test structure, PostgreSQL testing approach, and
+coverage policy.
+
 Pylint
 ------
 
@@ -31,7 +46,7 @@ Pylint is configured in ``pyproject.toml`` with ``pylint-django`` and the
 
 Run the current lint scope::
 
-   uv run pylint config manage.py docs/source/conf.py
+   uv run pylint config tests manage.py docs/source/conf.py
 
 Documentation
 -------------
@@ -45,5 +60,5 @@ that initialise Django still require valid environment configuration, and
 checks that connect to the database require the local PostgreSQL service to be
 available.
 
-Automated tests and dependency auditing are not part of the current baseline
-and should be documented here when they are introduced.
+Dependency auditing is not yet part of the current baseline and should be
+documented here when it is introduced.

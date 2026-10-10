@@ -8,6 +8,7 @@ Aether after the initial local setup is complete.
    :maxdepth: 1
 
    database
+   testing
    code-quality
    continuous-integration
    documentation

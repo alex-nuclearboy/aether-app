@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with pytest, Pylint, Sphinx documentation, and GitHub Actions.
+The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, and GitHub Actions.
 
 ## Requirements
 
@@ -131,6 +131,8 @@ The application is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
 The Django administration site is available at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
 
+During local development, application logs are colourised in the console and are also written to the rotating `logs/aether.log` file. Logging levels can be controlled through the local environment configuration. See the [logging documentation](docs/source/development/logging.rst) for details.
+
 To stop the development server, press `Ctrl+C` in the terminal where `runserver` is running. Then stop PostgreSQL with:
 
 ```console
@@ -158,7 +160,7 @@ Additional quality checks, such as dependency auditing, will be introduced as th
 
 ## Documentation
 
-Detailed project documentation lives in [`docs/`](docs/README.md) and is built with Sphinx. It covers development workflows, PostgreSQL, automated testing and coverage, architecture, configuration, CI, security, environment variables, commands, and the confirmed deployment and integration direction.
+Detailed project documentation lives in [`docs/`](docs/README.md) and is built with Sphinx. It covers development workflows, PostgreSQL, automated testing and coverage, logging, architecture, configuration, CI, security, environment variables, commands, and the confirmed deployment and integration direction.
 
 Build the documentation from the repository root with:
 

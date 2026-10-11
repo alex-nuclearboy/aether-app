@@ -25,7 +25,8 @@ or invalid. The current settings validate:
 * ``DATABASE_URL``;
 * the PostgreSQL URL scheme and required connection components;
 * non-negative database connection lifetime;
-* positive database connection timeout.
+* positive database connection timeout;
+* configured logging levels.
 
 Database URL references
 -----------------------
@@ -36,6 +37,24 @@ variables before the URL is parsed by ``django-environ``.
 
 This lets Docker Compose and Django share the same local database values without
 repeating the credentials in multiple settings.
+
+Logging configuration
+---------------------
+
+Logging configuration is separated from the main Django settings module.
+
+``config/settings.py`` reads the environment-specific logging levels and passes
+them to ``config/logging.py``. The logging module validates those values and
+builds the final Django ``LOGGING`` dictionary.
+
+This separation keeps formatter, handler, rotation, and logger definitions out
+of the main settings module while still allowing environment-specific defaults
+and overrides.
+
+Development uses coloured console output and a rotating local log file.
+Production uses plain console logging only.
+
+See :doc:`../development/logging` for the complete logging behaviour.
 
 Production configuration
 ------------------------

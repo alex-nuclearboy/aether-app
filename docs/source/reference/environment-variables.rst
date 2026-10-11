@@ -69,3 +69,25 @@ Locale
 
 ``DJANGO_TIME_ZONE``
    Django time zone. Defaults to ``UTC``.
+
+Logging
+-------
+
+``ROOT_LOG_LEVEL``
+   Fallback logging level for otherwise unconfigured loggers. Defaults to
+   ``WARNING``.
+
+``APP_LOG_LEVEL``
+   Logging level for the ``aether`` application logger. Defaults to ``DEBUG``
+   when ``DJANGO_DEBUG`` is enabled and ``WARNING`` otherwise.
+
+``DJANGO_LOG_LEVEL``
+   Logging level for the Django framework. Defaults to ``INFO`` when
+   ``DJANGO_DEBUG`` is enabled and ``WARNING`` otherwise.
+
+``DATABASE_LOG_LEVEL``
+   Logging level for ``django.db.backends``. Defaults to ``WARNING``. Set it to
+   ``DEBUG`` only temporarily when detailed SQL logging is required.
+
+``AUDIT_LOG_LEVEL``
+   Logging level for the ``aether.audit`` logger. Defaults to ``INFO``.

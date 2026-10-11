@@ -32,3 +32,25 @@ not production secrets.
 
 Real provider credentials, OAuth client secrets, API keys, and production
 database credentials must not be embedded in workflow files.
+
+Logging
+-------
+
+Sensitive configuration must not be written to application logs.
+
+This includes:
+
+* passwords;
+* Django secret keys;
+* database credentials;
+* API keys;
+* OAuth access and refresh tokens;
+* session identifiers;
+* CSRF tokens;
+* sensitive submitted form contents.
+
+The same rule applies to development ``DEBUG`` logging. Increased verbosity
+must never expose secret values.
+
+Local development log files are stored under ``logs/`` and are excluded from
+version control.

@@ -19,6 +19,7 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── __init__.py
    ├── test_database.py
    ├── test_django_entrypoints.py
+   ├── test_logging.py
    └── test_settings.py
 
 The current modules have separate responsibilities:
@@ -35,6 +36,11 @@ The current modules have separate responsibilities:
 ``test_django_entrypoints.py``
    Contains smoke tests for the ASGI application, WSGI application, and root
    URL configuration.
+
+``test_logging.py``
+   Tests logging-level validation, development and production handlers,
+   formatter selection, local log rotation, logger levels, and propagation
+   behaviour.
 
 The root ``tests/`` package is reserved for project-wide configuration and
 infrastructure tests.

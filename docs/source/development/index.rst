@@ -9,6 +9,7 @@ Aether after the initial local setup is complete.
 
    database
    testing
+   logging
    code-quality
    continuous-integration
    documentation

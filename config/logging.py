@@ -1,5 +1,6 @@
 """Logging configuration for the Aether project."""
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -36,37 +37,50 @@ def validate_log_level(name: str, value: str) -> str:
     return level
 
 
+@dataclass(frozen=True)
+class LoggingLevels:
+    """Logging levels for the main Aether logger groups."""
+
+    root: str
+    app: str
+    django: str
+    database: str
+    audit: str
+
+    def validated(self) -> "LoggingLevels":
+        """Return normalised and validated logging levels."""
+        return LoggingLevels(
+            root=validate_log_level(
+                "ROOT_LOG_LEVEL",
+                self.root,
+            ),
+            app=validate_log_level(
+                "APP_LOG_LEVEL",
+                self.app,
+            ),
+            django=validate_log_level(
+                "DJANGO_LOG_LEVEL",
+                self.django,
+            ),
+            database=validate_log_level(
+                "DATABASE_LOG_LEVEL",
+                self.database,
+            ),
+            audit=validate_log_level(
+                "AUDIT_LOG_LEVEL",
+                self.audit,
+            ),
+        )
+
+
 def build_logging_config(
     *,
     base_dir: Path,
     debug: bool,
-    root_level: str,
-    app_level: str,
-    django_level: str,
-    database_level: str,
-    audit_level: str,
+    levels: LoggingLevels,
 ) -> dict[str, Any]:
     """Build the Django logging configuration."""
-    root_level = validate_log_level(
-        "ROOT_LOG_LEVEL",
-        root_level,
-    )
-    app_level = validate_log_level(
-        "APP_LOG_LEVEL",
-        app_level,
-    )
-    django_level = validate_log_level(
-        "DJANGO_LOG_LEVEL",
-        django_level,
-    )
-    database_level = validate_log_level(
-        "DATABASE_LOG_LEVEL",
-        database_level,
-    )
-    audit_level = validate_log_level(
-        "AUDIT_LOG_LEVEL",
-        audit_level,
-    )
+    levels = levels.validated()
 
     formatters = {
         "plain": {
@@ -122,27 +136,27 @@ def build_logging_config(
         "handlers": handlers,
         "root": {
             "handlers": ["console"],
-            "level": root_level,
+            "level": levels.root,
         },
         "loggers": {
             "aether": {
                 "handlers": application_handlers,
-                "level": app_level,
+                "level": levels.app,
                 "propagate": False,
             },
             "django": {
                 "handlers": application_handlers,
-                "level": django_level,
+                "level": levels.django,
                 "propagate": False,
             },
             "django.db.backends": {
                 "handlers": application_handlers,
-                "level": database_level,
+                "level": levels.database,
                 "propagate": False,
             },
             "aether.audit": {
                 "handlers": application_handlers,
-                "level": audit_level,
+                "level": levels.audit,
                 "propagate": False,
             },
         },

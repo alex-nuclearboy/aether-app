@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import environ
 from django.core.exceptions import ImproperlyConfigured
 
-from config.logging import build_logging_config
+from config.logging import LoggingLevels, build_logging_config
 
 
 # ---------------------------------------------------------------------------
@@ -314,25 +314,27 @@ STATIC_URL = "static/"
 LOGGING = build_logging_config(
     base_dir=BASE_DIR,
     debug=DEBUG,
-    root_level=env(
-        "ROOT_LOG_LEVEL",
-        default="WARNING",
-    ),
-    app_level=env(
-        "APP_LOG_LEVEL",
-        default="DEBUG" if DEBUG else "WARNING",
-    ),
-    django_level=env(
-        "DJANGO_LOG_LEVEL",
-        default="INFO" if DEBUG else "WARNING",
-    ),
-    database_level=env(
-        "DATABASE_LOG_LEVEL",
-        default="WARNING",
-    ),
-    audit_level=env(
-        "AUDIT_LOG_LEVEL",
-        default="INFO",
+    levels=LoggingLevels(
+        root=env(
+            "ROOT_LOG_LEVEL",
+            default="WARNING",
+        ),
+        app=env(
+            "APP_LOG_LEVEL",
+            default="DEBUG" if DEBUG else "WARNING",
+        ),
+        django=env(
+            "DJANGO_LOG_LEVEL",
+            default="INFO" if DEBUG else "WARNING",
+        ),
+        database=env(
+            "DATABASE_LOG_LEVEL",
+            default="WARNING",
+        ),
+        audit=env(
+            "AUDIT_LOG_LEVEL",
+            default="INFO",
+        ),
     ),
 )
 

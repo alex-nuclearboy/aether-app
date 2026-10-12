@@ -228,6 +228,10 @@ The project may support more than one Python version, while this file provides
 a consistent default for developers and tooling that understand
 ``.python-version`` files.
 
+The primary CI quality job also uses this preferred version. Other supported
+Python versions are verified separately by the compatibility matrix rather
+than changing the project's local version pin.
+
 
 Environment configuration
 -------------------------
@@ -341,30 +345,34 @@ Continuous integration
 ``.github/workflows/code-quality.yml``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the GitHub Actions workflow used for automated project checks.
+Defines the GitHub Actions workflow used for automated project validation.
 
-The workflow currently:
+The workflow has three distinct responsibilities:
 
-* checks out the repository;
-* configures Python;
-* installs ``uv``;
-* validates the lock file;
-* installs project and development dependencies;
-* starts a temporary PostgreSQL service;
-* runs Django system checks;
-* checks for missing migrations;
-* applies committed migrations;
-* runs the automated test suite with coverage enforcement;
-* runs Pylint;
-* builds the Sphinx documentation in strict mode.
+``quality``
+   Runs the complete project checks using the preferred Python version from
+   ``.python-version``. It validates the lock file and installed dependencies,
+   starts PostgreSQL, runs Django checks and migrations, executes the automated
+   tests with coverage, runs Pylint, and builds the Sphinx documentation.
 
-The automated tests use the temporary PostgreSQL service provided by the
-workflow. The same coverage policy defined in ``pyproject.toml`` applies both
-locally and in continuous integration.
+``python-compatibility``
+   Runs the dependency, Django, migration, and test checks on Python 3.12 and
+   3.13. Python 3.14 is not duplicated in this matrix because it is already
+   exercised by the primary ``quality`` job.
 
-The CI database is temporary and exists only for the duration of the workflow.
+``security``
+   Audits the locked dependency graph for Python 3.12, 3.13, and 3.14 on Linux
+   using ``uv audit``.
 
-See :doc:`../development/continuous-integration` for the detailed CI workflow.
+The test-oriented jobs share the same disposable Django environment and
+PostgreSQL 18 service configuration. YAML anchors are used inside the workflow
+to keep these shared definitions in one place.
+
+The security job is independent of Django and PostgreSQL because dependency
+auditing operates directly on the locked dependency graph.
+
+See :doc:`../development/continuous-integration` for the detailed workflow and
+:doc:`../security/dependencies` for dependency-security policy.
 
 
 Documentation

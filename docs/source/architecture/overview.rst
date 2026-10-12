@@ -18,9 +18,12 @@ The implemented foundation consists of:
 * branch coverage reporting and enforcement through ``pytest-cov``;
 * configurable application logging with coloured development output through
   ``colorlog``;
+* compatibility validation across Python 3.12, 3.13, and 3.14;
+* installed-dependency consistency checking through ``uv pip check``;
+* dependency vulnerability auditing through ``uv audit``;
 * Pylint with Django-aware linting;
 * Sphinx documentation;
-* GitHub Actions for continuous quality checks.
+* GitHub Actions for continuous quality, compatibility, and security checks.
 
 The application layer is intentionally minimal at this stage. Product domains,
 service boundaries, background work, and external-provider adapters should be

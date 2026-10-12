@@ -15,6 +15,17 @@ Verify that the lock file is current::
 
    uv lock --check
 
+Verify the installed dependency environment::
+
+   uv pip check
+
+Audit the current locked dependency set for known vulnerabilities::
+
+   uv audit --preview-features audit-command --locked
+
+Continuous integration additionally audits the locked dependency graph for
+Python 3.12, 3.13, and 3.14 on Linux.
+
 Local database
 --------------
 

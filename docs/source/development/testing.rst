@@ -134,10 +134,15 @@ introduced separately when such integration testing becomes necessary.
 Continuous integration
 ----------------------
 
-GitHub Actions runs the same pytest suite against the workflow's temporary
-PostgreSQL service.
+GitHub Actions runs the pytest suite against temporary PostgreSQL instances.
+
+The canonical ``quality`` job uses the preferred Python version defined in
+``.python-version``. Separate compatibility jobs run the same test suite on
+Python 3.12 and 3.13. Together with the canonical Python 3.14 environment, this
+verifies the complete supported Python range without unnecessarily repeating
+the Python 3.14 test run.
 
 Because coverage requirements are defined in ``pyproject.toml``, the same
-coverage policy applies locally and in continuous integration.
+coverage policy applies locally and to every CI test run.
 
 See :doc:`continuous-integration` for the complete CI workflow.

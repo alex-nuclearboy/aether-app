@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, and GitHub Actions.
+The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, and GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing.
 
 ## Requirements
 
@@ -147,6 +147,8 @@ Run the current project checks before committing changes:
 
 ```console
 uv lock --check
+uv pip check
+uv audit --preview-features audit-command --locked
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
 uv run pytest
@@ -154,9 +156,9 @@ uv run pylint config tests manage.py docs/source/conf.py
 uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html
 ```
 
-GitHub Actions runs the core quality checks, automated tests with coverage enforcement, and documentation validation against a temporary PostgreSQL instance for pushes and pull requests targeting `main`.
+GitHub Actions runs the full project checks against the preferred Python version defined in `.python-version`, verifies compatibility with Python 3.12 and 3.13, and audits the locked dependency graph for Python 3.12–3.14 on Linux.
 
-Additional quality checks, such as dependency auditing, will be introduced as the project grows.
+The compatibility jobs use a temporary PostgreSQL 18 instance and run the Django checks, committed migrations, and automated test suite against the additional supported Python versions.
 
 ## Documentation
 

@@ -1,9 +1,10 @@
 Code quality
 ============
 
-Aether currently uses lock-file validation, Django system checks, migration
+Aether currently uses lock-file validation, installed-dependency consistency
+checks, dependency vulnerability auditing, Django system checks, migration
 validation, automated tests with coverage enforcement, Pylint, and a strict
-Sphinx build as its baseline local quality checks.
+Sphinx build as its baseline quality checks.
 
 Lock file
 ---------
@@ -11,6 +12,41 @@ Lock file
 Verify that ``uv.lock`` is consistent with ``pyproject.toml``::
 
    uv lock --check
+
+Dependency validation
+---------------------
+
+Verify that the installed Python environment has no missing or incompatible
+dependencies::
+
+   uv pip check
+
+This check validates the installed environment after dependency
+synchronisation. It complements lock-file validation: ``uv lock --check``
+verifies that the lock file is current, while ``uv pip check`` verifies the
+resulting installed dependency environment.
+
+
+Dependency auditing
+-------------------
+
+Audit the locked dependency graph for known vulnerabilities and adverse package
+statuses::
+
+   uv audit --preview-features audit-command --locked
+
+The audit requires network access.
+
+The ``audit`` command is currently a preview feature in ``uv``. Continuous
+integration explicitly enables the ``audit-command`` preview feature so that
+use of the experimental command is intentional rather than implicit.
+
+CI performs separate audits for Python 3.12, 3.13, and 3.14 on Linux. This
+allows environment markers and version-specific dependency selections to be
+evaluated for every supported Python version.
+
+See :doc:`continuous-integration` for the CI implementation and
+:doc:`../security/dependencies` for the dependency-security policy.
 
 Django checks
 -------------
@@ -59,6 +95,3 @@ The development server does not need to be running for these checks. Commands
 that initialise Django still require valid environment configuration, and
 checks that connect to the database require the local PostgreSQL service to be
 available.
-
-Dependency auditing is not yet part of the current baseline and should be
-documented here when it is introduced.

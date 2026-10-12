@@ -154,6 +154,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    env:
+      UV_PREVIEW_FEATURES: audit-command
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v7

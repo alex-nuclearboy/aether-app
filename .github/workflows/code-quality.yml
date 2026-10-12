@@ -148,3 +148,42 @@ jobs:
 
       - name: Run tests
         run: uv run pytest
+
+  security:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          version: "latest-known"
+
+      - name: Check lock file
+        run: uv lock --check
+
+      - name: Audit dependencies for Python 3.12
+        run: >-
+          uv audit
+          --locked
+          --python-version 3.12
+          --python-platform linux
+
+      - name: Audit dependencies for Python 3.13
+        run: >-
+          uv audit
+          --locked
+          --python-version 3.13
+          --python-platform linux
+
+      - name: Audit dependencies for Python 3.14
+        run: >-
+          uv audit
+          --locked
+          --python-version 3.14
+          --python-platform linux

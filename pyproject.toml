@@ -1,7 +1,7 @@
 [project]
 name = "aether"
 version = "0.1.0"
-description = "A Django project for a modular personal digital assistant."
+description = "A personal digital environment for organising information, tasks, knowledge, files, integrations, and automation."
 authors = [
     {name = "Alex", email = "alex.nuclearboy@gmail.com"}
 ]

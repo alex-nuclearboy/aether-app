@@ -404,6 +404,34 @@ def test_settings_load_valid_configuration(
     assert database_config["OPTIONS"]["connect_timeout"] == 5
 
 
+def test_settings_apply_logging_level_overrides(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Apply logging levels supplied through environment variables."""
+    loaded_settings = _run_settings(
+        monkeypatch,
+        ROOT_LOG_LEVEL="ERROR",
+        APP_LOG_LEVEL="INFO",
+        DJANGO_LOG_LEVEL="ERROR",
+        DATABASE_LOG_LEVEL="CRITICAL",
+        AUDIT_LOG_LEVEL="WARNING",
+    )
+
+    logging_config = loaded_settings["LOGGING"]
+
+    assert logging_config["root"]["level"] == "ERROR"
+    assert logging_config["loggers"]["aether"]["level"] == "INFO"
+    assert logging_config["loggers"]["django"]["level"] == "ERROR"
+    assert (
+        logging_config["loggers"]["django.db.backends"]["level"]
+        == "CRITICAL"
+    )
+    assert (
+        logging_config["loggers"]["aether.audit"]["level"]
+        == "WARNING"
+    )
+
+
 def test_settings_reject_empty_secret_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

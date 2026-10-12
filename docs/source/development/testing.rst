@@ -4,10 +4,10 @@ Testing
 Aether uses ``pytest`` and ``pytest-django`` for automated testing.
 ``pytest-cov`` provides statement and branch coverage reporting.
 
-The current test suite covers the project configuration, PostgreSQL
-integration, and the Django project entry points. Application-specific tests
-will be added alongside individual Django applications as those applications
-are introduced.
+The current test suite covers project configuration, logging configuration,
+PostgreSQL integration, and the Django project entry points. Application-specific
+tests will be added alongside individual Django applications as those
+applications are introduced.
 
 
 Test structure

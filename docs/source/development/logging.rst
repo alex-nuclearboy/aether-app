@@ -32,8 +32,8 @@ In production:
 * audit logging defaults to ``INFO``;
 * no log files are written inside the application container.
 
-Production logs are therefore intended for standard output and standard error,
-where they can be collected by the hosting platform.
+Production logs are therefore emitted through the console handler, where they
+can be collected by the hosting platform.
 
 
 Logger groups
@@ -64,6 +64,25 @@ The current configuration defines the following logger groups.
 The audit logger is part of the logging foundation, but audit events should be
 added only when corresponding application behaviour such as authentication,
 access control, integrations, or automation is implemented.
+
+
+Application logger naming
+-------------------------
+
+Application code that should use ``APP_LOG_LEVEL`` must log under the
+``aether`` namespace.
+
+For example::
+
+   import logging
+
+   logger = logging.getLogger("aether.example")
+
+Child loggers such as ``aether.accounts`` or ``aether.integrations.google``
+inherit the ``aether`` logger configuration.
+
+This namespace is intentional. Loggers outside ``aether.*`` do not inherit the
+application logging level unless they are configured separately.
 
 
 Log levels

@@ -14,6 +14,10 @@ The implemented foundation consists of:
 * PostgreSQL access through Psycopg 3;
 * PostgreSQL 18 for local development through Docker Compose;
 * dependency and virtual-environment management through ``uv``;
+* automated testing through ``pytest`` and ``pytest-django``;
+* branch coverage reporting and enforcement through ``pytest-cov``;
+* configurable application logging with coloured development output through
+  ``colorlog``;
 * Pylint with Django-aware linting;
 * Sphinx documentation;
 * GitHub Actions for continuous quality checks.

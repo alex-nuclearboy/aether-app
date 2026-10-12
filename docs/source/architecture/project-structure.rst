@@ -251,7 +251,8 @@ The current template includes configuration for:
 * the local PostgreSQL instance;
 * ``DATABASE_URL``;
 * database connection behaviour;
-* language and time zone settings.
+* language and time zone settings;
+* logging levels.
 
 The complete description of each variable is maintained in
 :doc:`../reference/environment-variables`.
@@ -409,8 +410,8 @@ The documentation is organised by purpose rather than by Python package:
    Initial setup and local development onboarding.
 
 ``development/``
-   Development workflows such as PostgreSQL, automated testing, code quality,
-   continuous integration, and documentation maintenance.
+   Development workflows such as PostgreSQL, automated testing, logging, code
+   quality, continuous integration, and documentation maintenance.
 
 ``architecture/``
    Explanations of the project structure, configuration model, and architectural

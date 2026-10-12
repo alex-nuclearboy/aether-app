@@ -127,9 +127,9 @@ Start the Django development server:
 uv run python manage.py runserver
 ```
 
-The application is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+The development server listens at [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
-The Django administration site is available at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
+At the current stage, the project exposes only the Django administration site at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
 
 During local development, application logs are colourised in the console and are also written to the rotating `logs/aether.log` file. Logging levels can be controlled through the local environment configuration. See the [logging documentation](docs/source/development/logging.rst) for details.
 
@@ -149,8 +149,8 @@ Run the current project checks before committing changes:
 uv lock --check
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
-uv run pylint config manage.py docs/source/conf.py
 uv run pytest
+uv run pylint config tests manage.py docs/source/conf.py
 uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html
 ```
 

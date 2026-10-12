@@ -105,8 +105,10 @@ Start the Django development server::
 
    uv run python manage.py runserver
 
-The application is available at http://127.0.0.1:8000/ and the Django
-administration site at http://127.0.0.1:8000/admin/.
+The development server listens at http://127.0.0.1:8000/.
+
+At the current stage, the project exposes only the Django administration
+interface at http://127.0.0.1:8000/admin/.
 
 Stop the local environment
 --------------------------

@@ -45,6 +45,13 @@ CI performs separate audits for Python 3.12, 3.13, and 3.14 on Linux. This
 allows environment markers and version-specific dependency selections to be
 evaluated for every supported Python version.
 
+GitHub Dependabot provides an additional repository-level monitoring layer.
+Dependabot alerts can identify newly disclosed vulnerabilities independently
+of the local CI run, while Dependabot security updates may prepare remediation
+pull requests.
+
+Routine Dependabot version updates are intentionally disabled.
+
 See :doc:`continuous-integration` for the CI implementation and
 :doc:`../security/dependencies` for the dependency-security policy.
 

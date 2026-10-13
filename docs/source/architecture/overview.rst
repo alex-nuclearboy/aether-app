@@ -21,6 +21,8 @@ The implemented foundation consists of:
 * compatibility validation across Python 3.12, 3.13, and 3.14;
 * installed-dependency consistency checking through ``uv pip check``;
 * dependency vulnerability auditing through ``uv audit``;
+* repository-level dependency vulnerability monitoring and security update
+  pull requests through GitHub Dependabot;
 * Pylint with Django-aware linting;
 * Sphinx documentation;
 * GitHub Actions for continuous quality, compatibility, and security checks.

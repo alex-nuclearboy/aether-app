@@ -69,3 +69,108 @@ A reported vulnerability or adverse dependency status causes the corresponding
 audit step to fail.
 
 See :doc:`../development/continuous-integration` for the complete workflow.
+
+
+Dependabot security monitoring
+------------------------------
+
+Aether also uses GitHub Dependabot as an independent dependency-security
+layer.
+
+Dependabot alerts monitor the dependency graph on the repository's default
+branch and report supported dependencies affected by known vulnerabilities.
+
+Malware alerts are also enabled to report dependencies identified as
+malicious.
+
+Dependabot security updates are enabled. When a compatible remediation is
+available for a vulnerable dependency, Dependabot may create a pull request
+containing the security update.
+
+These pull requests are not merged automatically. They are reviewed and pass
+through the normal project CI workflow before a maintainer decides whether to
+merge them.
+
+
+Security-only policy
+--------------------
+
+Routine Dependabot version updates are intentionally disabled.
+
+Aether does not use Dependabot to automatically propose ordinary package
+upgrades merely because newer versions have been released. Non-security
+dependency upgrades remain an explicit maintenance decision.
+
+The current policy is therefore:
+
+* dependency graph: enabled;
+* Dependabot alerts: enabled;
+* malware alerts: enabled;
+* Dependabot security updates: enabled;
+* grouped security updates: disabled;
+* routine Dependabot version updates: disabled.
+
+No ``.github/dependabot.yml`` file is required for the current policy.
+Dependabot security updates are controlled through the repository's GitHub
+security settings.
+
+
+Relationship to uv audit
+------------------------
+
+Dependabot and ``uv audit`` have complementary responsibilities.
+
+``uv audit`` validates the locked dependency graph during continuous
+integration and causes CI to fail when known vulnerabilities or adverse
+project statuses are detected.
+
+Dependabot monitors the repository dependency graph through GitHub's security
+infrastructure and can raise new alerts when vulnerabilities are disclosed
+after the dependency versions were committed.
+
+When remediation is available, Dependabot can additionally prepare a security
+update pull request.
+
+Using both mechanisms provides continuous repository-level monitoring together
+with repeatable CI validation.
+
+
+Security update workflow
+------------------------
+
+A Dependabot security update follows the normal pull-request workflow::
+
+   Vulnerability disclosed
+          |
+          v
+   Dependabot alert
+          |
+          v
+   Security update pull request
+          |
+          v
+   GitHub Actions
+          |
+          +-- project quality checks
+          +-- Python compatibility tests
+          +-- dependency audit
+          |
+          v
+   Maintainer review
+          |
+          v
+   Manual merge
+
+Dependabot does not bypass the project's normal quality gates and automatic
+merging is not enabled.
+
+
+Current scope
+-------------
+
+The current Dependabot integration primarily covers supported Python
+dependencies and GitHub Actions represented in GitHub's dependency graph.
+
+Container-image vulnerability scanning is not part of the current baseline and
+will be addressed separately when the production container architecture is
+introduced.

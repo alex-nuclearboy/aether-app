@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, and GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing.
+The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
 
 ## Requirements
 
@@ -159,6 +159,10 @@ uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html
 GitHub Actions runs the full project checks against the preferred Python version defined in `.python-version`, verifies compatibility with Python 3.12 and 3.13, and audits the locked dependency graph for Python 3.12–3.14 on Linux.
 
 The compatibility jobs use a temporary PostgreSQL 18 instance and run the Django checks, committed migrations, and automated test suite against the additional supported Python versions.
+
+GitHub Dependabot provides an additional dependency-security layer. Dependabot alerts monitor supported dependencies for known vulnerabilities, and Dependabot security updates can open remediation pull requests when a compatible security fix is available.
+
+Routine Dependabot version updates are intentionally disabled. Dependency upgrades that are unrelated to a known security issue remain a manual maintenance decision.
 
 ## Documentation
 

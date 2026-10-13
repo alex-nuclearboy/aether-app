@@ -125,6 +125,27 @@ A vulnerability or adverse package status reported by the audit causes the
 corresponding CI step to fail.
 
 
+Dependabot security pull requests
+---------------------------------
+
+Dependabot-generated security pull requests trigger the same
+``pull_request`` workflow as other changes targeting ``main``.
+
+A security update is therefore validated by the normal project checks,
+including the canonical Python environment, the supported-Python compatibility
+jobs, PostgreSQL-backed tests, and dependency auditing.
+
+Dependabot does not have a separate path that bypasses these checks, and
+automatic merging of dependency security updates is not enabled.
+
+Routine Dependabot version updates are intentionally disabled. Dependabot is
+used for vulnerability monitoring and remediation rather than general
+dependency maintenance.
+
+See :doc:`../security/dependencies` for the complete dependency-security
+policy.
+
+
 Coverage
 --------
 

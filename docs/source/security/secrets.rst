@@ -23,6 +23,21 @@ file.
 When Koyeb and Neon deployment is implemented, this page will document the
 actual secret-management path used by those services.
 
+Production email delivery also requires SMTP credentials.
+
+For the current Mailjet integration:
+
+* ``MAILER_SMTP_USERNAME`` contains the Mailjet API Key;
+* ``MAILER_SMTP_PASSWORD`` contains the Mailjet Secret Key.
+
+Both values should be treated as sensitive deployment credentials and supplied
+through the deployment platform's secret storage.
+
+Non-secret SMTP configuration such as the server hostname, port, timeout, and
+sender address can be stored as normal deployment environment configuration.
+
+See :doc:`../integrations/mailjet` for the provider-specific SMTP configuration.
+
 Continuous integration
 ----------------------
 

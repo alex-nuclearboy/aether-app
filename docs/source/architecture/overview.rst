@@ -22,6 +22,9 @@ The implemented foundation consists of:
 * branch coverage reporting and enforcement through ``pytest-cov``;
 * configurable application logging with coloured development output through
   ``colorlog``;
+* environment-specific email delivery through Django ``MAILERS``, using the
+  console backend in development and test environments and authenticated SMTP
+  in production;
 * compatibility validation across Python 3.12, 3.13, and 3.14;
 * installed-dependency consistency checking through ``uv pip check``;
 * dependency vulnerability auditing through ``uv audit``;
@@ -41,7 +44,11 @@ Confirmed platform direction
 The planned production target is Koyeb for the Django application and Neon for
 managed PostgreSQL. Production deployment has not yet been implemented.
 
-Google Calendar, external APIs, and cloud-backed file storage are confirmed
-integration areas. Their concrete architecture, permissions, synchronisation
+Mailjet is the currently selected provider for production transactional email
+delivery. It is connected through the provider-neutral SMTP configuration
+documented in :doc:`../integrations/mailjet`.
+
+Google Calendar, external APIs, and cloud-backed file storage remain confirmed
+future integration areas. Their concrete architecture, permissions, synchronisation
 behaviour, and provider-specific configuration will be documented alongside
 the corresponding implementation.

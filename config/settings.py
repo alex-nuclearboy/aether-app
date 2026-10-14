@@ -444,8 +444,83 @@ LOGGING = build_logging_config(
 # Email
 # ---------------------------------------------------------------------------
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_DEFAULT_FROM_EMAIL",
+    default="",
+).strip()
+
+if ENVIRONMENT == "production":
+    MAILER_SMTP_HOST = env(
+        "MAILER_SMTP_HOST",
+        default="",
+    ).strip()
+
+    MAILER_SMTP_PORT = env.int(
+        "MAILER_SMTP_PORT",
+        default=587,
+    )
+
+    MAILER_SMTP_USERNAME = env(
+        "MAILER_SMTP_USERNAME",
+        default="",
+    ).strip()
+
+    MAILER_SMTP_PASSWORD = env(
+        "MAILER_SMTP_PASSWORD",
+        default="",
+    )
+
+    MAILER_SMTP_TIMEOUT = env.int(
+        "MAILER_SMTP_TIMEOUT",
+        default=10,
+    )
+
+    if not MAILER_SMTP_HOST:
+        raise ImproperlyConfigured(
+            "MAILER_SMTP_HOST must not be empty in production."
+        )
+
+    if MAILER_SMTP_PORT <= 0:
+        raise ImproperlyConfigured(
+            "MAILER_SMTP_PORT must be greater than zero."
+        )
+
+    if not MAILER_SMTP_USERNAME:
+        raise ImproperlyConfigured(
+            "MAILER_SMTP_USERNAME must not be empty in production."
+        )
+
+    if not MAILER_SMTP_PASSWORD.strip():
+        raise ImproperlyConfigured(
+            "MAILER_SMTP_PASSWORD must not be empty in production."
+        )
+
+    if MAILER_SMTP_TIMEOUT <= 0:
+        raise ImproperlyConfigured(
+            "MAILER_SMTP_TIMEOUT must be greater than zero."
+        )
+
+    if not DEFAULT_FROM_EMAIL:
+        raise ImproperlyConfigured(
+            "DJANGO_DEFAULT_FROM_EMAIL must not be empty in production."
+        )
+
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {
+                "host": MAILER_SMTP_HOST,
+                "port": MAILER_SMTP_PORT,
+                "username": MAILER_SMTP_USERNAME,
+                "password": MAILER_SMTP_PASSWORD,
+                "use_tls": True,
+                "timeout": MAILER_SMTP_TIMEOUT,
+            },
+        },
+    }
+else:
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.console.EmailBackend",
+        },
+    }

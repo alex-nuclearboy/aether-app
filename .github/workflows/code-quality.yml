@@ -151,6 +151,60 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+  deployment-checks:
+    name: Django deployment checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Synthetic production-shaped values used only for Django deployment checks.
+    # They do not define the final Koyeb production configuration.
+    env:
+      AETHER_ENVIRONMENT: "production"
+
+      DJANGO_SECRET_KEY: "ci-production-only-secret-key-&j4=fd*8(a6!6xc-%==^b48r(%mqxnfa$&xyqg9)exr#q24p^9"
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: "aether.example"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "https://aether.example"
+
+      DJANGO_SECURE_SSL_REDIRECT: "True"
+      DJANGO_SESSION_COOKIE_SECURE: "True"
+      DJANGO_CSRF_COOKIE_SECURE: "True"
+
+      DJANGO_SECURE_HSTS_SECONDS: "300"
+      DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS: "True"
+      DJANGO_SECURE_HSTS_PRELOAD: "True"
+
+      DATABASE_URL: "postgresql://aether:test-password@127.0.0.1:5432/aether"
+      DATABASE_CONN_MAX_AGE: "0"
+      DATABASE_CONN_HEALTH_CHECKS: "False"
+      DATABASE_CONNECT_TIMEOUT: "5"
+
+      DJANGO_DEFAULT_FROM_EMAIL: "aether@example.com"
+      MAILER_SMTP_HOST: "smtp.example.com"
+      MAILER_SMTP_USERNAME: "ci-smtp-user"
+      MAILER_SMTP_PASSWORD: "ci-smtp-password"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+          version: "latest-known"
+
+      - name: Install dependencies
+        run: uv sync --locked --dev
+
+      - name: Run Django deployment checks
+        run: uv run python manage.py check --deploy --fail-level WARNING
+
   security:
     name: Dependency audit
     runs-on: ubuntu-latest

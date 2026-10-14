@@ -158,7 +158,7 @@ uv run pylint config tests manage.py docs/source/conf.py
 uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html
 ```
 
-GitHub Actions runs the full project checks against the preferred Python version defined in `.python-version`, verifies compatibility with Python 3.12 and 3.13, and audits the locked dependency graph for Python 3.12–3.14 on Linux.
+GitHub Actions runs the full project checks against the preferred Python version defined in `.python-version`, verifies compatibility with Python 3.12 and 3.13, runs Django deployment checks against a synthetic production-shaped configuration, and audits the locked dependency graph for Python 3.12–3.14 on Linux.
 
 The compatibility jobs use a temporary PostgreSQL 18 instance and run the Django checks, committed migrations, and automated test suite against the additional supported Python versions.
 
@@ -180,7 +180,9 @@ The generated HTML is written to `docs/_build/html/` and is not committed to the
 
 ## Deployment direction
 
-The planned production environment uses Koyeb for application hosting and Neon for managed PostgreSQL. Google Calendar, external APIs, and cloud-backed file storage are planned integration areas. Provider-specific instructions will be documented when those parts are implemented and tested.
+The planned production environment uses Koyeb for application hosting and Neon for managed PostgreSQL. Mailjet is the currently selected provider for production transactional email delivery and is connected through Django's standard SMTP backend.
+
+Google Calendar, external APIs, and cloud-backed file storage remain planned integration areas. Detailed provider-specific configuration is maintained in the Sphinx documentation as integrations are implemented and verified.
 
 ## License
 

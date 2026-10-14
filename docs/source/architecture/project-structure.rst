@@ -96,6 +96,11 @@ Configuration is environment-driven. Local development values are loaded from
 ``.env``, while deployment environments can provide their own environment
 variables.
 
+Email configuration follows the same boundary. Development and test
+environments use Django's console backend, while production uses a
+provider-independent SMTP configuration. Mailjet-specific details are kept in
+:doc:`../integrations/mailjet`.
+
 Database URLs are validated before being converted into Django database
 settings. Aether currently requires PostgreSQL rather than supporting multiple
 database backends.
@@ -349,7 +354,7 @@ Continuous integration
 
 Defines the GitHub Actions workflow used for automated project validation.
 
-The workflow has three distinct responsibilities:
+The workflow has four distinct responsibilities:
 
 ``quality``
    Runs the complete project checks using the preferred Python version from
@@ -361,6 +366,12 @@ The workflow has three distinct responsibilities:
    Runs the dependency, Django, migration, and test checks on Python 3.12 and
    3.13. Python 3.14 is not duplicated in this matrix because it is already
    exercised by the primary ``quality`` job.
+
+``deployment-checks``
+   Runs Django's deployment checks using a synthetic production-shaped
+   configuration. It exercises the ``AETHER_ENVIRONMENT=production`` settings
+   path without using real production credentials or defining the final Koyeb
+   deployment policy.
 
 ``security``
    Audits the locked dependency graph for Python 3.12, 3.13, and 3.14 on Linux
@@ -432,8 +443,10 @@ The documentation is organised by purpose rather than by Python package:
    Koyeb and Neon environments are implemented.
 
 ``integrations/``
-   Documentation for external systems such as Google Calendar, external APIs,
-   and file-storage providers as those integrations are introduced.
+   Documentation for provider-specific external-service integrations. The
+   section currently documents Mailjet as the selected production email
+   provider and will expand as additional integrations such as Google Calendar,
+   external APIs, and cloud-backed file storage are introduced.
 
 ``security/``
    Security-related documentation covering Django security configuration,

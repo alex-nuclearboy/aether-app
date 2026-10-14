@@ -76,6 +76,54 @@ Django
    Boolean controlling whether Django adds the ``preload`` directive to the
    HSTS header. Defaults to ``False``.
 
+Email
+-----
+
+These variables define Aether's provider-neutral production SMTP contract.
+Provider-specific values for the currently selected Mailjet service are
+documented in :doc:`../integrations/mailjet`.
+
+``DJANGO_DEFAULT_FROM_EMAIL``
+   Default sender address used by Django for application-generated email.
+
+   The local ``.env.example`` value is ``aether@example.com``. Development
+   email is written to the console rather than delivered.
+
+   Production requires a non-empty value corresponding to a sender accepted by
+   the configured email provider.
+
+``MAILER_SMTP_HOST``
+   SMTP server hostname used by the production mailer.
+
+   This variable is read only in production and must not be empty.
+
+``MAILER_SMTP_PORT``
+   SMTP server port used in production. Defaults to ``587`` and must be greater
+   than zero.
+
+   The production SMTP connection uses explicit TLS.
+
+``MAILER_SMTP_USERNAME``
+   Username used to authenticate with the production SMTP server.
+
+   This variable is read only in production and must not be empty. Treat the
+   value as a credential when required by the selected provider.
+
+``MAILER_SMTP_PASSWORD``
+   Password or secret used to authenticate with the production SMTP server.
+
+   This variable is read only in production and must not be empty or contain
+   only whitespace. The configured value is passed to the SMTP backend without
+   trimming or other modification.
+
+   This value is sensitive and must be supplied through the production secret
+   store rather than committed to the repository.
+
+``MAILER_SMTP_TIMEOUT``
+   Maximum time, in seconds, allowed for blocking SMTP operations in production.
+
+   Defaults to ``10`` and must be greater than zero.
+
 Local PostgreSQL
 ----------------
 

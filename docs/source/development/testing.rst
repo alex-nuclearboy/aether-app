@@ -27,8 +27,8 @@ The current modules have separate responsibilities:
 ``test_settings.py``
    Tests runtime environment handling, Django security configuration,
    production safety validation, database URL expansion, PostgreSQL
-   configuration, connection options, logging overrides, and module-level
-   settings behaviour.
+   configuration, connection options, logging overrides, email backend
+   selection, production SMTP validation, and module-level settings behaviour.
 
 ``test_database.py``
    Contains integration tests that verify the configured PostgreSQL backend
@@ -124,6 +124,10 @@ External integrations
 
 The standard automated test suite should remain deterministic and should not
 depend on live third-party services.
+
+The current Mailjet integration is tested at the configuration boundary using
+synthetic SMTP values. The automated test suite does not connect to Mailjet or
+use real provider credentials.
 
 Future integrations such as Google Calendar, external APIs, and cloud storage
 should normally be tested through isolated adapters, mocks, or test doubles.

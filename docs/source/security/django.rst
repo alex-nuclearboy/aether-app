@@ -28,13 +28,18 @@ or bypassing production validation.
 Production safeguards
 ---------------------
 
-When ``AETHER_ENVIRONMENT=production``, settings loading requires:
+When ``AETHER_ENVIRONMENT=production``, the Django security baseline requires:
 
 * ``DJANGO_DEBUG=False``;
 * at least one value in ``DJANGO_ALLOWED_HOSTS``;
 * no ``*`` wildcard in ``DJANGO_ALLOWED_HOSTS``;
 * ``DJANGO_SESSION_COOKIE_SECURE=True``;
 * ``DJANGO_CSRF_COOKIE_SECURE=True``.
+
+Production settings also validate operational configuration that is not part of
+this security baseline, including the default email sender and SMTP connection
+settings. See :doc:`../architecture/configuration` and
+:doc:`../integrations/mailjet`.
 
 Invalid production configuration fails immediately with
 ``ImproperlyConfigured`` rather than allowing the application to start with a
@@ -114,6 +119,11 @@ including:
 * trusted-origin normalisation;
 * environment-controlled security overrides;
 * rejection of negative HSTS duration.
+
+GitHub Actions also runs ``manage.py check --deploy --fail-level WARNING`` in a
+separate ``deployment-checks`` job using synthetic production-shaped values.
+This verifies the production settings path without treating those CI values as
+the final deployment configuration.
 
 Deployment-specific HTTPS, proxy-header, and HSTS decisions remain outside this
 baseline until the production platform is implemented and verified.

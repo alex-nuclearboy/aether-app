@@ -1,10 +1,20 @@
 Integrations
 ============
 
-External integrations are part of Aether's confirmed product direction, but no
-provider-specific integration is implemented yet.
+Aether keeps provider-specific integration details separate from the core
+application configuration. The Django settings expose provider-neutral
+interfaces where possible, while integration documentation records the
+configuration and operational requirements of the selected external service.
 
-Current planned areas are:
+Implemented integrations
+------------------------
+
+* :doc:`mailjet` — transactional email delivery through SMTP.
+
+Planned areas
+-------------
+
+Current planned areas include:
 
 * Google Calendar;
 * external APIs;
@@ -12,10 +22,16 @@ Current planned areas are:
 * OAuth-based provider access where required;
 * scheduled and automated operations.
 
-Integration documentation will be added alongside implementation. It should
-record authentication and permissions, configuration, data ownership,
-synchronisation behaviour, failure handling, provider limits, and the boundary
-between provider-specific code and the Aether core.
+Integration documentation should record authentication and permissions,
+configuration, data ownership, synchronisation behaviour, failure handling,
+provider limits, and the boundary between provider-specific services and the
+Aether core.
 
 Provider choices and API contracts should not be documented as final before
 they are implemented and verified.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   mailjet

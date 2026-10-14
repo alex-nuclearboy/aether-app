@@ -61,7 +61,9 @@ or invalid. The current settings validate:
 * the PostgreSQL URL scheme and required connection components;
 * non-negative database connection lifetime;
 * positive database connection timeout;
-* configured logging levels.
+* configured logging levels;
+* production email sender and SMTP configuration;
+* positive SMTP port and timeout values.
 
 When ``AETHER_ENVIRONMENT`` is ``production``, Aether additionally requires:
 
@@ -69,7 +71,10 @@ When ``AETHER_ENVIRONMENT`` is ``production``, Aether additionally requires:
 * at least one configured allowed host;
 * no wildcard ``*`` in ``DJANGO_ALLOWED_HOSTS``;
 * secure session cookies;
-* secure CSRF cookies.
+* secure CSRF cookies;
+* a non-empty default email sender;
+* an SMTP host, username, and password;
+* a positive SMTP port and connection timeout.
 
 These checks express application-level production invariants without deriving
 the runtime environment from ``DJANGO_DEBUG``.
@@ -119,6 +124,36 @@ Development uses coloured console output and a rotating local log file.
 Production uses plain console logging only.
 
 See :doc:`../development/logging` for the complete logging behaviour.
+
+Email configuration
+-------------------
+
+Email delivery is environment-specific while the application-level SMTP
+configuration remains provider-neutral.
+
+Development and test environments use Django's console email backend. Messages
+are written to the process output instead of being delivered through an
+external service.
+
+Production uses Django's SMTP email backend. The SMTP host, port, username,
+password, and connection timeout are supplied through environment variables.
+Explicit TLS is always enabled for the production SMTP connection and is not
+exposed as an environment-controlled option.
+
+``DJANGO_DEFAULT_FROM_EMAIL`` defines the default sender address. It is
+available in all environments and must be non-empty in production.
+
+The local ``.env.example`` contains only the development sender address.
+Production-only SMTP variables are intentionally excluded from that template
+and are documented in the environment-variable reference instead.
+
+Aether uses Django's standard SMTP backend for production email delivery. The
+application-level SMTP configuration is provider-neutral and does not
+expose Mailjet-specific settings.
+
+Mailjet is the currently selected production SMTP provider. Its SMTP endpoint,
+credential mapping, sender verification requirements, and operational setup are
+documented separately in :doc:`../integrations/mailjet`.
 
 Production configuration
 ------------------------

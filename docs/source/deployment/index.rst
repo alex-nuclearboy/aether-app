@@ -17,6 +17,18 @@ current settings then require Django debug mode to be disabled, require a
 non-wildcard allowed-host configuration, and require secure session and CSRF
 cookies.
 
+The production runtime also requires email delivery configuration: a default
+sender address together with valid SMTP host and authentication credentials.
+Aether keeps this application-level SMTP configuration provider-neutral.
+
+Mailjet is the currently selected production email provider. Its SMTP endpoint,
+credential mapping, sender verification requirements, and operational setup are
+documented in :doc:`../integrations/mailjet`.
+
+The exact mapping of email configuration to Koyeb environment variables and
+Secrets will be documented when the production deployment is implemented and
+verified.
+
 HTTPS redirect ownership, trusted proxy headers, and the final HSTS policy have
 not yet been fixed because they depend on the verified Koyeb deployment
 architecture.

@@ -46,7 +46,7 @@ is ignored by Git and must not be committed.
 ``.env.example`` is intentionally limited to the local development setup.
 Production-only and provider-specific configuration is managed separately
 through the deployment environment and documented in the configuration
-reference and deployment documentation.
+reference and the relevant deployment or integration documentation.
 
 The template sets ``AETHER_ENVIRONMENT=development``. Keep this value for the
 normal local workflow.
@@ -66,6 +66,25 @@ Generate a local Django secret key::
    uv run python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 
 Copy the generated value into ``DJANGO_SECRET_KEY`` in ``.env``.
+
+Local email
+-----------
+
+The local ``.env.example`` configures:
+
+.. code-block:: text
+
+   DJANGO_DEFAULT_FROM_EMAIL=aether@example.com
+
+Development uses Django's console email backend. Application-generated email is
+therefore printed to the terminal running Django rather than sent to an
+external mail service.
+
+No SMTP credentials are required for local development. Production SMTP
+configuration is intentionally not included in ``.env.example``.
+
+See :doc:`../integrations/mailjet` for the currently selected production email
+provider.
 
 Configure the PostgreSQL password
 ---------------------------------

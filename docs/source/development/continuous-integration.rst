@@ -23,11 +23,13 @@ same Git reference starts.
 Workflow structure
 ------------------
 
-The workflow is divided into three jobs with separate responsibilities:
+The workflow is divided into four jobs with separate responsibilities:
 
 * ``quality`` performs the complete project validation on the preferred Python
   version defined in ``.python-version``;
 * ``python-compatibility`` verifies the additional supported Python versions;
+* ``deployment-checks`` runs Django's deployment checks against a synthetic
+  production-shaped configuration;
 * ``security`` audits the dependency graph for known vulnerabilities and
   adverse package statuses.
 
@@ -96,6 +98,34 @@ CI-only values. They protect only the ephemeral CI environment and are not
 production secrets.
 
 The CI database exists only for the duration of each job.
+
+
+Django deployment checks
+------------------------
+
+The ``deployment-checks`` job runs separately from the test-oriented jobs.
+
+It sets ``AETHER_ENVIRONMENT=production`` and executes:
+
+.. code-block:: console
+
+   uv run python manage.py check --deploy --fail-level WARNING
+
+The job uses synthetic production-shaped environment values. These values exist
+only to exercise the production configuration path and Django's deployment
+checks; they do not define the final Koyeb production configuration.
+
+No real deployment credentials are used. Database and SMTP credentials in this
+job are disposable CI-only values, and the job does not connect to PostgreSQL
+or the configured SMTP server.
+
+The deployment check validates Django's production-oriented system checks,
+including the production mailer configuration. This complements the normal
+``quality`` and ``python-compatibility`` jobs, which continue to run with
+``AETHER_ENVIRONMENT=test``.
+
+The final Koyeb HTTPS, proxy, HSTS, database, and email configuration will be
+validated separately when the production deployment is implemented.
 
 
 Dependency security

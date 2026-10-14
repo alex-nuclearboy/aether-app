@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
+The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, explicit runtime environment classification and production safety validation, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
 
 ## Requirements
 
@@ -52,6 +52,8 @@ cp .env.example .env
 ```
 
 The `.env` file contains local configuration and credentials. It is ignored by Git and must not be committed to the repository.
+
+The template sets `AETHER_ENVIRONMENT=development` for local use. Runtime environment classification is explicit and is independent of `DJANGO_DEBUG`. Keep the development value for the normal local workflow.
 
 ### Configure the Django secret key
 

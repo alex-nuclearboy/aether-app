@@ -80,7 +80,8 @@ The main Django settings module.
 The file currently handles:
 
 * environment-variable loading;
-* validation of required configuration;
+* explicit runtime environment classification;
+* validation of required and production-sensitive configuration;
 * Django security settings;
 * installed applications and middleware;
 * PostgreSQL configuration;
@@ -309,9 +310,9 @@ Django project entry points.
 The current package contains:
 
 ``tests/test_settings.py``
-   Tests environment handling, PostgreSQL configuration, database URL
-   expansion, validation paths, connection options, and module-level settings
-   behaviour.
+   Tests runtime environment handling, Django security configuration,
+   production safety validation, PostgreSQL configuration, database URL
+   expansion, connection options, and module-level settings behaviour.
 
 ``tests/test_database.py``
    Contains integration tests that verify PostgreSQL as the configured database
@@ -434,8 +435,8 @@ The documentation is organised by purpose rather than by Python package:
    and file-storage providers as those integrations are introduced.
 
 ``security/``
-   Security-related documentation covering secret handling, sensitive
-   configuration, dependency security, and future authentication and OAuth
+   Security-related documentation covering Django security configuration,
+   secret handling, dependency security, and future authentication and OAuth
    concerns.
 
 ``reference/``

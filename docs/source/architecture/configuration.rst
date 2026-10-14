@@ -15,18 +15,73 @@ environment variables. Existing process variables take precedence over values
 loaded from ``.env``. This allows the same settings code to run locally and on
 the deployment platform without a separate production settings module.
 
+Runtime environment classification
+----------------------------------
+
+Aether identifies the runtime environment explicitly through
+``AETHER_ENVIRONMENT``.
+
+The supported values are:
+
+* ``development``;
+* ``test``;
+* ``production``.
+
+Runtime environment classification is deliberately independent of
+``DJANGO_DEBUG``. Disabling Django debug mode does not by itself mean that the
+application is running in production; for example, CI may run with
+``DJANGO_DEBUG=False`` while remaining a test environment.
+
+The environment value is required and is normalised by trimming surrounding
+whitespace and converting it to lowercase. Missing or unsupported values cause
+configuration to fail during settings loading.
+
 Validation
 ----------
 
 Required and security-sensitive values fail early when configuration is missing
 or invalid. The current settings validate:
 
+* ``AETHER_ENVIRONMENT`` and its supported values;
 * ``DJANGO_SECRET_KEY``;
+* production debug mode;
+* production allowed-host configuration;
+* production session and CSRF cookie security;
+* non-negative HSTS duration;
 * ``DATABASE_URL``;
 * the PostgreSQL URL scheme and required connection components;
 * non-negative database connection lifetime;
 * positive database connection timeout;
 * configured logging levels.
+
+When ``AETHER_ENVIRONMENT`` is ``production``, Aether additionally requires:
+
+* ``DJANGO_DEBUG=False``;
+* at least one configured allowed host;
+* no wildcard ``*`` in ``DJANGO_ALLOWED_HOSTS``;
+* secure session cookies;
+* secure CSRF cookies.
+
+These checks express application-level production invariants without deriving
+the runtime environment from ``DJANGO_DEBUG``.
+
+Django security configuration
+-----------------------------
+
+HTTPS redirection, secure-cookie behaviour, trusted CSRF origins, and HSTS
+settings are configurable through environment variables.
+
+Some deployment-specific decisions are deliberately not enforced yet.
+``SECURE_SSL_REDIRECT`` is configurable but is not currently a production
+invariant, and ``SECURE_PROXY_SSL_HEADER`` is not configured until the
+behaviour of the production reverse proxy has been verified.
+
+HSTS can also be configured through the environment. The settings currently
+reject a negative duration but do not require HSTS to be enabled in production.
+The final HTTPS, proxy, and HSTS policy will be completed alongside the verified
+deployment configuration.
+
+See :doc:`../security/django` for the detailed Django security model.
 
 Database URL references
 -----------------------

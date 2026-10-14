@@ -25,8 +25,9 @@ Project-level tests are stored in the root ``tests/`` package::
 The current modules have separate responsibilities:
 
 ``test_settings.py``
-   Tests environment handling, database URL expansion, PostgreSQL
-   configuration, validation paths, connection options, and module-level
+   Tests runtime environment handling, Django security configuration,
+   production safety validation, database URL expansion, PostgreSQL
+   configuration, connection options, logging overrides, and module-level
    settings behaviour.
 
 ``test_database.py``

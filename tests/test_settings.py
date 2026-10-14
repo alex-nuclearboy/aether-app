@@ -17,13 +17,29 @@ VALID_DATABASE_URL = (
 )
 
 VALID_ENVIRONMENT = {
+    "AETHER_ENVIRONMENT": "test",
     "DJANGO_SECRET_KEY": "test-only-secret-key",
     "DJANGO_DEBUG": "True",
     "DJANGO_ALLOWED_HOSTS": "localhost,testserver",
+    "DJANGO_CSRF_TRUSTED_ORIGINS": "",
+    "DJANGO_SECURE_SSL_REDIRECT": "False",
+    "DJANGO_SESSION_COOKIE_SECURE": "False",
+    "DJANGO_CSRF_COOKIE_SECURE": "False",
+    "DJANGO_SECURE_HSTS_SECONDS": "0",
+    "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS": "False",
+    "DJANGO_SECURE_HSTS_PRELOAD": "False",
     "DATABASE_URL": VALID_DATABASE_URL,
     "DATABASE_CONN_MAX_AGE": "0",
     "DATABASE_CONN_HEALTH_CHECKS": "False",
     "DATABASE_CONNECT_TIMEOUT": "5",
+}
+
+VALID_PRODUCTION_OVERRIDES = {
+    "AETHER_ENVIRONMENT": "production",
+    "DJANGO_DEBUG": "False",
+    "DJANGO_ALLOWED_HOSTS": "aether.example",
+    "DJANGO_SESSION_COOKIE_SECURE": "True",
+    "DJANGO_CSRF_COOKIE_SECURE": "True",
 }
 
 
@@ -378,6 +394,216 @@ def test_build_database_config_preserves_existing_options(
 
 
 # ---------------------------------------------------------------------------
+# Security configuration
+# ---------------------------------------------------------------------------
+
+
+def test_settings_normalise_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Normalise the configured runtime environment."""
+    loaded_settings = _run_settings(
+        monkeypatch,
+        AETHER_ENVIRONMENT="  DeVeLoPmEnT  ",
+    )
+
+    assert loaded_settings["ENVIRONMENT"] == "development"
+
+
+@pytest.mark.parametrize(
+    "environment",
+    [
+        "",
+        "staging",
+    ],
+)
+def test_settings_reject_invalid_environment(
+    monkeypatch: pytest.MonkeyPatch,
+    environment: str,
+) -> None:
+    """Reject empty and unsupported runtime environments."""
+    with pytest.raises(
+        ImproperlyConfigured,
+        match="AETHER_ENVIRONMENT must be one of:",
+    ):
+        _run_settings(
+            monkeypatch,
+            AETHER_ENVIRONMENT=environment,
+        )
+
+
+def test_settings_load_valid_production_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Load settings with the required production safeguards."""
+    loaded_settings = _run_settings(
+        monkeypatch,
+        **VALID_PRODUCTION_OVERRIDES,
+    )
+
+    assert loaded_settings["ENVIRONMENT"] == "production"
+    assert loaded_settings["DEBUG"] is False
+    assert loaded_settings["ALLOWED_HOSTS"] == ["aether.example"]
+    assert loaded_settings["SESSION_COOKIE_SECURE"] is True
+    assert loaded_settings["CSRF_COOKIE_SECURE"] is True
+
+
+def test_settings_reject_debug_in_production(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject Django debug mode in production."""
+    production_environment = {
+        **VALID_PRODUCTION_OVERRIDES,
+        "DJANGO_DEBUG": "True",
+    }
+
+    with pytest.raises(
+        ImproperlyConfigured,
+        match="DJANGO_DEBUG must be False in production",
+    ):
+        _run_settings(
+            monkeypatch,
+            **production_environment,
+        )
+
+
+def test_settings_require_allowed_hosts_in_production(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Require at least one allowed host in production."""
+    production_environment = {
+        **VALID_PRODUCTION_OVERRIDES,
+        "DJANGO_ALLOWED_HOSTS": "",
+    }
+
+    with pytest.raises(
+        ImproperlyConfigured,
+        match="DJANGO_ALLOWED_HOSTS must be configured in production",
+    ):
+        _run_settings(
+            monkeypatch,
+            **production_environment,
+        )
+
+
+def test_settings_reject_wildcard_host_in_production(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject an unrestricted allowed-host wildcard in production."""
+    production_environment = {
+        **VALID_PRODUCTION_OVERRIDES,
+        "DJANGO_ALLOWED_HOSTS": "aether.example,*",
+    }
+
+    with pytest.raises(
+        ImproperlyConfigured,
+        match="DJANGO_ALLOWED_HOSTS must not contain",
+    ):
+        _run_settings(
+            monkeypatch,
+            **production_environment,
+        )
+
+
+def test_settings_require_secure_session_cookie_in_production(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Require secure session cookies in production."""
+    production_environment = {
+        **VALID_PRODUCTION_OVERRIDES,
+        "DJANGO_SESSION_COOKIE_SECURE": "False",
+    }
+
+    with pytest.raises(
+        ImproperlyConfigured,
+        match=(
+            "DJANGO_SESSION_COOKIE_SECURE must be True "
+            "in production"
+        ),
+    ):
+        _run_settings(
+            monkeypatch,
+            **production_environment,
+        )
+
+
+def test_settings_require_secure_csrf_cookie_in_production(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Require secure CSRF cookies in production."""
+    production_environment = {
+        **VALID_PRODUCTION_OVERRIDES,
+        "DJANGO_CSRF_COOKIE_SECURE": "False",
+    }
+
+    with pytest.raises(
+        ImproperlyConfigured,
+        match=(
+            "DJANGO_CSRF_COOKIE_SECURE must be True "
+            "in production"
+        ),
+    ):
+        _run_settings(
+            monkeypatch,
+            **production_environment,
+        )
+
+
+def test_settings_normalise_csrf_trusted_origins(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Normalise configured CSRF trusted origins."""
+    loaded_settings = _run_settings(
+        monkeypatch,
+        DJANGO_CSRF_TRUSTED_ORIGINS=(
+            " https://aether.example/, "
+            "https://api.aether.example/ "
+        ),
+    )
+
+    assert loaded_settings["CSRF_TRUSTED_ORIGINS"] == [
+        "https://aether.example",
+        "https://api.aether.example",
+    ]
+
+
+def test_settings_apply_security_overrides(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Apply environment-controlled Django security settings."""
+    loaded_settings = _run_settings(
+        monkeypatch,
+        DJANGO_SECURE_SSL_REDIRECT="True",
+        DJANGO_SESSION_COOKIE_SECURE="True",
+        DJANGO_CSRF_COOKIE_SECURE="True",
+        DJANGO_SECURE_HSTS_SECONDS="300",
+        DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS="True",
+        DJANGO_SECURE_HSTS_PRELOAD="True",
+    )
+
+    assert loaded_settings["SECURE_SSL_REDIRECT"] is True
+    assert loaded_settings["SESSION_COOKIE_SECURE"] is True
+    assert loaded_settings["CSRF_COOKIE_SECURE"] is True
+    assert loaded_settings["SECURE_HSTS_SECONDS"] == 300
+    assert loaded_settings["SECURE_HSTS_INCLUDE_SUBDOMAINS"] is True
+    assert loaded_settings["SECURE_HSTS_PRELOAD"] is True
+
+
+def test_settings_reject_negative_hsts_seconds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject a negative HSTS duration."""
+    with pytest.raises(
+        ImproperlyConfigured,
+        match="DJANGO_SECURE_HSTS_SECONDS must not be negative",
+    ):
+        _run_settings(
+            monkeypatch,
+            DJANGO_SECURE_HSTS_SECONDS="-1",
+        )
+
+
+# ---------------------------------------------------------------------------
 # Module-level settings validation
 # ---------------------------------------------------------------------------
 
@@ -385,15 +611,24 @@ def test_build_database_config_preserves_existing_options(
 def test_settings_load_valid_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Load the settings module with a valid development configuration."""
+    """Load the settings module with a valid test configuration."""
     loaded_settings = _run_settings(monkeypatch)
 
+    assert loaded_settings["ENVIRONMENT"] == "test"
     assert loaded_settings["SECRET_KEY"] == "test-only-secret-key"
     assert loaded_settings["DEBUG"] is True
     assert loaded_settings["ALLOWED_HOSTS"] == [
         "localhost",
         "testserver",
     ]
+
+    assert loaded_settings["CSRF_TRUSTED_ORIGINS"] == []
+    assert loaded_settings["SECURE_SSL_REDIRECT"] is False
+    assert loaded_settings["SESSION_COOKIE_SECURE"] is False
+    assert loaded_settings["CSRF_COOKIE_SECURE"] is False
+    assert loaded_settings["SECURE_HSTS_SECONDS"] == 0
+    assert loaded_settings["SECURE_HSTS_INCLUDE_SUBDOMAINS"] is False
+    assert loaded_settings["SECURE_HSTS_PRELOAD"] is False
 
     database_config = loaded_settings["DATABASES"]["default"]
 

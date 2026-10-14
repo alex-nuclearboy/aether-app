@@ -82,6 +82,11 @@ Shared test environment
 The ``quality`` and ``python-compatibility`` jobs use the same disposable
 Django and PostgreSQL configuration.
 
+Both jobs explicitly classify this runtime as ``test`` through
+``AETHER_ENVIRONMENT=test``. Runtime classification is independent of
+``DJANGO_DEBUG``, so CI can disable Django debug mode without being mistaken
+for a production environment.
+
 The shared environment and PostgreSQL service definitions are reused inside
 the workflow through YAML anchors. This keeps the CI configuration consistent
 without duplicating the same environment values between jobs.

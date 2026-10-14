@@ -43,6 +43,16 @@ Linux and macOS::
 The local ``.env`` file contains development configuration and credentials. It
 is ignored by Git and must not be committed.
 
+The template sets ``AETHER_ENVIRONMENT=development``. Keep this value for the
+normal local workflow.
+
+The local security defaults deliberately leave HTTPS redirection, secure-only
+cookies, and HSTS disabled because Django's development server is normally
+accessed over HTTP. These development defaults are not the production security
+policy.
+
+See :doc:`../security/django` for the security configuration model.
+
 Configure the Django secret key
 -------------------------------
 

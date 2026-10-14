@@ -29,7 +29,7 @@ use when preferred.
 - `architecture/` — current technical foundation, configuration model, and repository structure.
 - `deployment/` — confirmed production target and deployment status.
 - `integrations/` — confirmed integration direction without speculative implementation details.
-- `security/` — secret handling, sensitive configuration, and dependency security.
+- `security/` — Django security configuration, secret handling, sensitive configuration, and dependency security.
 - `reference/` — concise environment-variable and command reference.
 
 Documentation should describe implemented behaviour or an explicitly agreed

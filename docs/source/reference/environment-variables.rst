@@ -4,19 +4,72 @@ Environment variables
 ``.env.example`` is the canonical template for local development. The entries
 below summarise the variables currently used by Django or Docker Compose.
 
+Application environment
+-----------------------
+
+``AETHER_ENVIRONMENT``
+   Required runtime environment classification. Supported values are
+   ``development``, ``test``, and ``production``. Surrounding whitespace and
+   letter case are normalised while loading the settings.
+
+   This value is independent of ``DJANGO_DEBUG``. Production-specific safety
+   validation is activated only when the value is ``production``.
+
 Django
 ------
 
 ``DJANGO_SECRET_KEY``
-   Required. Django secret key. Generate a local value for development;
+   Required Django secret key. Generate a separate local value for development;
    production values must be supplied securely by the deployment environment.
 
 ``DJANGO_DEBUG``
-   Boolean. Defaults to ``False`` in Django settings. The local environment can
-   enable it for development.
+   Boolean. Defaults to ``False`` in Django settings. Local development normally
+   enables it. It must be ``False`` when ``AETHER_ENVIRONMENT`` is
+   ``production``.
 
 ``DJANGO_ALLOWED_HOSTS``
    Comma-separated list of host names accepted by Django.
+
+   Production requires at least one host and does not permit the unrestricted
+   ``*`` wildcard.
+
+``DJANGO_CSRF_TRUSTED_ORIGINS``
+   Optional comma-separated list of additional trusted origins used for CSRF
+   validation. Empty entries are discarded, surrounding whitespace is removed,
+   and trailing slashes are normalised away.
+
+``DJANGO_SECURE_SSL_REDIRECT``
+   Boolean controlling Django HTTP-to-HTTPS redirection. Defaults to ``False``.
+
+   The setting is environment-controlled but is not currently required to be
+   ``True`` merely because ``AETHER_ENVIRONMENT`` is ``production``. Final
+   redirect behaviour depends on the verified deployment and reverse-proxy
+   configuration.
+
+``DJANGO_SESSION_COOKIE_SECURE``
+   Boolean controlling the ``Secure`` attribute of the Django session cookie.
+   Defaults to ``False`` for local development and must be ``True`` in
+   production.
+
+``DJANGO_CSRF_COOKIE_SECURE``
+   Boolean controlling the ``Secure`` attribute of the Django CSRF cookie.
+   Defaults to ``False`` for local development and must be ``True`` in
+   production.
+
+``DJANGO_SECURE_HSTS_SECONDS``
+   HTTP Strict Transport Security duration in seconds. Defaults to ``0`` and
+   must not be negative.
+
+   A positive production duration is not currently enforced. HSTS deployment
+   policy will be finalised only after HTTPS behaviour has been verified.
+
+``DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS``
+   Boolean controlling whether Django adds the ``includeSubDomains`` directive
+   to the HSTS header. Defaults to ``False``.
+
+``DJANGO_SECURE_HSTS_PRELOAD``
+   Boolean controlling whether Django adds the ``preload`` directive to the
+   HSTS header. Defaults to ``False``.
 
 Local PostgreSQL
 ----------------

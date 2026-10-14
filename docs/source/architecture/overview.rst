@@ -11,6 +11,10 @@ The implemented foundation consists of:
 
 * Django 6.1;
 * environment-driven settings through ``django-environ``;
+* explicit ``development``, ``test``, and ``production`` runtime environment
+  classification;
+* production safety validation for debug mode, allowed hosts, and secure
+  session and CSRF cookies;
 * PostgreSQL access through Psycopg 3;
 * PostgreSQL 18 for local development through Docker Compose;
 * dependency and virtual-environment management through ``uv``;

@@ -140,21 +140,122 @@ def build_database_config(
 # Core security settings
 # ---------------------------------------------------------------------------
 
-SECRET_KEY = env("DJANGO_SECRET_KEY", default="").strip()
+ENVIRONMENT = env(
+    "AETHER_ENVIRONMENT",
+    default="",
+).strip().lower()
+
+SUPPORTED_ENVIRONMENTS = {
+    "development",
+    "test",
+    "production",
+}
+
+if ENVIRONMENT not in SUPPORTED_ENVIRONMENTS:
+    raise ImproperlyConfigured(
+        "AETHER_ENVIRONMENT must be one of: "
+        f"{', '.join(sorted(SUPPORTED_ENVIRONMENTS))}."
+    )
+
+SECRET_KEY = env(
+    "DJANGO_SECRET_KEY",
+    default="",
+).strip()
 
 if not SECRET_KEY:
     raise ImproperlyConfigured(
         "DJANGO_SECRET_KEY must not be empty."
     )
 
+
 DEBUG = env.bool(
     "DJANGO_DEBUG",
     default=False,
 )
 
-ALLOWED_HOSTS = env.list(
-    "DJANGO_ALLOWED_HOSTS",
-    default=[],
+if ENVIRONMENT == "production" and DEBUG:
+    raise ImproperlyConfigured(
+        "DJANGO_DEBUG must be False in production."
+    )
+
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in env.list(
+        "DJANGO_ALLOWED_HOSTS",
+        default=[],
+    )
+    if host.strip()
+]
+
+if ENVIRONMENT == "production" and not ALLOWED_HOSTS:
+    raise ImproperlyConfigured(
+        "DJANGO_ALLOWED_HOSTS must be configured in production."
+    )
+
+if ENVIRONMENT == "production" and "*" in ALLOWED_HOSTS:
+    raise ImproperlyConfigured(
+        "DJANGO_ALLOWED_HOSTS must not contain '*' in production."
+    )
+
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in env.list(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        default=[],
+    )
+    if origin.strip()
+]
+
+
+SECURE_SSL_REDIRECT = env.bool(
+    "DJANGO_SECURE_SSL_REDIRECT",
+    default=False,
+)
+
+
+SESSION_COOKIE_SECURE = env.bool(
+    "DJANGO_SESSION_COOKIE_SECURE",
+    default=False,
+)
+
+if ENVIRONMENT == "production" and not SESSION_COOKIE_SECURE:
+    raise ImproperlyConfigured(
+        "DJANGO_SESSION_COOKIE_SECURE must be True in production."
+    )
+
+
+CSRF_COOKIE_SECURE = env.bool(
+    "DJANGO_CSRF_COOKIE_SECURE",
+    default=False,
+)
+
+if ENVIRONMENT == "production" and not CSRF_COOKIE_SECURE:
+    raise ImproperlyConfigured(
+        "DJANGO_CSRF_COOKIE_SECURE must be True in production."
+    )
+
+
+SECURE_HSTS_SECONDS = env.int(
+    "DJANGO_SECURE_HSTS_SECONDS",
+    default=0,
+)
+
+if SECURE_HSTS_SECONDS < 0:
+    raise ImproperlyConfigured(
+        "DJANGO_SECURE_HSTS_SECONDS must not be negative."
+    )
+
+
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool(
+    "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS",
+    default=False,
+)
+
+SECURE_HSTS_PRELOAD = env.bool(
+    "DJANGO_SECURE_HSTS_PRELOAD",
+    default=False,
 )
 
 

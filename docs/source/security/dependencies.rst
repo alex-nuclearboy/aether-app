@@ -104,11 +104,18 @@ dependency upgrades remain an explicit maintenance decision.
 The current policy is therefore:
 
 * dependency graph: enabled;
+* automatic dependency submission: disabled;
 * Dependabot alerts: enabled;
 * malware alerts: enabled;
 * Dependabot security updates: enabled;
 * grouped security updates: disabled;
+* Dependabot auto-triage rules: disabled;
 * routine Dependabot version updates: disabled.
+
+Automatic dependency submission is not required for the current Python setup.
+GitHub uses Dependabot graph jobs for Python repositories with the dependency
+graph enabled, and these jobs take precedence over automatic dependency
+submission.
 
 No ``.github/dependabot.yml`` file is required for the current policy.
 Dependabot security updates are controlled through the repository's GitHub

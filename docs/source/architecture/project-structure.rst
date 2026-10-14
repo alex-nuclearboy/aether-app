@@ -434,8 +434,9 @@ The documentation is organised by purpose rather than by Python package:
    and file-storage providers as those integrations are introduced.
 
 ``security/``
-   Security-related documentation, including secrets and future authentication
-   and OAuth concerns.
+   Security-related documentation covering secret handling, sensitive
+   configuration, dependency security, and future authentication and OAuth
+   concerns.
 
 ``reference/``
    Precise technical reference material such as environment variables and

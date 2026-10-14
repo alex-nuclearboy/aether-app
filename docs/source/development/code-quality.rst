@@ -62,6 +62,13 @@ Run Django's system checks::
 
    uv run python manage.py check
 
+Continuous integration additionally runs Django's deployment checks against a
+synthetic production-shaped configuration::
+
+   uv run python manage.py check --deploy --fail-level WARNING
+
+See :doc:`continuous-integration` for the environment used by this check.
+
 Verify that model changes have not been left without migrations::
 
    uv run python manage.py makemigrations --check --dry-run

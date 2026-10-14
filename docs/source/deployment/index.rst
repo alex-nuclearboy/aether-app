@@ -18,8 +18,9 @@ non-wildcard allowed-host configuration, and require secure session and CSRF
 cookies.
 
 The production runtime also requires email delivery configuration: a default
-sender address together with valid SMTP host and authentication credentials.
-Aether keeps this application-level SMTP configuration provider-neutral.
+sender address together with a configured SMTP host and authentication
+credentials. Aether keeps this application-level SMTP configuration
+provider-neutral.
 
 Mailjet is the currently selected production email provider. Its SMTP endpoint,
 credential mapping, sender verification requirements, and operational setup are

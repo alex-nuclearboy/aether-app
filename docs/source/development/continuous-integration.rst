@@ -4,8 +4,10 @@ Continuous integration
 GitHub Actions runs the ``Code Quality`` workflow from
 ``.github/workflows/code-quality.yml``.
 
-The workflow validates the preferred development environment, verifies the
-additional supported Python versions, and audits the locked dependency graph.
+The workflow validates the project on the preferred Python version, verifies
+the additional supported Python versions, runs Django deployment checks against
+a synthetic production-shaped configuration, and audits the locked dependency
+graph.
 
 
 Triggers

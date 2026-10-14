@@ -28,7 +28,7 @@ use when preferred.
 - `development/` — database operation, automated testing, logging, quality checks, CI, and documentation workflow.
 - `architecture/` — current technical foundation, configuration model, and repository structure.
 - `deployment/` — confirmed production target and deployment status.
-- `integrations/` — confirmed integration direction without speculative implementation details.
+- `integrations/` — current and planned external-service integrations, including verified provider-specific configuration.
 - `security/` — Django security configuration, secret handling, sensitive configuration, and dependency security.
 - `reference/` — concise environment-variable and command reference.
 

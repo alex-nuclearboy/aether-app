@@ -32,7 +32,8 @@ The implemented foundation consists of:
   pull requests through GitHub Dependabot;
 * Pylint with Django-aware linting;
 * Sphinx documentation;
-* GitHub Actions for continuous quality, compatibility, and security checks.
+* GitHub Actions for continuous quality, Python compatibility, Django
+  deployment, and dependency-security checks.
 
 The application layer is intentionally minimal at this stage. Product domains,
 service boundaries, background work, and external-provider adapters should be

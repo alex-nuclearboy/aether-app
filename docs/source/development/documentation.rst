@@ -18,8 +18,8 @@ The repository documentation is deliberately split by purpose:
    documentation itself.
 
 Sphinx documentation
-   Detailed development workflows, architecture, deployment status, security,
-   and reference material.
+   Detailed development workflows, architecture, deployment status,
+   integrations, security, and reference material.
 
 This separation keeps the root README useful without turning it into a second
 copy of the full documentation.

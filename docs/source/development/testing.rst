@@ -125,9 +125,12 @@ External integrations
 The standard automated test suite should remain deterministic and should not
 depend on live third-party services.
 
-The current Mailjet integration is tested at the configuration boundary using
-synthetic SMTP values. The automated test suite does not connect to Mailjet or
-use real provider credentials.
+The production email configuration is tested at the provider-neutral
+configuration boundary using synthetic SMTP values. The automated test suite
+does not connect to Mailjet or use real provider credentials.
+
+Mailjet-specific SMTP connectivity and sender verification are documented
+separately in :doc:`../integrations/mailjet`.
 
 Future integrations such as Google Calendar, external APIs, and cloud storage
 should normally be tested through isolated adapters, mocks, or test doubles.

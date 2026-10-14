@@ -10,8 +10,8 @@ Aether.
 Aether connects to Mailjet through Django's standard SMTP backend rather than
 through a Mailjet-specific SDK or API integration. The application therefore
 exposes a provider-neutral SMTP configuration, while this page records the
-Mailjet-specific values and operational requirements of the current production
-email setup.
+Mailjet-specific values and operational requirements of the selected
+production email configuration.
 
 Replacing Mailjet with another compatible SMTP provider should normally require
 changes to deployment configuration and provider documentation rather than to

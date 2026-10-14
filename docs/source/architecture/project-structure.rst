@@ -98,7 +98,7 @@ variables.
 
 Email configuration follows the same boundary. Development and test
 environments use Django's console backend, while production uses a
-provider-independent SMTP configuration. Mailjet-specific details are kept in
+provider-neutral SMTP configuration. Mailjet-specific details are kept in
 :doc:`../integrations/mailjet`.
 
 Database URLs are validated before being converted into Django database

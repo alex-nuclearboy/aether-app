@@ -663,6 +663,22 @@ def test_settings_use_smtp_mailer_in_production(
     }
 
 
+def test_settings_preserve_smtp_password(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Preserve the SMTP password exactly as configured."""
+    loaded_settings = _run_settings(
+        monkeypatch,
+        **VALID_PRODUCTION_OVERRIDES,
+        MAILER_SMTP_PASSWORD=" test-smtp-password ",
+    )
+
+    assert (
+        loaded_settings["MAILERS"]["default"]["OPTIONS"]["password"]
+        == " test-smtp-password "
+    )
+
+
 @pytest.mark.parametrize(
     ("variable_name", "expected_message"),
     [
@@ -702,6 +718,21 @@ def test_settings_require_production_email_values(
         _run_settings(
             monkeypatch,
             **production_environment,
+        )
+
+
+def test_settings_reject_whitespace_only_smtp_password(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject an SMTP password containing only whitespace."""
+    with pytest.raises(
+        ImproperlyConfigured,
+        match="MAILER_SMTP_PASSWORD must not be empty in production",
+    ):
+        _run_settings(
+            monkeypatch,
+            **VALID_PRODUCTION_OVERRIDES,
+            MAILER_SMTP_PASSWORD="   ",
         )
 
 

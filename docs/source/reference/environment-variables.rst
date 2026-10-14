@@ -1,8 +1,13 @@
 Environment variables
 =====================
 
-``.env.example`` is the canonical template for local development. The entries
-below summarise the variables currently used by Django or Docker Compose.
+This page is the authoritative reference for environment variables consumed by
+Aether and its local development tooling.
+
+``.env.example`` is the canonical template for local development, not an
+exhaustive deployment manifest. Variables that are relevant only to hosted
+production environments may be documented here without being added to
+``.env.example``.
 
 Application environment
 -----------------------

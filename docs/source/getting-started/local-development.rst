@@ -43,6 +43,11 @@ Linux and macOS::
 The local ``.env`` file contains development configuration and credentials. It
 is ignored by Git and must not be committed.
 
+``.env.example`` is intentionally limited to the local development setup.
+Production-only and provider-specific configuration is managed separately
+through the deployment environment and documented in the configuration
+reference and deployment documentation.
+
 The template sets ``AETHER_ENVIRONMENT=development``. Keep this value for the
 normal local workflow.
 

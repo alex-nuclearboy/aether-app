@@ -240,26 +240,27 @@ Environment configuration
 ``.env.example``
 ~~~~~~~~~~~~~~~~
 
-Documents the environment variables required or supported by the project.
+Provides the version-controlled template for the local development
+environment.
 
-It contains safe example values and placeholders only. It must never contain
-real development or production credentials.
+It contains safe local defaults and placeholders for secrets that must be
+configured after the file is copied to ``.env``. It must never contain real
+development or production credentials.
 
-For local development, the file is copied to ``.env`` and the required secret
-values are filled in locally.
+The file is intentionally scoped to local development and is not an exhaustive
+catalogue of every environment variable supported by Aether. Production-only
+and deployment-specific configuration is documented separately.
 
 The current template includes configuration for:
 
-* the Django secret key;
-* debug mode;
-* allowed hosts;
+* runtime environment classification;
+* local Django and security settings;
 * the local PostgreSQL instance;
-* ``DATABASE_URL``;
-* database connection behaviour;
-* language and time zone settings;
+* ``DATABASE_URL`` and database connection behaviour;
+* application language and time zone;
 * logging levels.
 
-The complete description of each variable is maintained in
+The complete application environment-variable reference is maintained in
 :doc:`../reference/environment-variables`.
 
 ``.env``

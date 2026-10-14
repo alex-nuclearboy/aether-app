@@ -15,6 +15,15 @@ environment variables. Existing process variables take precedence over values
 loaded from ``.env``. This allows the same settings code to run locally and on
 the deployment platform without a separate production settings module.
 
+``.env.example`` is intentionally scoped to local development. It is not an
+exhaustive manifest of every environment variable that may be used by a
+deployment.
+
+The complete application configuration contract is documented in
+:doc:`../reference/environment-variables`. Deployment-platform mappings,
+provider-specific values, and production secret storage belong in the
+corresponding deployment or integration documentation.
+
 Runtime environment classification
 ----------------------------------
 

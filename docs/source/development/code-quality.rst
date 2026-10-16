@@ -96,7 +96,7 @@ Pylint is configured in ``pyproject.toml`` with ``pylint-django`` and the
 
 Run the current lint scope::
 
-   uv run pylint config tests manage.py docs/source/conf.py
+   uv run pylint config accounts tests manage.py docs/source/conf.py
 
 Documentation
 -------------

@@ -6,10 +6,11 @@ The current structure contains the Django project configuration, local
 development infrastructure, automated tests, documentation, and code-quality
 tooling.
 
-Application-specific Django apps, integrations, and service layers will be
-added as the corresponding functionality is implemented rather than being
-created in advance. Tests that belong to those components should be introduced
-together with the code they verify.
+Application-specific Django apps, integrations, and service layers are added as
+the corresponding functionality is implemented rather than being created in
+advance. The ``accounts`` application is the first project-specific Django app.
+Tests that belong to application components are introduced together with the
+code they verify.
 
 Current structure
 -----------------
@@ -22,6 +23,19 @@ The repository currently has the following top-level structure:
    ├── .github/
    │   └── workflows/
    │       └── code-quality.yml
+   ├── accounts/
+   │   ├── migrations/
+   │   │   ├── __init__.py
+   │   │   └── 0001_initial.py
+   │   ├── tests/
+   │   │   ├── __init__.py
+   │   │   ├── test_admin.py
+   │   │   └── test_models.py
+   │   ├── __init__.py
+   │   ├── admin.py
+   │   ├── apps.py
+   │   ├── models.py
+   │   └── views.py
    ├── config/
    │   ├── __init__.py
    │   ├── asgi.py
@@ -60,6 +74,63 @@ The repository currently has the following top-level structure:
    └── uv.lock
 
 
+Accounts application
+--------------------
+
+``accounts/``
+~~~~~~~~~~~~~
+
+The ``accounts`` package contains Aether's project-specific user-account
+functionality.
+
+The application currently defines a custom Django user model based on
+``AbstractUser``. Keeping a project-owned user model from the beginning allows
+account-specific fields and authentication behaviour to evolve without
+replacing Django's built-in user model later.
+
+The current user model retains Django's standard username-based identity model
+and requires a unique email address. Authentication by either username or email
+will be introduced separately with the authentication layer.
+
+Django groups and permissions remain available through ``AbstractUser`` and
+will be used when application access rules are introduced. No project-specific
+roles or access levels are defined at this stage.
+
+``accounts/models.py``
+~~~~~~~~~~~~~~~~~~~~~~
+
+Defines the project-specific ``User`` model.
+
+``accounts/admin.py``
+~~~~~~~~~~~~~~~~~~~~~
+
+Registers the custom user model with Django administration and extends the
+standard user administration configuration so the required email address is
+available when accounts are created.
+
+``accounts/apps.py``
+~~~~~~~~~~~~~~~~~~~~
+
+Defines the Django application configuration for the accounts package.
+
+``accounts/views.py``
+~~~~~~~~~~~~~~~~~~~~~
+
+Reserved for account-related views. Authentication views have not yet been
+implemented.
+
+``accounts/migrations/``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Contains database migrations for the accounts application. The custom user
+model is introduced in ``0001_initial.py``.
+
+``accounts/tests/``
+~~~~~~~~~~~~~~~~~~~
+
+Contains automated tests specific to the accounts application.
+
+
 Django project configuration
 ----------------------------
 
@@ -84,6 +155,7 @@ The file currently handles:
 * validation of required and production-sensitive configuration;
 * Django security settings;
 * installed applications and middleware;
+* the project-specific Django user model;
 * PostgreSQL configuration;
 * database connection settings;
 * logging level selection and logging configuration integration;

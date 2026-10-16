@@ -5,9 +5,8 @@ Aether uses ``pytest`` and ``pytest-django`` for automated testing.
 ``pytest-cov`` provides statement and branch coverage reporting.
 
 The current test suite covers project configuration, logging configuration,
-PostgreSQL integration, and the Django project entry points. Application-specific
-tests will be added alongside individual Django applications as those
-applications are introduced.
+PostgreSQL integration, the Django project entry points, and the accounts
+application.
 
 
 Test structure
@@ -46,16 +45,14 @@ The current modules have separate responsibilities:
 The root ``tests/`` package is reserved for project-wide configuration and
 infrastructure tests.
 
-When a Django application is introduced, tests specific to that application
-should normally live inside the application's own ``tests/`` package. For
-example::
+Application-specific tests live inside the corresponding Django application's
+own ``tests/`` package. The accounts application currently uses::
 
    accounts/
    └── tests/
        ├── __init__.py
-       ├── test_models.py
-       ├── test_urls.py
-       └── test_views.py
+       ├── test_admin.py
+       └── test_models.py
 
 
 Running tests
@@ -106,7 +103,7 @@ configuration in ``pyproject.toml``.
 
 The current coverage policy:
 
-* measures the ``config`` package;
+* measures the ``config`` and ``accounts`` packages;
 * includes branch coverage;
 * reports missing lines in the terminal;
 * requires at least 90 percent overall coverage.
@@ -115,8 +112,8 @@ The threshold is a minimum quality gate rather than a target. Tests should
 verify meaningful behaviour, validation paths, and integration boundaries
 rather than exist solely to increase the coverage percentage.
 
-As application packages are introduced, the coverage scope should be expanded
-to include their production code.
+New application packages should be added to the coverage scope when their
+production code is introduced.
 
 
 External integrations

@@ -168,7 +168,7 @@ Routine Dependabot version updates are intentionally disabled. Dependency upgrad
 
 ## Documentation
 
-Detailed project documentation lives in [`docs/`](docs/README.md) and is built with Sphinx. It covers development workflows, PostgreSQL, automated testing and coverage, logging, architecture, configuration, CI, security, environment variables, commands, and the confirmed deployment and integration direction.
+Detailed project documentation lives in [`docs/`](docs/README.md) and is built with Sphinx. It covers development workflows, PostgreSQL, automated testing and coverage, logging, architecture, configuration, CI, security, environment variables, commands, deployment status, and current and planned integrations.
 
 Build the documentation from the repository root with:
 
@@ -180,7 +180,7 @@ The generated HTML is written to `docs/_build/html/` and is not committed to the
 
 ## Deployment direction
 
-The planned production environment uses Koyeb for application hosting and Neon for managed PostgreSQL. Mailjet is the currently selected provider for production transactional email delivery and is connected through Django's standard SMTP backend.
+The planned production environment uses Koyeb for application hosting and Neon for managed PostgreSQL. Mailjet is the currently selected provider for production email delivery. Aether is configured to use Mailjet through Django's standard SMTP backend.
 
 Google Calendar, external APIs, and cloud-backed file storage remain planned integration areas. Detailed provider-specific configuration is maintained in the Sphinx documentation as integrations are implemented and verified.
 

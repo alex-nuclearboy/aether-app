@@ -45,8 +45,8 @@ Confirmed platform direction
 The planned production target is Koyeb for the Django application and Neon for
 managed PostgreSQL. Production deployment has not yet been implemented.
 
-Mailjet is the currently selected provider for production transactional email
-delivery. It is connected through the provider-neutral SMTP configuration
+Mailjet is the currently selected provider for production email delivery. Aether
+is configured to use Mailjet through the provider-neutral SMTP configuration
 documented in :doc:`../integrations/mailjet`.
 
 Google Calendar, external APIs, and cloud-backed file storage remain confirmed

@@ -9,7 +9,7 @@ configuration and operational requirements of the selected external service.
 Implemented integrations
 ------------------------
 
-* :doc:`mailjet` — transactional email delivery through SMTP.
+* :doc:`mailjet` — production email delivery through SMTP.
 
 Planned areas
 -------------

@@ -160,6 +160,7 @@ A Dependabot security update follows the normal pull-request workflow::
           |
           +-- project quality checks
           +-- Python compatibility tests
+          +-- Django deployment checks
           +-- dependency audit
           |
           v

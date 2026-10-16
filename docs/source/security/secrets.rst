@@ -42,8 +42,9 @@ Continuous integration
 ----------------------
 
 GitHub Actions uses disposable CI-only values for the Django secret key and
-PostgreSQL credentials. They protect only the ephemeral CI environment and are
-not production secrets.
+PostgreSQL credentials, together with synthetic SMTP credentials for the
+``deployment-checks`` job. These values exist only for the ephemeral CI
+environment and are not production secrets.
 
 Real provider credentials, OAuth client secrets, API keys, and production
 database credentials must not be embedded in workflow files.

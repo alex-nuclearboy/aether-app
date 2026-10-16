@@ -89,7 +89,7 @@ The current sender domain is not controlled by Aether, so Aether cannot add
 Mailjet-specific DNS records for that domain.
 
 This means the current sender setup should be treated as an interim
-transactional-email configuration. When Aether uses a dedicated sending domain,
+email-delivery configuration. When Aether uses a dedicated sending domain,
 the sending domain should be verified in Mailjet and the appropriate SPF and
 DKIM records should be configured before it becomes the preferred production
 sender.

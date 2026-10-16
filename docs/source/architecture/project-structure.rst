@@ -260,6 +260,7 @@ The current template includes configuration for:
 
 * runtime environment classification;
 * local Django and security settings;
+* the local default email sender;
 * the local PostgreSQL instance;
 * ``DATABASE_URL`` and database connection behaviour;
 * application language and time zone;
@@ -318,7 +319,8 @@ The current package contains:
 ``tests/test_settings.py``
    Tests runtime environment handling, Django security configuration,
    production safety validation, PostgreSQL configuration, database URL
-   expansion, connection options, and module-level settings behaviour.
+   expansion, connection options, logging overrides, email backend selection,
+   production SMTP validation, and module-level settings behaviour.
 
 ``tests/test_database.py``
    Contains integration tests that verify PostgreSQL as the configured database

@@ -170,7 +170,8 @@ Dependabot-generated security pull requests trigger the same
 
 A security update is therefore validated by the normal project checks,
 including the canonical Python environment, the supported-Python compatibility
-jobs, PostgreSQL-backed tests, and dependency auditing.
+jobs, PostgreSQL-backed tests, Django deployment checks, and dependency
+auditing.
 
 Dependabot does not have a separate path that bypasses these checks, and
 automatic merging of dependency security updates is not enabled.

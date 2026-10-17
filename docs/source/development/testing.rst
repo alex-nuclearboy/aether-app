@@ -104,6 +104,7 @@ configuration in ``pyproject.toml``.
 The current coverage policy:
 
 * measures the ``config`` and ``accounts`` packages;
+* excludes test modules and generated Django migrations;
 * includes branch coverage;
 * reports missing lines in the terminal;
 * requires at least 90 percent overall coverage.

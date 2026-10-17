@@ -94,6 +94,10 @@ Pylint
 Pylint is configured in ``pyproject.toml`` with ``pylint-django`` and the
 ``config.settings`` Django settings module.
 
+Generated Django migration packages are excluded from Pylint because migration
+files are produced by Django rather than maintained as normal application
+source code.
+
 Run the current lint scope::
 
    uv run pylint config accounts tests manage.py docs/source/conf.py

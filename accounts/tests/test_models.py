@@ -2,7 +2,7 @@
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 from accounts.models import User
 
@@ -17,32 +17,67 @@ def test_user_keeps_username_as_primary_identifier() -> None:
     assert User.USERNAME_FIELD == "username"
 
 
+def test_username_has_expected_maximum_length() -> None:
+    """Limit Aether usernames to 32 characters."""
+    username_field = User._meta.get_field("username")
+
+    assert username_field.max_length == 32
+
+
 @pytest.mark.django_db
-def test_user_can_be_created_with_username_and_email() -> None:
-    """Create an Aether user with the required identity fields."""
+def test_user_can_be_created_with_valid_identifiers() -> None:
+    """Create an Aether user with valid account identifiers."""
     user = User.objects.create_user(
-        username="test",
-        email="test@example.com",
+        username="aether-user",
+        email="aether.user@example.com",
         password="test-password",
     )
 
-    assert user.username == "test"
-    assert user.email == "test@example.com"
+    assert user.username == "aether-user"
+    assert user.email == "aether.user@example.com"
     assert user.check_password("test-password")
 
 
 @pytest.mark.django_db
-def test_user_email_must_be_unique() -> None:
-    """Reject duplicate user email addresses."""
+def test_database_rejects_invalid_username() -> None:
+    """Enforce username syntax at the database boundary."""
+    with pytest.raises(IntegrityError), transaction.atomic():
+        User.objects.create_user(
+            username="aether@user",
+            email="invalid-username@example.com",
+            password="test-password",
+        )
+
+
+@pytest.mark.django_db
+def test_username_must_be_unique_case_insensitively() -> None:
+    """Reject usernames that differ only by letter case."""
     User.objects.create_user(
-        username="first-user",
-        email="shared@example.com",
+        username="Aether.User",
+        email="first-user@example.com",
         password="test-password",
     )
 
-    with pytest.raises(IntegrityError):
+    with pytest.raises(IntegrityError), transaction.atomic():
+        User.objects.create_user(
+            username="aether.user",
+            email="second-user@example.com",
+            password="test-password",
+        )
+
+
+@pytest.mark.django_db
+def test_email_must_be_unique_case_insensitively() -> None:
+    """Reject email addresses that differ only by letter case."""
+    User.objects.create_user(
+        username="first-user",
+        email="Account@example.com",
+        password="test-password",
+    )
+
+    with pytest.raises(IntegrityError), transaction.atomic():
         User.objects.create_user(
             username="second-user",
-            email="shared@example.com",
+            email="account@example.com",
             password="test-password",
         )

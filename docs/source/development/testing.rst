@@ -52,7 +52,11 @@ own ``tests/`` package. The accounts application currently uses::
    └── tests/
        ├── __init__.py
        ├── test_admin.py
-       └── test_models.py
+       ├── test_models.py
+       └── test_validators.py
+
+The accounts tests cover the configured user model, Django administration,
+database-level account identifier constraints, and username validation rules.
 
 
 Running tests

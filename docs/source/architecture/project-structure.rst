@@ -26,15 +26,18 @@ The repository currently has the following top-level structure:
    ├── accounts/
    │   ├── migrations/
    │   │   ├── __init__.py
-   │   │   └── 0001_initial.py
+   │   │   ├── 0001_initial.py
+   │   │   └── ...
    │   ├── tests/
    │   │   ├── __init__.py
    │   │   ├── test_admin.py
-   │   │   └── test_models.py
+   │   │   ├── test_models.py
+   │   │   └── test_validators.py
    │   ├── __init__.py
    │   ├── admin.py
    │   ├── apps.py
    │   ├── models.py
+   │   ├── validators.py
    │   └── views.py
    ├── config/
    │   ├── __init__.py
@@ -88,9 +91,18 @@ The application currently defines a custom Django user model based on
 account-specific fields and authentication behaviour to evolve without
 replacing Django's built-in user model later.
 
-The current user model retains Django's standard username-based identity model
-and requires a unique email address. Authentication by either username or email
-will be introduced separately with the authentication layer.
+The current user model retains ``username`` as Django's primary user identifier.
+Usernames are limited to 3--32 ASCII characters and may contain letters,
+digits, periods, underscores, and hyphens. They must start and end with a
+letter or digit.
+
+Username and email uniqueness are both enforced case-insensitively at the
+database level while their stored values are not forcibly converted entirely
+to lowercase. Email addresses continue to use Django's standard email-field
+validation.
+
+Authentication by either username or email will be introduced separately with
+the authentication layer.
 
 Django groups and permissions remain available through ``AbstractUser`` and
 will be used when application access rules are introduced. No project-specific
@@ -99,7 +111,22 @@ roles or access levels are defined at this stage.
 ``accounts/models.py``
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the project-specific ``User`` model.
+Defines the project-specific ``User`` model and the database constraints that
+protect account identifiers.
+
+The model retains ``username`` as Django's ``USERNAME_FIELD`` while enforcing
+the project-specific username length and syntax rules. Functional unique
+constraints prevent usernames and email addresses that differ only by letter
+case from representing separate accounts.
+
+``accounts/validators.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines reusable validation rules for account identifiers.
+
+The current username validator accepts 3--32 ASCII characters using letters,
+digits, periods, underscores, and hyphens, with an alphanumeric first and last
+character.
 
 ``accounts/admin.py``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -123,12 +150,15 @@ implemented.
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Contains database migrations for the accounts application. The custom user
-model is introduced in ``0001_initial.py``.
+model is introduced in ``0001_initial.py``, while later migrations evolve the
+account identifier rules and database constraints.
 
 ``accounts/tests/``
 ~~~~~~~~~~~~~~~~~~~
 
-Contains automated tests specific to the accounts application.
+Contains automated tests specific to the accounts application, including user
+model behaviour, Django administration integration, account identifier
+constraints, and username validation.
 
 
 Django project configuration

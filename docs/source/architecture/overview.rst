@@ -18,7 +18,9 @@ The implemented foundation consists of:
 * PostgreSQL access through Psycopg 3;
 * PostgreSQL 18 for local development through Docker Compose;
 * dependency and virtual-environment management through ``uv``;
-* a project-specific Django user model provided by the ``accounts`` application;
+* a project-specific Django user model provided by the ``accounts`` application,
+  with explicit username syntax and case-insensitive username and email
+  uniqueness;
 * automated testing through ``pytest`` and ``pytest-django``;
 * branch coverage reporting and enforcement through ``pytest-cov``;
 * configurable application logging with coloured development output through

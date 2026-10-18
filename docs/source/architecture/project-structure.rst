@@ -142,6 +142,9 @@ Synchronous and asynchronous authentication use Django's password
 verification and timing-attack mitigation mechanisms. The backend
 also preserves Django's inactive-user checks and permission system.
 
+The module also defines ``AsyncAxesStandaloneBackend``, which provides
+asynchronous compatibility for the django-axes lockout checks.
+
 ``accounts/lockouts.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -293,7 +293,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "accounts.User"
 
 AUTHENTICATION_BACKENDS = [
-    "axes.backends.AxesStandaloneBackend",
+    "accounts.backends.AsyncAxesStandaloneBackend",
     "accounts.backends.UsernameOrEmailBackend",
 ]
 

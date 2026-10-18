@@ -4,7 +4,9 @@
 from datetime import timedelta
 
 import pytest
+from asgiref.sync import async_to_sync
 from axes.models import AccessAttempt
+from django.contrib.auth import aauthenticate
 from django.test import RequestFactory
 from django.urls import reverse
 from django.utils import timezone
@@ -334,3 +336,64 @@ def test_lockout_is_not_global_for_same_ip(client, member):
     )
 
     assert response.status_code == 200
+
+
+@pytest.mark.django_db(transaction=True)
+def test_async_authentication_succeeds_before_lockout(member):
+    """Allow valid asynchronous authentication before any lockout."""
+    request = RequestFactory().post(
+        reverse("admin:login"),
+        REMOTE_ADDR=CLIENT_IP,
+    )
+
+    user = async_to_sync(aauthenticate)(
+        request=request,
+        username=member.email,
+        password="test-password",
+    )
+
+    assert user == member
+
+
+@pytest.mark.django_db(transaction=True)
+def test_async_authentication_respects_shared_lockout(member):
+    """Enforce the same failure limit across asynchronous identifiers."""
+    factory = RequestFactory()
+
+    for identifier in [
+        member.username,
+        member.email,
+        member.username.upper(),
+    ]:
+        request = factory.post(
+            reverse("admin:login"),
+            REMOTE_ADDR=CLIENT_IP,
+        )
+
+        assert async_to_sync(aauthenticate)(
+            request=request,
+            username=identifier,
+            password="wrong-password",
+        ) is None
+
+    attempt = AccessAttempt.objects.get(
+        username=member.username.casefold(),
+        ip_address=CLIENT_IP,
+    )
+    assert attempt.failures_since_start == 3
+
+    request = factory.post(
+        reverse("admin:login"),
+        REMOTE_ADDR=CLIENT_IP,
+    )
+
+    assert async_to_sync(aauthenticate)(
+        request=request,
+        username=member.email,
+        password="test-password",
+    ) is None
+
+    assert getattr(request, "axes_locked_out", False) is True
+
+    attempt.refresh_from_db()
+    assert attempt.failures_since_start == 3

@@ -1,6 +1,8 @@
 
 """Username-or-email authentication for Aether accounts."""
 
+from asgiref.sync import sync_to_async
+from axes.backends import AxesStandaloneBackend
 from django.contrib.auth import (
     acheck_password_with_timing_attack_mitigation,
     check_password_with_timing_attack_mitigation,
@@ -73,3 +75,22 @@ class UsernameOrEmailBackend(ModelBackend):
             return user
 
         return None
+
+
+class AsyncAxesStandaloneBackend(AxesStandaloneBackend):
+    """Enforce Axes lockouts during synchronous and asynchronous login."""
+
+    @sensitive_variables("password")
+    async def aauthenticate(
+        self, request, username=None, password=None, **kwargs
+    ):
+        """Run Axes lockout checks safely from asynchronous authentication."""
+        return await sync_to_async(
+            self.authenticate,
+            thread_sensitive=True,
+        )(
+            request,
+            username=username,
+            password=password,
+            **kwargs,
+        )

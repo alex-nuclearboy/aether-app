@@ -46,6 +46,11 @@ failed login attempts.
 ``UsernameOrEmailBackend``. Django's standard password verification,
 active-user checks, and permission handling remain unchanged.
 
+``AsyncAxesStandaloneBackend`` extends the Axes standalone backend with
+asynchronous authentication support. It executes the original Axes lockout
+check through ``sync_to_async`` while preserving the same lockout policy
+for synchronous and asynchronous authentication.
+
 Lockout policy
 ~~~~~~~~~~~~~~
 

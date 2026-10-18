@@ -31,11 +31,13 @@ The repository currently has the following top-level structure:
    │   ├── tests/
    │   │   ├── __init__.py
    │   │   ├── test_admin.py
+   │   │   ├── test_backends.py
    │   │   ├── test_models.py
    │   │   └── test_validators.py
    │   ├── __init__.py
    │   ├── admin.py
    │   ├── apps.py
+   │   ├── backends.py
    │   ├── models.py
    │   ├── validators.py
    │   └── views.py
@@ -101,8 +103,9 @@ database level while their stored values are not forcibly converted entirely
 to lowercase. Email addresses continue to use Django's standard email-field
 validation.
 
-Authentication by either username or email will be introduced separately with
-the authentication layer.
+The authentication backend accepts either a username or an email address,
+with case-insensitive matching. It inherits Django's standard password
+hash verification, active-user checks, and group/permission handling.
 
 Django groups and permissions remain available through ``AbstractUser`` and
 will be used when application access rules are introduced. No project-specific
@@ -118,6 +121,20 @@ The model retains ``username`` as Django's ``USERNAME_FIELD`` while enforcing
 the project-specific username length and syntax rules. Functional unique
 constraints prevent usernames and email addresses that differ only by letter
 case from representing separate accounts.
+
+``accounts/backends.py``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines ``UsernameOrEmailBackend``, a subclass of Django's
+``ModelBackend``.
+
+The backend selects the username or email lookup according to the
+presence of ``@`` in the submitted identifier. Both lookups are
+case-insensitive.
+
+Synchronous and asynchronous authentication use Django's password
+verification and timing-attack mitigation mechanisms. The backend
+also preserves Django's inactive-user checks and permission system.
 
 ``accounts/validators.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -156,9 +173,15 @@ account identifier rules and database constraints.
 ``accounts/tests/``
 ~~~~~~~~~~~~~~~~~~~
 
-Contains automated tests specific to the accounts application, including user
-model behaviour, Django administration integration, account identifier
-constraints, and username validation.
+Contains automated tests specific to the accounts application, including:
+
+* user model behaviour and database constraints;
+* Django administration integration;
+* account identifier validation and case-insensitive uniqueness;
+* username-or-email authentication with case-insensitive lookups;
+* password verification, inactive-user rejection, and timing-attack mitigation;
+* synchronous and asynchronous authentication;
+* inherited Django group and permission handling.
 
 
 Django project configuration

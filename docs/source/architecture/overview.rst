@@ -21,6 +21,9 @@ The implemented foundation consists of:
 * a project-specific Django user model provided by the ``accounts`` application,
   with explicit username syntax and case-insensitive username and email
   uniqueness;
+* synchronous and asynchronous authentication by username or email with
+  case-insensitive lookups, using Django's standard password and permissions
+  mechanisms;
 * automated testing through ``pytest`` and ``pytest-django``;
 * branch coverage reporting and enforcement through ``pytest-cov``;
 * configurable application logging with coloured development output through

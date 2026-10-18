@@ -2,13 +2,16 @@ Security
 ========
 
 The current security documentation covers Django security configuration,
-secret handling, sensitive configuration, and dependency security.
-Authentication, OAuth, provider permissions, and other application-level
-security topics will be added when those features exist.
+username-or-email authentication, secret handling, and dependency security.
+
+Login and logout flows, OAuth, provider-specific permissions, and other
+application-level security features will be documented as they are
+implemented.
 
 .. toctree::
    :maxdepth: 1
 
    django
+   authentication
    secrets
    dependencies

@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 from asgiref.sync import async_to_sync
-from django.conf import settings
 from django.contrib.auth import (
     aauthenticate,
     authenticate,
@@ -29,11 +28,13 @@ def create_test_user() -> User:
     )
 
 
-def test_backend_is_configured() -> None:
-    """Use only the project-specific authentication backend."""
-    assert settings.AUTHENTICATION_BACKENDS == [
+@pytest.fixture(autouse=True)
+def isolate_authentication_backend(settings):
+    """Test the custom authentication backend independently of Axes."""
+    settings.AUTHENTICATION_BACKENDS = [
         "accounts.backends.UsernameOrEmailBackend",
     ]
+    settings.AXES_ENABLED = False
 
 
 @pytest.mark.django_db

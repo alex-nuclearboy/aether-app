@@ -26,6 +26,9 @@ The implemented foundation consists of:
 * synchronous and asynchronous authentication by username or email with
   case-insensitive lookups, using Django's standard password and permissions
   mechanisms;
+* PostgreSQL-backed brute-force protection through django-axes, with a
+  three-failure threshold, a 15-minute lockout, and shared username/email
+  failure counters;
 * automated testing through ``pytest`` and ``pytest-django``;
 * branch coverage reporting and enforcement through ``pytest-cov``;
 * configurable application logging with coloured development output through

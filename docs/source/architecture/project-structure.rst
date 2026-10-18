@@ -32,12 +32,14 @@ The repository currently has the following top-level structure:
    │   │   ├── __init__.py
    │   │   ├── test_admin.py
    │   │   ├── test_backends.py
+   │   │   ├── test_lockouts.py
    │   │   ├── test_models.py
    │   │   └── test_validators.py
    │   ├── __init__.py
    │   ├── admin.py
    │   ├── apps.py
    │   ├── backends.py
+   │   ├── lockouts.py
    │   ├── models.py
    │   ├── validators.py
    │   └── views.py
@@ -140,6 +142,18 @@ Synchronous and asynchronous authentication use Django's password
 verification and timing-attack mitigation mechanisms. The backend
 also preserves Django's inactive-user checks and permission system.
 
+``accounts/lockouts.py``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the account identifier normalisation function used by django-axes.
+
+Known usernames and email addresses are resolved to the same
+case-normalised username. Unknown identifiers are normalised without
+creating or modifying user accounts.
+
+This enables a shared failure counter for both authentication identifiers
+of the same account.
+
 ``accounts/validators.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -185,7 +199,9 @@ Contains automated tests specific to the accounts application, including:
 * username-or-email authentication with case-insensitive lookups;
 * password verification, inactive-user rejection, and timing-attack mitigation;
 * synchronous and asynchronous authentication;
-* inherited Django group and permission handling.
+* inherited Django group and permission handling;
+* authentication lockout thresholds and identifier normalisation;
+* lockout expiration, counter resets, and account/IP isolation.
 
 
 Django project configuration
@@ -214,6 +230,7 @@ The file currently handles:
 * environment-specific client IP resolution and proxy policy;
 * installed applications and middleware;
 * the project-specific Django user model;
+* authentication lockout protection through django-axes;
 * PostgreSQL configuration;
 * database connection settings;
 * logging level selection and logging configuration integration;
@@ -329,8 +346,8 @@ When that header is absent, the direct peer address is used.
 Production use assumes that requests reach Django through the trusted Koyeb
 ingress. This boundary must be verified during deployment.
 
-The shared resolver can be reused by authentication protection, audit
-logging, and other request-related components.
+The shared resolver is used by django-axes for authentication protection
+and can be reused by audit logging and other request-related components.
 
 
 Project entry point
@@ -623,8 +640,8 @@ The documentation is organised by purpose rather than by Python package:
 
 ``security/``
    Security-related documentation covering Django security configuration,
-   secret handling, dependency security, and future authentication and OAuth
-   concerns.
+   username-or-email authentication, brute-force protection, secret handling,
+   dependency security, and future OAuth concerns.
 
 ``reference/``
    Precise technical reference material such as environment variables and

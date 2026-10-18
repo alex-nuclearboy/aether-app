@@ -7,6 +7,7 @@ environment variables take precedence in production.
 
 import os
 import re
+from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -285,12 +286,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "axes",
     "accounts.apps.AccountsConfig",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
 
 AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
     "accounts.backends.UsernameOrEmailBackend",
 ]
 
@@ -302,7 +305,35 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Authentication lockout protection
+# ---------------------------------------------------------------------------
+
+AXES_ENABLED = True
+
+AXES_HANDLER = "axes.handlers.database.AxesDatabaseHandler"
+
+AXES_FAILURE_LIMIT = 3
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_LOCKOUT_PARAMETERS = [
+    ["username", "ip_address"],
+]
+
+AXES_USERNAME_CALLABLE = "accounts.lockouts.get_lockout_username"
+AXES_CLIENT_IP_CALLABLE = "infrastructure.request.get_client_ip"
+
+AXES_RESET_ON_SUCCESS = True
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
+
+AXES_ONLY_ADMIN_SITE = False
+AXES_HTTP_RESPONSE_CODE = 429
+
 
 ROOT_URLCONF = "config.urls"
 

@@ -58,6 +58,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── __init__.py
        ├── test_admin.py
        ├── test_backends.py
+       ├── test_lockouts.py
        ├── test_models.py
        └── test_validators.py
 
@@ -65,7 +66,9 @@ The accounts tests cover the configured user model, Django administration,
 database-level account identifier constraints, username validation rules,
 case-insensitive username and email authentication, password verification,
 inactive-user rejection, timing-attack mitigation, synchronous and
-asynchronous authentication, and inherited Django group permissions.
+asynchronous authentication, inherited Django group permissions, and
+brute-force protection, including lockout thresholds, identifier
+normalisation, expiration, counter resets, and account/IP isolation.
 
 
 Running tests
@@ -82,11 +85,6 @@ Run the complete test suite::
 Run one test module::
 
    uv run pytest tests/test_settings.py
-
-Run the authentication backend tests without the project-wide coverage
-threshold::
-
-   uv run pytest accounts/tests/test_backends.py --no-cov
 
 Run one individual test::
 

@@ -93,8 +93,8 @@ If another proxy or CDN is introduced, the address resolution policy must
 be reviewed. The selected address may otherwise identify an upstream proxy
 rather than the originating client.
 
-This resolver is shared infrastructure for future security-sensitive
-components, including authentication lockout protection and audit logging.
+The shared resolver is used by django-axes for authentication lockout
+protection and can be reused by future components, including audit logging.
 
 Client IP resolution is separate from Django's HTTPS proxy settings.
 ``SECURE_PROXY_SSL_HEADER`` remains unconfigured at this stage.

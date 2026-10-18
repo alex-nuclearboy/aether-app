@@ -15,6 +15,8 @@ The implemented foundation consists of:
   classification;
 * production safety validation for debug mode, allowed hosts, and secure
   session and CSRF cookies;
+* shared client IP resolution with environment-specific proxy handling
+  and IPv4/IPv6 normalisation;
 * PostgreSQL access through Psycopg 3;
 * PostgreSQL 18 for local development through Docker Compose;
 * dependency and virtual-environment management through ``uv``;

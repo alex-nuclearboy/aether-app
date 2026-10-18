@@ -961,3 +961,35 @@ def test_settings_reject_non_positive_connect_timeout(
             monkeypatch,
             DATABASE_CONNECT_TIMEOUT=connect_timeout,
         )
+
+
+# ---------------------------------------------------------------------------
+# Client IP resolution
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("environment", "expected_headers", "expected_order"),
+    [
+        ("development", ("REMOTE_ADDR",), "left-most"),
+        ("test", ("REMOTE_ADDR",), "left-most"),
+        ("production", ("HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"), "right-most"),
+    ],
+)
+def test_client_ip_configuration_by_environment(
+    monkeypatch: pytest.MonkeyPatch,
+    environment: str,
+    expected_headers: tuple[str, ...],
+    expected_order: str,
+) -> None:
+    """Configure client IP resolution for each runtime environment."""
+    overrides = {"AETHER_ENVIRONMENT": environment}
+    if environment == "production":
+        overrides.update(VALID_PRODUCTION_OVERRIDES)
+
+    configured = _run_settings(monkeypatch, **overrides)
+
+    assert configured["CLIENT_IP_META_PRECEDENCE_ORDER"] == expected_headers
+    assert configured["CLIENT_IP_PROXY_ORDER"] == expected_order
+    assert configured["CLIENT_IP_PROXY_COUNT"] is None
+    assert configured["CLIENT_IP_PROXY_TRUSTED_IPS"] is None

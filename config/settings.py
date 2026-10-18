@@ -260,6 +260,26 @@ SECURE_HSTS_PRELOAD = env.bool(
 
 
 # ---------------------------------------------------------------------------
+# Client IP resolution
+# ---------------------------------------------------------------------------
+
+if ENVIRONMENT == "production":
+    # Koyeb appends the verified connecting IP to X-Forwarded-For.
+    CLIENT_IP_META_PRECEDENCE_ORDER = (
+        "HTTP_X_FORWARDED_FOR",
+        "REMOTE_ADDR",
+    )
+    CLIENT_IP_PROXY_ORDER = "right-most"
+else:
+    # Do not trust forwarded headers outside the production proxy.
+    CLIENT_IP_META_PRECEDENCE_ORDER = ("REMOTE_ADDR",)
+    CLIENT_IP_PROXY_ORDER = "left-most"
+
+CLIENT_IP_PROXY_COUNT = None
+CLIENT_IP_PROXY_TRUSTED_IPS = None
+
+
+# ---------------------------------------------------------------------------
 # Application definition
 # ---------------------------------------------------------------------------
 

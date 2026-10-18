@@ -19,6 +19,7 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── test_database.py
    ├── test_django_entrypoints.py
    ├── test_logging.py
+   ├── test_request.py
    └── test_settings.py
 
 The current modules have separate responsibilities:
@@ -41,6 +42,10 @@ The current modules have separate responsibilities:
    Tests logging-level validation, development and production handlers,
    formatter selection, local log rotation, logger levels, and propagation
    behaviour.
+
+``test_request.py``
+   Tests shared IP address normalisation, environment-specific client IP
+   resolution, untrusted forwarded headers, and proxy-policy integration.
 
 The root ``tests/`` package is reserved for project-wide configuration and
 infrastructure tests.
@@ -116,7 +121,7 @@ configuration in ``pyproject.toml``.
 
 The current coverage policy:
 
-* measures the ``config`` and ``accounts`` packages;
+* measures the ``config``, ``accounts``, and ``infrastructure`` packages;
 * excludes test modules and generated Django migrations;
 * includes branch coverage;
 * reports missing lines in the terminal;

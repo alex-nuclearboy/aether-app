@@ -69,6 +69,36 @@ The project therefore does not currently configure
 ``SECURE_PROXY_SSL_HEADER``. Trusting a forwarded protocol header will be
 considered only after the production proxy behaviour has been verified.
 
+Client IP resolution
+--------------------
+
+Aether uses a shared client IP resolver in ``infrastructure.request``.
+
+Development and test environments use ``REMOTE_ADDR`` and do not trust
+client-supplied forwarding headers.
+
+Production is currently configured for the documented Koyeb ingress
+behaviour. Koyeb appends the connecting peer address to the end of
+``X-Forwarded-For``. The resolver selects the final address rather than
+trusting earlier entries, which may have been supplied by the client.
+
+The resolved address is validated and normalised using Python's
+``ipaddress`` module. Invalid addresses return ``None``.
+
+The production policy assumes that requests reach the application through
+the trusted Koyeb ingress. The ingress restriction and actual forwarded
+headers must be verified before deployment.
+
+If another proxy or CDN is introduced, the address resolution policy must
+be reviewed. The selected address may otherwise identify an upstream proxy
+rather than the originating client.
+
+This resolver is shared infrastructure for future security-sensitive
+components, including authentication lockout protection and audit logging.
+
+Client IP resolution is separate from Django's HTTPS proxy settings.
+``SECURE_PROXY_SSL_HEADER`` remains unconfigured at this stage.
+
 Secure cookies
 --------------
 

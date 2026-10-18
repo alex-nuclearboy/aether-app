@@ -91,7 +91,7 @@ Run Django system checks::
 
 Run Pylint::
 
-   uv run pylint config accounts tests manage.py docs/source/conf.py
+   uv run pylint config accounts infrastructure tests manage.py docs/source/conf.py
 
 Documentation
 -------------

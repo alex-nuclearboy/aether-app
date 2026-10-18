@@ -100,7 +100,7 @@ source code.
 
 Run the current lint scope::
 
-   uv run pylint config accounts tests manage.py docs/source/conf.py
+   uv run pylint config accounts infrastructure tests manage.py docs/source/conf.py
 
 Documentation
 -------------

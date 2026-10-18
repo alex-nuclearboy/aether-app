@@ -48,6 +48,9 @@ The repository currently has the following top-level structure:
    │   ├── settings.py
    │   ├── urls.py
    │   └── wsgi.py
+   ├── infrastructure/
+   │   ├── __init__.py
+   │   └── request.py
    ├── docs/
    │   ├── source/
    │   │   ├── architecture/
@@ -67,6 +70,7 @@ The repository currently has the following top-level structure:
    │   ├── test_database.py
    │   ├── test_django_entrypoints.py
    │   ├── test_logging.py
+   │   ├── test_request.py
    │   └── test_settings.py
    ├── .env.example
    ├── .gitignore
@@ -207,6 +211,7 @@ The file currently handles:
 * explicit runtime environment classification;
 * validation of required and production-sensitive configuration;
 * Django security settings;
+* environment-specific client IP resolution and proxy policy;
 * installed applications and middleware;
 * the project-specific Django user model;
 * PostgreSQL configuration;
@@ -289,6 +294,43 @@ the Koyeb deployment setup once deployment is introduced.
 Marks ``config`` as a Python package.
 
 It intentionally contains no project configuration.
+
+
+Shared infrastructure
+---------------------
+
+``infrastructure/``
+~~~~~~~~~~~~~~~~~~~
+
+Contains reusable infrastructure utilities shared across Django applications
+and project-level components.
+
+It is a regular Python package and is not included in ``INSTALLED_APPS``.
+
+``infrastructure/request.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides shared HTTP request utilities for resolving and normalising client
+IP addresses.
+
+``_normalise_ip()`` validates and canonicalises IPv4 and IPv6 addresses,
+including IPv4-mapped IPv6 addresses. Invalid addresses return ``None``.
+
+``get_client_ip()`` uses the environment-specific proxy policy defined in
+``config/settings.py``.
+
+Development and test environments use ``django-ipware`` with
+``REMOTE_ADDR`` as the only permitted address source.
+
+Production currently follows the documented Koyeb forwarding behaviour:
+the last address in ``X-Forwarded-For`` is selected and normalised.
+When that header is absent, the direct peer address is used.
+
+Production use assumes that requests reach Django through the trusted Koyeb
+ingress. This boundary must be verified during deployment.
+
+The shared resolver can be reused by authentication protection, audit
+logging, and other request-related components.
 
 
 Project entry point
@@ -459,6 +501,10 @@ The current package contains:
    Tests logging-level validation, development and production handlers,
    colour formatting, local file rotation, logger levels, and propagation
    behaviour.
+
+``tests/test_request.py``
+   Tests shared IP address normalisation, client IP resolution in development
+   and production, forwarding-header handling, and proxy-policy integration.
 
 ``tests/__init__.py``
    Marks the root test directory as a Python package.

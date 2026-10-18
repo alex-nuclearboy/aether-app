@@ -154,7 +154,7 @@ uv audit --preview-features audit-command --locked
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
 uv run pytest
-uv run pylint config accounts tests manage.py docs/source/conf.py
+uv run pylint config accounts infrastructure tests manage.py docs/source/conf.py
 uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html
 ```
 

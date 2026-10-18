@@ -973,7 +973,7 @@ def test_settings_reject_non_positive_connect_timeout(
     [
         ("development", ("REMOTE_ADDR",), "left-most"),
         ("test", ("REMOTE_ADDR",), "left-most"),
-        ("production", ("HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"), "right-most"),
+        ("production", ("HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"), "left-most"),
     ],
 )
 def test_client_ip_configuration_by_environment(

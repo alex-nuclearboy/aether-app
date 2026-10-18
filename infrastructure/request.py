@@ -26,7 +26,7 @@ def _normalise_ip(value: str | None) -> str | None:
 
 def get_client_ip(request: HttpRequest) -> str | None:
     """Resolve and normalise the client IP using the proxy policy."""
-    if settings.ENVIRONMENT == "production":
+    if "HTTP_X_FORWARDED_FOR" in settings.CLIENT_IP_META_PRECEDENCE_ORDER:
         forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
 
         if isinstance(forwarded_for, str) and forwarded_for:

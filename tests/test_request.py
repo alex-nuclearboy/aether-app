@@ -78,7 +78,12 @@ def test_get_client_ip_handles_missing_remote_address():
     assert get_client_ip(request) is None
 
 
-@override_settings(ENVIRONMENT="production")
+@override_settings(
+    CLIENT_IP_META_PRECEDENCE_ORDER=(
+        "HTTP_X_FORWARDED_FOR",
+        "REMOTE_ADDR",
+    ),
+)
 def test_production_uses_last_forwarded_ip():
     """Use the address appended by the trusted Koyeb ingress."""
     request = RequestFactory().get(
@@ -90,7 +95,12 @@ def test_production_uses_last_forwarded_ip():
     assert get_client_ip(request) == "203.0.113.25"
 
 
-@override_settings(ENVIRONMENT="production")
+@override_settings(
+    CLIENT_IP_META_PRECEDENCE_ORDER=(
+        "HTTP_X_FORWARDED_FOR",
+        "REMOTE_ADDR",
+    ),
+)
 def test_production_ignores_spoofed_forwarded_prefix():
     """Changing an untrusted prefix must not change the resolved IP."""
     factory = RequestFactory()
@@ -111,7 +121,12 @@ def test_production_ignores_spoofed_forwarded_prefix():
     assert get_client_ip(second) == "203.0.113.25"
 
 
-@override_settings(ENVIRONMENT="production")
+@override_settings(
+    CLIENT_IP_META_PRECEDENCE_ORDER=(
+        "HTTP_X_FORWARDED_FOR",
+        "REMOTE_ADDR",
+    ),
+)
 def test_production_normalises_forwarded_ipv6():
     """Normalise the last IPv6 address in the forwarded chain."""
     request = RequestFactory().get(
@@ -125,7 +140,12 @@ def test_production_normalises_forwarded_ipv6():
     assert get_client_ip(request) == "2001:db8::1"
 
 
-@override_settings(ENVIRONMENT="production")
+@override_settings(
+    CLIENT_IP_META_PRECEDENCE_ORDER=(
+        "HTTP_X_FORWARDED_FOR",
+        "REMOTE_ADDR",
+    ),
+)
 def test_production_rejects_invalid_last_forwarded_ip():
     """Never fall back to an earlier untrusted forwarded address."""
     request = RequestFactory().get(
@@ -137,7 +157,12 @@ def test_production_rejects_invalid_last_forwarded_ip():
     assert get_client_ip(request) is None
 
 
-@override_settings(ENVIRONMENT="production")
+@override_settings(
+    CLIENT_IP_META_PRECEDENCE_ORDER=(
+        "HTTP_X_FORWARDED_FOR",
+        "REMOTE_ADDR",
+    ),
+)
 def test_production_falls_back_to_remote_addr():
     """Use the direct peer address when X-Forwarded-For is absent."""
     request = RequestFactory().get(

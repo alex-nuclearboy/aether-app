@@ -85,6 +85,9 @@ jobs:
       - name: Run Django system checks
         run: uv run python manage.py check
 
+      - name: Check static file collection
+        run: uv run python manage.py collectstatic --noinput --dry-run
+
       - name: Check for missing migrations
         run: uv run python manage.py makemigrations --check --dry-run
 
@@ -95,7 +98,7 @@ jobs:
         run: uv run pytest
 
       - name: Run Pylint
-        run: uv run pylint config accounts infrastructure tests manage.py docs/source/conf.py
+        run: uv run pylint config accounts core infrastructure tests manage.py docs/source/conf.py
 
       - name: Build documentation
         run: uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html

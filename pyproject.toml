@@ -43,6 +43,7 @@ addopts = [
     "--strict-markers",
     "--cov=config",
     "--cov=accounts",
+    "--cov=core",
     "--cov=infrastructure",
     "--cov-branch",
     "--cov-report=term-missing",

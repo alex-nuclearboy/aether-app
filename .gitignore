@@ -62,6 +62,9 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Collected Django static files
+/staticfiles/
+
 # Local application logs
 logs/
 

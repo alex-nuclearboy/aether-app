@@ -102,6 +102,19 @@ Run the current lint scope::
 
    uv run pylint config accounts core infrastructure tests manage.py docs/source/conf.py
 
+Static files
+------------
+
+Verify that Django can discover and collect the configured static files without
+copying them to the output directory::
+
+   uv run python manage.py collectstatic --noinput --dry-run
+
+The check covers the configured static file sources, including the project's
+``static/`` directory.
+
+The canonical GitHub Actions quality job also runs this check.
+
 Documentation
 -------------
 

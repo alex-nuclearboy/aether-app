@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, explicit runtime environment classification and production safety validation, a custom Django user model, username-or-email authentication with brute-force protection, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
+The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, explicit runtime environment classification and production safety validation, a custom Django user model, username-or-email authentication with brute-force protection, a public home page with a shared Django template and minimal CSS, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
 
 ## Requirements
 
@@ -131,7 +131,9 @@ uv run python manage.py runserver
 
 The development server listens at [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
-At the current stage, the project exposes only the Django administration site at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
+The public home page is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). It currently provides a minimal interface with a shared base template and stylesheet.
+
+The Django administration site remains available at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
 
 During local development, application logs are colourised in the console and are also written to the rotating `logs/aether.log` file. Logging levels can be controlled through the local environment configuration. See the [logging documentation](docs/source/development/logging.rst) for details.
 

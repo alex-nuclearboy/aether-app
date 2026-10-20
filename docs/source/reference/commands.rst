@@ -67,6 +67,13 @@ Run Django's development server::
 
    uv run python manage.py runserver
 
+Static files
+------------
+
+Check static file collection without copying the files::
+
+   uv run python manage.py collectstatic --noinput --dry-run
+
 Testing
 -------
 

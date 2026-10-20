@@ -8,7 +8,11 @@ tooling.
 
 Application-specific Django apps, integrations, and service layers are added as
 the corresponding functionality is implemented rather than being created in
-advance. The ``accounts`` application is the first project-specific Django app.
+advance.
+
+The ``accounts`` application manages user accounts and authentication, while
+the ``core`` application provides the initial public home page.
+
 Tests that belong to application components are introduced together with the
 code they verify.
 
@@ -50,6 +54,21 @@ The repository currently has the following top-level structure:
    │   ├── settings.py
    │   ├── urls.py
    │   └── wsgi.py
+   ├── core/
+   │   ├── migrations/
+   │   │   └── __init__.py
+   │   ├── templates/
+   │   │   └── core/
+   │   │       └── home.html
+   │   ├── tests/
+   │   │   ├── __init__.py
+   │   │   └── test_views.py
+   │   ├── __init__.py
+   │   ├── admin.py
+   │   ├── apps.py
+   │   ├── models.py
+   │   ├── urls.py
+   │   └── views.py
    ├── infrastructure/
    │   ├── __init__.py
    │   └── request.py
@@ -67,6 +86,11 @@ The repository currently has the following top-level structure:
    │   ├── Makefile
    │   ├── make.bat
    │   └── README.md
+   ├── static/
+   │   └── css/
+   │       └── base.css
+   ├── templates/
+   │   └── base.html
    ├── tests/
    │   ├── __init__.py
    │   ├── test_database.py
@@ -207,6 +231,84 @@ Contains automated tests specific to the accounts application, including:
 * lockout expiration, counter resets, and account/IP isolation.
 
 
+Core application
+----------------
+
+``core/``
+~~~~~~~~~
+
+The ``core`` application provides general-purpose pages that do not belong to
+a specific application domain.
+
+The current implementation exposes a public home page at ``/``. The page is
+intentionally minimal and does not yet provide navigation, authentication
+controls, or other application features.
+
+``core/apps.py``
+~~~~~~~~~~~~~~~~
+
+Defines the Django application configuration through ``CoreConfig``.
+
+``core/views.py``
+~~~~~~~~~~~~~~~~~
+
+Defines the ``home`` view, which renders the public home page.
+
+``core/urls.py``
+~~~~~~~~~~~~~~~~
+
+Defines the ``home`` URL pattern for the root path ``/``.
+
+``core/templates/core/home.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines the minimal home page template, which extends the shared base layout.
+
+``core/admin.py``
+~~~~~~~~~~~~~~~~~
+
+Reserved for future Django administration registrations.
+
+``core/models.py``
+~~~~~~~~~~~~~~~~~~
+
+Reserved for future core application models. No database models are currently
+defined by this application.
+
+``core/migrations/``
+~~~~~~~~~~~~~~~~~~~~~
+
+Contains the Django migrations package. No core database migrations are
+currently required.
+
+``core/tests/``
+~~~~~~~~~~~~~~~
+
+Contains application-specific tests covering home page routing, anonymous
+access, template inheritance, and static stylesheet discovery.
+
+
+Shared interface resources
+--------------------------
+
+``templates/base.html``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines the shared HTML document structure and content blocks used by
+application templates.
+
+The current layout is intentionally minimal and does not include a header,
+navigation, or footer.
+
+``static/css/base.css``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Contains the initial project-wide CSS styles.
+
+The stylesheet provides a small starting point for future interface development
+rather than a complete visual design system.
+
+
 Django project configuration
 ----------------------------
 
@@ -239,7 +341,7 @@ The file currently handles:
 * logging level selection and logging configuration integration;
 * password validation;
 * internationalisation;
-* static files;
+* shared template discovery and static file configuration;
 * email backend configuration.
 
 Configuration is environment-driven. Local development values are loaded from
@@ -288,9 +390,11 @@ See :doc:`../development/logging` for the detailed logging policy.
 
 Defines the root URL configuration for the Django project.
 
-At the current stage, it exposes the Django administration interface. Routes
-for application-specific functionality will be included here or delegated to
-individual Django apps as the project grows.
+The root URL configuration exposes the Django administration interface at
+``/admin/`` and includes the ``core`` application routes at ``/``.
+
+Additional application-specific routes will be introduced as their
+corresponding functionality is implemented.
 
 ``config/asgi.py``
 ~~~~~~~~~~~~~~~~~~

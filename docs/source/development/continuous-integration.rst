@@ -48,11 +48,16 @@ It performs the complete project validation:
 #. installs the locked runtime and development dependencies;
 #. verifies the installed dependency environment with ``uv pip check``;
 #. runs Django system checks;
+#. checks static file collection in dry-run mode;
 #. checks for missing migrations;
 #. applies the committed migrations to PostgreSQL;
 #. runs the automated test suite with coverage enforcement;
 #. runs Pylint;
 #. builds the Sphinx documentation in strict mode.
+
+The static file check verifies Django's ability to discover and collect the
+configured static resources without copying them to the collection directory.
+It does not configure or verify production static file serving.
 
 This is the canonical CI environment for the project.
 

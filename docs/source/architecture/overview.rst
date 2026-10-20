@@ -29,6 +29,8 @@ The implemented foundation consists of:
 * PostgreSQL-backed brute-force protection through django-axes, with a
   three-failure threshold, a 15-minute lockout, and shared username/email
   failure counters;
+* a ``core`` Django application providing a public home page at ``/``;
+* a shared Django base template and minimal project-level CSS;
 * automated testing through ``pytest`` and ``pytest-django``;
 * branch coverage reporting and enforcement through ``pytest-cov``;
 * configurable application logging with coloured development output through

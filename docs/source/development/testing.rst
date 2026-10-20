@@ -5,8 +5,8 @@ Aether uses ``pytest`` and ``pytest-django`` for automated testing.
 ``pytest-cov`` provides statement and branch coverage reporting.
 
 The current test suite covers project configuration, logging configuration,
-PostgreSQL integration, the Django project entry points, and the accounts
-application.
+PostgreSQL integration, Django project entry points, and the accounts and
+core applications.
 
 
 Test structure
@@ -70,6 +70,16 @@ asynchronous authentication, inherited Django group permissions, and
 brute-force protection, including lockout thresholds, identifier
 normalisation, expiration, counter resets, and account/IP isolation.
 
+The ``core`` application maintains a separate test package::
+
+   core/
+   └── tests/
+       ├── __init__.py
+       └── test_views.py
+
+The core tests verify root URL routing, anonymous access to the home page,
+shared template inheritance, and discovery of the base CSS file.
+
 
 Running tests
 -------------
@@ -119,7 +129,7 @@ configuration in ``pyproject.toml``.
 
 The current coverage policy:
 
-* measures the ``config``, ``accounts``, and ``infrastructure`` packages;
+* measures the ``config``, ``accounts``, ``core``, and ``infrastructure`` packages;
 * excludes test modules and generated Django migrations;
 * includes branch coverage;
 * reports missing lines in the terminal;

@@ -141,8 +141,11 @@ Start the Django development server::
 
 The development server listens at http://127.0.0.1:8000/.
 
-At the current stage, the project exposes only the Django administration
-interface at http://127.0.0.1:8000/admin/.
+The public home page is available at http://127.0.0.1:8000/. It currently
+contains a minimal interface built with the shared Django base template.
+
+The Django administration interface remains available at
+http://127.0.0.1:8000/admin/.
 
 Stop the local environment
 --------------------------

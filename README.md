@@ -129,8 +129,6 @@ Start the Django development server:
 uv run python manage.py runserver
 ```
 
-The development server listens at [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
-
 The public home page is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). It currently provides a minimal interface with a shared base template and stylesheet.
 
 The Django administration site remains available at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
@@ -155,6 +153,7 @@ uv pip check
 uv audit --preview-features audit-command --locked
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
+uv run python manage.py collectstatic --noinput --dry-run
 uv run pytest
 uv run pylint config accounts core infrastructure tests manage.py docs/source/conf.py
 uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html

@@ -3,8 +3,8 @@ Code quality
 
 Aether currently uses lock-file validation, installed-dependency consistency
 checks, dependency vulnerability auditing, Django system checks, migration
-validation, automated tests with coverage enforcement, Pylint, and a strict
-Sphinx build as its baseline quality checks.
+validation, static file collection checks, automated tests with coverage
+enforcement, Pylint, and a strict Sphinx build as its baseline quality checks.
 
 Lock file
 ---------

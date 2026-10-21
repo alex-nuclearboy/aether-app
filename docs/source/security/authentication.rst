@@ -1,4 +1,3 @@
-
 Authentication
 ==============
 
@@ -42,14 +41,16 @@ Brute-force protection
 Aether uses ``django-axes`` to protect authentication against repeated
 failed login attempts.
 
-``AxesStandaloneBackend`` runs before the project's
-``UsernameOrEmailBackend``. Django's standard password verification,
-active-user checks, and permission handling remain unchanged.
+``AsyncAxesStandaloneBackend`` extends django-axes'
+``AxesStandaloneBackend`` and runs before the project's
+``UsernameOrEmailBackend``.
 
-``AsyncAxesStandaloneBackend`` extends the Axes standalone backend with
-asynchronous authentication support. It executes the original Axes lockout
-check through ``sync_to_async`` while preserving the same lockout policy
-for synchronous and asynchronous authentication.
+It delegates asynchronous lockout checks to the original synchronous
+Axes implementation through ``sync_to_async``, ensuring consistent
+lockout enforcement for synchronous and asynchronous authentication.
+
+Django's standard password verification, active-user checks, and
+permission handling remain unchanged.
 
 Lockout policy
 ~~~~~~~~~~~~~~
@@ -61,7 +62,7 @@ The lockout lasts 15 minutes. Correct credentials are also rejected
 while the corresponding identifier and IP combination is locked.
 
 Additional attempts during the lockout do not extend the cool-off period.
-Successful authentication resets the corresponding failure counter.
+A successful login resets the corresponding failure counter.
 
 Different accounts and client IP addresses maintain independent counters.
 

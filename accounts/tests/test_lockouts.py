@@ -1,4 +1,3 @@
-
 """Tests for Aether authentication lockout helpers."""
 
 from datetime import timedelta

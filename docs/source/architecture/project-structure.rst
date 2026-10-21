@@ -228,7 +228,8 @@ Contains automated tests specific to the accounts application, including:
 * synchronous and asynchronous authentication;
 * inherited Django group and permission handling;
 * authentication lockout thresholds and identifier normalisation;
-* lockout expiration, counter resets, and account/IP isolation.
+* lockout expiration, counter resets, and account/IP isolation;
+* asynchronous lockout enforcement.
 
 
 Core application

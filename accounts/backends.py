@@ -1,4 +1,3 @@
-
 """Username-or-email authentication for Aether accounts."""
 
 from asgiref.sync import sync_to_async

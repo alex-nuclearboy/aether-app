@@ -1,4 +1,3 @@
-
 """Tests for the Aether username-or-email authentication backend."""
 
 from unittest.mock import patch

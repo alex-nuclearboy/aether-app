@@ -1,4 +1,3 @@
-
 """Tests for shared HTTP request utilities."""
 
 import pytest

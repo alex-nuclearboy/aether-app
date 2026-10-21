@@ -1,4 +1,3 @@
-
 """Shared utilities for HTTP request metadata."""
 
 from ipaddress import IPv6Address, ip_address

@@ -1,10 +1,20 @@
-/* Base styles for Aether. */
+/* Global styles for Aether. */
+
+:root {
+    --font-family-base: "Inter", system-ui, sans-serif;
+    --header-height: 64px;
+    --content-padding: 32px;
+}
 
 body {
     margin: 0;
-    font-family: system-ui, sans-serif;
+    font-family: var(--font-family-base);
+    color: #1f2937;
+    background-color: #ffffff;
 }
 
 main {
-    padding: 2rem;
+    padding: calc(var(--header-height) + var(--content-padding))
+             var(--content-padding)
+             var(--content-padding);
 }

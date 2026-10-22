@@ -1,7 +1,20 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Home | Aether{% endblock title %}
 
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/pages/home.css' %}">
+{% endblock page_styles %}
+
 {% block content %}
-<h1>Aether</h1>
+<div class="home">
+    <h1 class="home__title">
+        <img
+            class="home__logo"
+            src="{% static 'images/aether_logo_full.png' %}"
+            alt="Aether"
+        >
+    </h1>
+</div>
 {% endblock content %}

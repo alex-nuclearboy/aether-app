@@ -1,0 +1,44 @@
+/* Fixed application header. */
+
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+
+    box-sizing: border-box;
+    height: var(--header-height);
+    padding: 0 24px;
+
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+
+    color: inherit;
+    text-decoration: none;
+}
+
+.site-brand__icon {
+    display: block;
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.site-brand__name {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.site-brand:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 4px;
+}

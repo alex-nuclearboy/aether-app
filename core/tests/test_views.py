@@ -18,7 +18,8 @@ def test_home_page_is_accessible(client):
     response = client.get(reverse("home"))
 
     assert response.status_code == 200
-    assert b"<h1>Aether</h1>" in response.content
+    assert b'<h1 class="home__title">' in response.content
+    assert b'alt="Aether"' in response.content
 
 
 def test_home_page_uses_shared_template(client):
@@ -34,6 +35,48 @@ def test_home_page_uses_shared_template(client):
     assert "base.html" in template_names
 
 
+def test_home_logo_is_discoverable():
+    """Find the full home page logo through Django staticfiles."""
+    assert finders.find("images/aether_logo_full.png") is not None
+
+
+def test_home_stylesheet_is_discoverable():
+    """Expose the home page stylesheet through Django staticfiles."""
+    assert finders.find("css/pages/home.css") is not None
+
+
+def test_header_contains_home_link(client):
+    """Display a clickable brand linking to the home page."""
+    response = client.get(reverse("home"))
+
+    assert b'<a class="site-brand" href="/">' in response.content
+    assert b'<span class="site-brand__name">Aether</span>' in response.content
+
+
+def test_brand_icon_is_discoverable():
+    """Find the approved brand icon through Django staticfiles."""
+    assert finders.find("images/aether_logo.png") is not None
+
+
+def test_header_stylesheet_is_discoverable():
+    """Expose the shared header stylesheet through Django staticfiles."""
+    assert finders.find("css/components/header.css") is not None
+
+
 def test_base_stylesheet_is_discoverable():
     """Expose the base stylesheet through Django staticfiles."""
     assert finders.find("css/base.css") is not None
+
+
+def test_favicons_are_discoverable():
+    """Ensure favicon assets are available through staticfiles."""
+    assets = (
+        "favicons/favicon.ico",
+        "favicons/favicon-16x16.png",
+        "favicons/favicon-32x32.png",
+        "favicons/apple-touch-icon.png",
+        "favicons/site.webmanifest",
+    )
+
+    for asset in assets:
+        assert finders.find(asset) is not None

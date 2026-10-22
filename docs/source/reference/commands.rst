@@ -74,6 +74,9 @@ Check static file collection without copying the files::
 
    uv run python manage.py collectstatic --noinput --dry-run
 
+This command verifies the static file collection process. Core tests
+separately verify the discovery of individual required assets.
+
 Testing
 -------
 

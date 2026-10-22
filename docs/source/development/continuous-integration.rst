@@ -53,6 +53,7 @@ It performs the complete project validation:
 #. applies the committed migrations to PostgreSQL;
 #. runs the automated test suite with coverage enforcement;
 #. runs Pylint;
+#. checks static file collection in dry-run mode;
 #. builds the Sphinx documentation in strict mode.
 
 The static file check verifies Django's ability to discover and collect the

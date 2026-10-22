@@ -87,9 +87,19 @@ The repository currently has the following top-level structure:
    │   ├── make.bat
    │   └── README.md
    ├── static/
-   │   └── css/
-   │       └── base.css
+   │   ├── css/
+   │   │   ├── components/
+   │   │   │   └── header.css
+   │   │   ├── pages/
+   │   │   │   └── home.css
+   │   │   └── base.css
+   │   ├── favicons/
+   │   └── images/
+   │       ├── aether_logo.png
+   │       └── aether_logo_full.png
    ├── templates/
+   │   ├── includes/
+   │   │   └── header.html
    │   └── base.html
    ├── tests/
    │   ├── __init__.py
@@ -241,9 +251,10 @@ Core application
 The ``core`` application provides general-purpose pages that do not belong to
 a specific application domain.
 
-The current implementation exposes a public home page at ``/``. The page is
-intentionally minimal and does not yet provide navigation, authentication
-controls, or other application features.
+The current implementation exposes a public home page at ``/``. The page
+displays the full Aether logo in the shared application layout. A fixed header
+links the compact Aether brand to the home page. Navigation menus, a sidebar,
+and authentication controls have not yet been implemented.
 
 ``core/apps.py``
 ~~~~~~~~~~~~~~~~
@@ -263,7 +274,8 @@ Defines the ``home`` URL pattern for the root path ``/``.
 ``core/templates/core/home.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the minimal home page template, which extends the shared base layout.
+Defines the home page template, which extends the shared base layout,
+loads its own stylesheet, and displays the full Aether logo as the page heading.
 
 ``core/admin.py``
 ~~~~~~~~~~~~~~~~~
@@ -285,8 +297,9 @@ currently required.
 ``core/tests/``
 ~~~~~~~~~~~~~~~
 
-Contains application-specific tests covering home page routing, anonymous
-access, template inheritance, and static stylesheet discovery.
+Contains application-specific tests for home page routing, anonymous
+access, template inheritance, the header's home link, and discovery of
+the base stylesheet, logos, and favicon assets.
 
 
 Shared interface resources
@@ -295,19 +308,48 @@ Shared interface resources
 ``templates/base.html``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the shared HTML document structure and content blocks used by
-application templates.
+Defines the shared HTML document, including page metadata, favicon links,
+Google Fonts, global stylesheets, and the main content block. It includes the
+fixed header and provides a ``page_styles`` block for page-specific CSS.
 
-The current layout is intentionally minimal and does not include a header,
-navigation, or footer.
+``templates/includes/header.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines the fixed application header. The compact Aether logo and application
+name form a single link to the home page. Navigation menus and a sidebar are
+not yet implemented.
 
 ``static/css/base.css``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Contains the initial project-wide CSS styles.
+Contains global typography, shared layout variables, and base styles for the
+page and main content area.
 
-The stylesheet provides a small starting point for future interface development
-rather than a complete visual design system.
+``static/css/components/header.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Contains the fixed header layout and brand-link styles.
+
+``static/css/pages/home.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Centres the full-size Aether logo within the home page's main content area.
+It is included by the home page template rather than by every page.
+
+``static/images/``
+~~~~~~~~~~~~~~~~~~~
+
+Contains the compact ``aether_logo.png`` used in the header and the full
+``aether_logo_full.png`` displayed on the home page.
+
+``static/favicons/``
+~~~~~~~~~~~~~~~~~~~~
+
+Contains browser favicons, the Apple touch icon, and the web application
+manifest. These assets are referenced from the shared base template.
+
+The interface currently loads Inter through Google Fonts. It has no footer or
+responsive layout implementation at this stage.
 
 
 Django project configuration
@@ -657,8 +699,9 @@ The workflow has four distinct responsibilities:
 ``quality``
    Runs the complete project checks using the preferred Python version from
    ``.python-version``. It validates the lock file and installed dependencies,
-   starts PostgreSQL, runs Django checks and migrations, executes the automated
-   tests with coverage, runs Pylint, and builds the Sphinx documentation.
+   starts PostgreSQL, runs Django checks, checks static file collection in
+   dry-run mode, applies migrations, executes the automated tests with coverage,
+   runs Pylint, and builds the Sphinx documentation.
 
 ``python-compatibility``
    Runs the dependency, Django, migration, and test checks on Python 3.12 and

@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, explicit runtime environment classification and production safety validation, a custom Django user model, username-or-email authentication with brute-force protection, a public home page with a shared Django template and minimal CSS, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
+The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, explicit runtime environment classification and production safety validation, a custom Django user model, username-or-email authentication with brute-force protection, a branded home page with a fixed header, shared Django templates, and separate global, component, and page-specific CSS, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
 
 ## Requirements
 
@@ -129,7 +129,9 @@ Start the Django development server:
 uv run python manage.py runserver
 ```
 
-The public home page is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). It currently provides a minimal interface with a shared base template and stylesheet.
+The public home page is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). It displays the full Aether logo in the centre of the main content area, beneath a fixed header containing a compact logo and a link to the home page.
+
+The interface does not yet include navigation menus, a sidebar, or authentication controls.
 
 The Django administration site remains available at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
 

@@ -89,7 +89,8 @@ The repository currently has the following top-level structure:
    │   └── README.md
    ├── infrastructure/
    │   ├── __init__.py
-   │   └── request.py
+   │   ├── request.py
+   │   └── request_id.py
    ├── static/
    │   ├── css/
    │   │   ├── components/
@@ -111,6 +112,7 @@ The repository currently has the following top-level structure:
    │   ├── test_django_entrypoints.py
    │   ├── test_logging.py
    │   ├── test_request.py
+   │   ├── test_request_id.py
    │   └── test_settings.py
    ├── .env.example
    ├── .gitignore
@@ -229,18 +231,22 @@ during application initialisation.
 ``accounts/audit.py``
 ~~~~~~~~~~~~~~~~~~~~~
 
-Defines signal receivers for successful login, failed login, authenticated
-logout, and newly triggered authentication lockouts. Django authentication
-signals report login and logout results; django-axes reports lockouts.
+Defines Django signal receivers for successful login, failed login,
+authenticated logout, and newly triggered authentication lockouts.
 
-The receivers write structured messages to ``aether.audit``. Login and
-logout events include internal user identifiers and resolved client IP
-addresses. Lockout events include a keyed SHA-256 HMAC fingerprint of the
-normalised identifier, client IP address, failure count, configured duration,
-remaining-time snapshot, and a UTC deadline. No plaintext username or email
-is written to custom failed-login or lockout audit messages. Anonymous logout
-events are ignored; repeat blocked requests are audited separately rather than
-logged as newly triggered lockouts.
+The receivers write structured messages to ``aether.audit``. All events
+include a keyed SHA-256 HMAC fingerprint of the canonical login identifier
+and the resolved client IP address. Successful login and authenticated
+logout events also include the verified ``user_id``.
+
+Failed authentication and lockout events do not include a user ID.
+New lockout events additionally record the failure count, configured
+duration, remaining-time snapshot, and UTC deadline.
+
+Plaintext usernames, email addresses, and credentials are excluded from
+custom authentication audit events. Anonymous logout signals are ignored.
+Repeated blocked POST requests are audited separately through
+``accounts/lockout_responses.py``.
 
 ``accounts/lockout_responses.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -460,7 +466,9 @@ The module is responsible for:
 * configuring console logging;
 * configuring rotating development log files;
 * separating development and production handlers;
-* defining the ``aether``, Django, database, and audit logger groups.
+* defining the ``aether``, Django, database, and audit logger groups;
+* attaching request correlation IDs to log records through a shared
+  logging filter.
 
 Development console output uses ``colorlog``. Local development also writes
 plain-text logs to ``logs/aether.log`` with rotation.
@@ -515,6 +523,15 @@ Contains reusable infrastructure utilities shared across Django applications
 and project-level components.
 
 It is a regular Python package and is not included in ``INSTALLED_APPS``.
+
+``infrastructure/request_id.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides server-generated HTTP request correlation IDs. Hybrid middleware
+supports sync and async requests, stores the active ID in a ``ContextVar``,
+and returns it through the ``X-Request-ID`` response header. A logging filter
+adds it to console and file log records. For HTTP 429 responses the middleware
+also records an ``aether.http`` warning before the request context is cleared.
 
 ``infrastructure/request.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -706,8 +723,13 @@ The current package contains:
 
 ``tests/test_logging.py``
    Tests logging-level validation, development and production handlers,
-   colour formatting, local file rotation, logger levels, and propagation
-   behaviour.
+   colour formatting, local file rotation, logger levels, propagation,
+   and request ID filter configuration.
+
+``tests/test_request_id.py``
+   Verifies request ID generation, uniqueness, context isolation and cleanup,
+   sync and async middleware support, rate-limited HTTP reporting, and
+   authentication audit correlation.
 
 ``tests/test_request.py``
    Tests shared IP address normalisation, client IP resolution in development

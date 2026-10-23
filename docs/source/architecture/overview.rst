@@ -29,11 +29,11 @@ The implemented foundation consists of:
 * PostgreSQL-backed brute-force protection through django-axes, with a
   three-failure threshold, a 15-minute lockout, and shared username/email
   failure counters;
-* authentication auditing for successful and failed logins, logouts,
-  lockouts, and blocked login attempts, including client IP addresses and
-  protected account identifiers;
+* server-generated request IDs for correlating HTTP and application logs;
+* authentication auditing for successful logins, logouts, and lockouts,
+  including client IP addresses and protected account identifiers;
 * database-backed lockout deadline and remaining-time calculations,
-  with UTC deadlines and HTTP ``Retry-After`` responses for blocked requests;
+  with UTC deadlines available for future authentication interfaces;
 * a ``core`` Django application providing a public home page with the
   full Aether logo;
 * a shared base template with a fixed header and clickable brand link;

@@ -142,17 +142,35 @@ The current audit events are:
 * ``authentication.lockout`` (``WARNING``);
 * ``authentication.lockout_denied`` (``WARNING``).
 
-Login and logout messages include the internal ``user_id`` and the client IP
-resolved through ``infrastructure.request.get_client_ip``. Anonymous logout
-signals are ignored.
+All authentication audit events include ``identifier_hash`` and
+``client_ip``. Successful login and authenticated logout events also
+include ``user_id``, identifying the verified authenticated user.
 
-Lockout messages include a keyed SHA-256 HMAC fingerprint of the normalised
-login identifier, the resolved client IP address, failure count, configured
-cool-off duration, remaining-time snapshot, and deadline. The deadline is
-formatted in UTC with second-level precision. The remaining-time value is
-calculated when the event is recorded; it is not updated in the audit log.
-Custom failed-login and lockout messages do not expose plaintext usernames,
-email addresses, or credentials.
+Failed login and lockout events do not contain ``user_id``, even when
+the submitted identifier corresponds to an existing account. A claimed
+account identity must not be confused with an authenticated user.
+
+The identifier fingerprint is calculated from the canonical username
+using a keyed SHA-256 HMAC. Known usernames and email addresses belonging
+to the same account produce the same fingerprint.
+
+New lockout events additionally include the failure count, configured
+cool-off duration, remaining-time snapshot, and UTC deadline. The
+deadline is formatted with second-level precision. Repeated blocked
+attempts include an updated remaining-time snapshot.
+
+Request IDs are assigned independently of account identifiers and included
+in request-scoped server logs through the shared logging filter. They connect
+messages from the same HTTP request but are not evidence of authenticated
+identity. See :doc:`../development/logging` for request correlation.
+
+Request correlation is handled independently of user identity through
+server-generated ``X-Request-ID`` values and a request-scoped logging filter.
+Records from one HTTP request can therefore be linked without treating the
+request ID as a user or account identifier. See :doc:`../development/logging`.
+
+Custom authentication audit events do not expose plaintext usernames,
+email addresses, passwords, or submitted credentials.
 
 Repeated blocked attempts do not extend the lockout or produce additional
 ``authentication.lockout`` events. Each blocked authentication POST instead

@@ -62,6 +62,37 @@ The current configuration defines the following logger groups.
    logging. It defaults to ``INFO`` in all environments.
 
 
+Request correlation
+-------------------
+
+Aether assigns a new server-generated request ID to every HTTP request via
+``infrastructure.request_id.request_id_middleware``. Each ID is a random UUID
+represented as 32 hexadecimal characters. The ID is exposed through
+``request.request_id`` and the ``X-Request-ID`` response header. Incoming
+client-supplied request IDs are not trusted or reused.
+
+The request middleware stores the ID in a ``ContextVar`` during request
+processing and restores the previous context on completion, including when
+processing raises an exception. Synchronous and asynchronous requests are
+supported. Records outside request processing use ``request_id=-``.
+
+``infrastructure.request_id.RequestIdFilter`` populates the ``request_id``
+logging field for every configured console and file handler. This permits
+messages from django-axes, Aether, and Django loggers produced during the
+same request to be correlated without changing each log call.
+
+The development server may emit its ``django.server`` access entry after the
+middleware context has been cleared, so such access records can contain
+``request_id=-``. Aether records an additional ``aether.http`` warning for
+HTTP 429 responses within the active request context, including method,
+path and status code. This is not a complete access log for all HTTP status
+codes.
+
+A request ID is neither an account identity nor a session identifier. Each
+HTTP request receives a different ID; distributed tracing, a persistent
+audit-event ID and cross-request correlation are not implemented yet.
+
+
 Authentication audit events
 ---------------------------
 
@@ -70,12 +101,13 @@ and the django-axes lockout signal through ``AccountsConfig.ready()``.
 Authentication security events are written to ``aether.audit``:
 
 ``authentication.login_success``
-   Emitted at ``INFO`` level on successful login. Includes ``user_id`` and
-   ``client_ip``.
+   Emitted at ``INFO`` level on successful authentication. Includes the
+   verified ``user_id``, ``identifier_hash``, and ``client_ip``.
 
 ``authentication.logout``
-   Emitted at ``INFO`` level on authenticated logout. Includes ``user_id`` and
-   ``client_ip``. Anonymous logout signals do not produce audit messages.
+   Emitted at ``INFO`` level on authenticated logout. Includes the
+   verified ``user_id``, ``identifier_hash``, and ``client_ip``.
+   Anonymous logout signals do not produce audit messages.
 
 ``authentication.login_failed``
    Emitted at ``INFO`` level for a rejected login before lockout. Includes
@@ -93,12 +125,32 @@ Authentication security events are written to ``aether.audit``:
    ``retry_after_seconds``. Ordinary login-page GET requests are not logged
    as failed or denied authentication attempts.
 
+
+Audit identity policy
+~~~~~~~~~~~~~~~~~~~~~
+
+Authentication audit events use ``identifier_hash`` and ``client_ip`` as
+common fields. The internal ``user_id`` is included only when a user's
+identity has been confirmed through successful authentication.
+
+Failed login and lockout events do not include ``user_id``. This does not
+indicate whether the submitted account identifier exists; it means that
+the identity of the requester has not been authenticated.
+
+The ``identifier_hash`` is calculated from the canonical username using
+a keyed SHA-256 HMAC. Known username and email login identifiers resolve
+to the same canonical username, allowing successful and unsuccessful
+authentication events to be correlated without exposing plaintext
+account identifiers.
+
+The fingerprint is not a permanent account identifier. Changing a username
+or rotating the secret key used by the HMAC may prevent correlation with
+older audit records.
+
 Client IP addresses are resolved using
-``infrastructure.request.get_client_ip``. The ``identifier_hash`` is a
-keyed SHA-256 HMAC fingerprint of the case-normalised login identifier;
-plaintext usernames or email addresses are not included in custom lockout
-audit messages. Passwords, submitted credentials, and session identifiers
-are not included in these messages.
+``infrastructure.request.get_client_ip``. Passwords, submitted credentials,
+and session identifiers are not included in custom authentication audit
+messages.
 
 ``duration_seconds`` represents the configured cool-off duration.
 ``retry_after_seconds`` is the remaining time at the moment of the audit
@@ -112,8 +164,9 @@ the current remaining time using
 ``accounts.lockouts.get_lockout_remaining_seconds``; neither helper reads
 log messages. Repeated requests during an existing lockout do not extend its
 deadline or repeat ``authentication.lockout``; blocked POST requests produce
-separate ``authentication.lockout_denied`` audit events. Failed-attempt tracking and lockout enforcement remain the
-responsibility of django-axes; its own sensitive-data masking is unchanged.
+separate ``authentication.lockout_denied`` audit events. Failed-attempt tracking
+and lockout enforcement remain the responsibility of django-axes; its own
+sensitive-data masking is unchanged.
 
 ``accounts.lockout_responses.lockout_response`` supplies HTTP 429 responses
 with a dynamic ``Retry-After`` header in seconds and ``Cache-Control:
@@ -275,9 +328,10 @@ The tests verify:
 * propagation behaviour.
 
 Authentication audit events are tested in ``accounts/tests/test_audit.py``.
-The tests cover successful Django Admin login and logout, anonymous logout,
-lockout event fields, identifier fingerprints, UTC deadlines, remaining-time
-snapshots, and suppression of repeated lockout audit events.
+The tests cover successful and failed Django Admin logins, authenticated
+and anonymous logout, fingerprint consistency across email and username,
+lockout events, UTC deadlines, remaining-time snapshots, and suppression of
+duplicate lockout threshold events.
 
 Lockout timing and expiry are tested in ``accounts/tests/test_lockouts.py``.
 

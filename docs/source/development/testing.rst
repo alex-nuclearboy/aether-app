@@ -20,6 +20,7 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── test_django_entrypoints.py
    ├── test_logging.py
    ├── test_request.py
+   ├── test_request_id.py
    └── test_settings.py
 
 The current modules have separate responsibilities:
@@ -40,8 +41,13 @@ The current modules have separate responsibilities:
 
 ``test_logging.py``
    Tests logging-level validation, development and production handlers,
-   formatter selection, local log rotation, logger levels, and propagation
-   behaviour.
+   formatter selection, local log rotation, logger levels, propagation,
+   and request ID filter configuration.
+
+``test_request_id.py``
+   Tests request ID generation, scope isolation, synchronous and asynchronous
+   middleware execution, logging enrichment, HTTP 429 reporting, and
+   end-to-end authentication event correlation.
 
 ``test_request.py``
    Tests shared IP address normalisation, environment-specific client IP
@@ -73,10 +79,13 @@ brute-force protection, including lockout thresholds, identifier
 normalisation, expiration, counter resets, and account/IP isolation.
 
 Authentication audit tests verify successful Django Admin login and logout,
-anonymous logout handling, failed-login events, newly triggered lockouts, and
-repeat-denial events. They cover client IP addresses, protected identifiers,
-lockout duration, UTC deadlines, remaining-time snapshots, and the absence of
-plaintext credentials or duplicate threshold events.
+anonymous logout handling, failed-login events, newly triggered lockouts,
+and repeat-denial events.
+
+They cover verified user IDs, consistent identifier fingerprints across
+username and email authentication, client IP addresses, lockout duration,
+UTC deadlines, remaining-time snapshots, and the absence of plaintext
+credentials or duplicate threshold events.
 
 ``accounts/tests/test_lockout_responses.py`` verifies HTTP 429 responses,
 recalculated ``Retry-After`` values, cache headers, and separate auditing of

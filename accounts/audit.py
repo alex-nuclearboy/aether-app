@@ -7,19 +7,23 @@ from math import ceil
 from axes.helpers import get_cool_off
 from axes.signals import user_locked_out
 from django.conf import settings
-from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.contrib.auth.signals import (
+    user_logged_in,
+    user_logged_out,
+    user_login_failed,
+)
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
-from accounts.lockouts import get_lockout_deadline
+from accounts.lockouts import get_lockout_deadline, get_lockout_username
 from infrastructure.request import get_client_ip
 
 
 logger = logging.getLogger("aether.audit")
 
 
-def _identifier_fingerprint(identifier):
+def identifier_fingerprint(identifier):
     """Create a keyed fingerprint of a login identifier."""
     return salted_hmac(
         "aether.authentication.lockout",
@@ -56,6 +60,26 @@ def audit_logout(*, request, user, **_kwargs):
 
 
 @receiver(
+    user_login_failed,
+    dispatch_uid="accounts.audit.login_failed",
+)
+def audit_login_failed(*, request, credentials, **_kwargs):
+    """Audit a failed login unless Axes has blocked the request."""
+    if request is None or getattr(request, "axes_locked_out", False):
+        return
+
+    username = get_lockout_username(request, credentials)
+    if not username:
+        return
+
+    logger.info(
+        "authentication.login_failed identifier_hash=%s client_ip=%s",
+        identifier_fingerprint(username),
+        get_client_ip(request),
+    )
+
+
+@receiver(
     user_locked_out,
     dispatch_uid="accounts.audit.lockout",
 )
@@ -77,11 +101,13 @@ def audit_lockout(*, request, username, **_kwargs):
         ceil((deadline - timezone.now()).total_seconds()),
     )
 
+    request.aether_new_lockout = True
+
     logger.warning(
         "authentication.lockout identifier_hash=%s "
         "client_ip=%s failures=%s duration_seconds=%s "
         'retry_after_seconds=%s locked_until="%s"',
-        _identifier_fingerprint(username),
+        identifier_fingerprint(username),
         get_client_ip(request),
         failures,
         int(cool_off.total_seconds()),

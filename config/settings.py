@@ -334,6 +334,7 @@ AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
 
 AXES_ONLY_ADMIN_SITE = False
 AXES_HTTP_RESPONSE_CODE = 429
+AXES_LOCKOUT_CALLABLE = "accounts.lockout_responses.lockout_response"
 
 
 ROOT_URLCONF = "config.urls"

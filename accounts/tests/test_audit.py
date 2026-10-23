@@ -9,7 +9,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils.crypto import salted_hmac
 
-from accounts.audit import audit_lockout, audit_logout
+from accounts.audit import audit_login_failed, audit_lockout, audit_logout
 from accounts.models import User
 
 
@@ -70,7 +70,7 @@ def test_anonymous_logout_is_not_audited(rf):
 
 
 @pytest.mark.django_db
-def test_lockout_audit_records_deadline_once(client):
+def test_lockout_and_repeated_denial_are_audited(client):
     """Record the lockout deadline without repeating the audit event."""
     user = User.objects.create_user(
         username="lockout.member",
@@ -151,42 +151,72 @@ def test_lockout_audit_records_deadline_once(client):
         )
 
         assert response.status_code == 429
-        log_warning.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    "missing",
-    ["cool_off", "deadline"],
-)
-def test_lockout_audit_skips_unavailable_timing(rf, missing):
-    """Do not record lockouts without valid timing information."""
-    request = rf.post(
-        "/admin/login/",
-        REMOTE_ADDR="192.0.2.10",
-    )
-    request.axes_failures_since_start = settings.AXES_FAILURE_LIMIT
-
-    cool_off = (
-        None if missing == "cool_off" else timedelta(minutes=15)
-    )
-    deadline = (
-        None if missing == "deadline" else datetime.now(UTC)
-    )
-
-    with (
-        patch(
-            "accounts.audit.get_cool_off",
-            return_value=cool_off,
-        ),
-        patch(
-            "accounts.audit.get_lockout_deadline",
-            return_value=deadline,
-        ),
-        patch("accounts.audit.logger.warning") as log_warning,
-    ):
-        audit_lockout(
-            request=request,
-            username="lockout.member",
+        assert len(log_warning.call_args_list) == 2
+        assert log_warning.call_args_list[1].args[0] == (
+            "authentication.lockout_denied identifier_hash=%s "
+            "client_ip=%s retry_after_seconds=%s"
+        )
+        assert log_warning.call_args_list[1].args[1] == identifier_hash
+        assert log_warning.call_args_list[1].args[2] == client_ip
+        assert 0 < log_warning.call_args_list[1].args[3] <= duration_seconds
+        assert response["Retry-After"] == str(
+            log_warning.call_args_list[1].args[3]
         )
 
+
+@pytest.mark.django_db
+def test_failed_login_audit_excludes_plaintext_credentials(client):
+    """Record a failed login without plaintext identifiers or passwords."""
+    user = User.objects.create_user(
+        username="failed.member",
+        email="failed.member@example.test",
+        password="correct-password",
+        is_staff=True,
+    )
+
+    with patch("accounts.audit.logger.info") as log_info:
+        response = client.post(
+            reverse("admin:login"),
+            {"username": user.email.upper(), "password": "incorrect-password"},
+            REMOTE_ADDR="192.0.2.42",
+        )
+
+    assert response.status_code == 200
+    log_info.assert_called_once()
+    fmt, fingerprint, ip = log_info.call_args.args
+    assert fmt == "authentication.login_failed identifier_hash=%s client_ip=%s"
+    assert fingerprint == salted_hmac(
+        "aether.authentication.lockout",
+        user.username.casefold(),
+        algorithm="sha256",
+    ).hexdigest()
+    assert ip == "192.0.2.42"
+    assert user.email not in str(log_info.call_args)
+    assert "incorrect-password" not in str(log_info.call_args)
+
+
+def test_failed_login_audit_ignores_missing_request_or_identifier(rf):
+    """Ignore failed-login events without usable request context."""
+    request = rf.post("/admin/login/", REMOTE_ADDR="192.0.2.43")
+    with patch("accounts.audit.logger.info") as log_info:
+        audit_login_failed(request=None, credentials={"username": "unknown"})
+        audit_login_failed(request=request, credentials={"username": None})
+        request.axes_locked_out = True
+        audit_login_failed(request=request, credentials={"username": "unknown"})
+    log_info.assert_not_called()
+
+
+@pytest.mark.parametrize("missing", ["cool_off", "deadline"])
+def test_lockout_audit_skips_unavailable_timing(rf, missing):
+    """Do not record an incomplete lockout audit event."""
+    request = rf.post("/admin/login/", REMOTE_ADDR="192.0.2.44")
+    request.axes_failures_since_start = settings.AXES_FAILURE_LIMIT
+    cool_off = None if missing == "cool_off" else timedelta(minutes=15)
+    deadline = None if missing == "deadline" else datetime.now(UTC)
+    with (
+        patch("accounts.audit.get_cool_off", return_value=cool_off),
+        patch("accounts.audit.get_lockout_deadline", return_value=deadline),
+        patch("accounts.audit.logger.warning") as log_warning,
+    ):
+        audit_lockout(request=request, username="unknown.member")
     log_warning.assert_not_called()

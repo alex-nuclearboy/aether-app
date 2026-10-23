@@ -99,16 +99,62 @@ database handler.
 The required database tables are created by the migrations provided
 with django-axes. No additional accounts migrations are required.
 
-Authentication audit logging remains a separate concern.
+The Axes database records are used for authentication attempt tracking and
+lockout enforcement. Authentication audit events are handled separately
+through the existing logging system and do not require additional database
+tables.
 
 Current lockout response
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The current implementation returns HTTP 429 when the failure limit
-is reached.
+is reached. No dedicated lockout status page or browser countdown has been
+implemented yet.
 
-A dedicated lockout status page with a server-rendered remaining-time
-indicator will be introduced separately.
+``accounts.lockouts.get_lockout_deadline`` determines the absolute deadline
+of an active username/IP lockout from django-axes database records.
+``accounts.lockouts.get_lockout_remaining_seconds`` returns the current
+non-negative remaining time. A future lockout view can recalculate this value
+on every request, including page refreshes, without extending the lockout.
+
+Authentication audit logging
+----------------------------
+
+Aether records successful login, authenticated logout, and newly triggered
+authentication lockout events. Django's ``user_logged_in`` and
+``user_logged_out`` signals and django-axes' ``user_locked_out`` signal are
+handled in ``accounts/audit.py``. Receivers are registered through
+``AccountsConfig.ready()`` in ``accounts/apps.py``.
+
+The current audit events are:
+
+* ``authentication.login_success`` (``INFO``);
+* ``authentication.logout`` (``INFO``);
+* ``authentication.lockout`` (``WARNING``).
+
+Login and logout messages include the internal ``user_id`` and the client IP
+resolved through ``infrastructure.request.get_client_ip``. Anonymous logout
+signals are ignored.
+
+Lockout messages include a keyed SHA-256 HMAC fingerprint of the normalised
+login identifier, the resolved client IP address, failure count, configured
+cool-off duration, remaining-time snapshot, and deadline. The deadline is
+formatted in UTC with second-level precision. The remaining-time value is
+calculated when the event is recorded; it is not updated in the audit log.
+The custom lockout message does not expose plaintext usernames or email
+addresses.
+
+Repeated blocked attempts do not extend the lockout or produce further custom
+``authentication.lockout`` events under the current policy. django-axes
+continues to manage failed-attempt records and enforcement in PostgreSQL,
+with its standard sensitive-parameter masking unchanged.
+
+The audit receivers also cover Django Admin and can be reused by future
+application-specific views that use Django's authentication mechanisms.
+
+See :doc:`../development/logging` for the log format, destinations, and
+sensitive-data handling.
+
 
 Authorization
 -------------
@@ -136,5 +182,4 @@ Django Admin uses the protected authentication flow.
 Application-specific login and logout views, forms, URLs, and templates
 have not yet been introduced.
 
-A dedicated lockout status page and authentication audit logging will
-be implemented separately.
+A dedicated lockout status page has not yet been implemented.

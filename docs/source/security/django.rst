@@ -77,24 +77,26 @@ Aether uses a shared client IP resolver in ``infrastructure.request``.
 Development and test environments use ``REMOTE_ADDR`` and do not trust
 client-supplied forwarding headers.
 
-Production is currently configured for the documented Koyeb ingress
-behaviour. Koyeb appends the connecting peer address to the end of
-``X-Forwarded-For``. The resolver selects the final address rather than
-trusting earlier entries, which may have been supplied by the client.
+Production prioritises ``X-Forwarded-For`` over ``REMOTE_ADDR`` and
+currently uses the left-most address selected by the shared resolver.
+
+This policy assumes that the trusted ingress controls the forwarded
+header chain. The actual proxy behaviour and header trust boundary
+must be verified before production deployment.
 
 The resolved address is validated and normalised using Python's
 ``ipaddress`` module. Invalid addresses return ``None``.
-
-The production policy assumes that requests reach the application through
-the trusted Koyeb ingress. The ingress restriction and actual forwarded
-headers must be verified before deployment.
 
 If another proxy or CDN is introduced, the address resolution policy must
 be reviewed. The selected address may otherwise identify an upstream proxy
 rather than the originating client.
 
 The shared resolver is used by django-axes for authentication lockout
-protection and can be reused by future components, including audit logging.
+protection and by the Aether authentication audit handlers for recording
+client IP addresses.
+
+See :doc:`authentication` for the lockout policy, audit events, and
+lockout timing behaviour.
 
 Client IP resolution is separate from Django's HTTPS proxy settings.
 ``SECURE_PROXY_SSL_HEADER`` remains unconfigured at this stage.

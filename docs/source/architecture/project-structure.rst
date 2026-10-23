@@ -42,6 +42,7 @@ The repository currently has the following top-level structure:
    │   ├── __init__.py
    │   ├── admin.py
    │   ├── apps.py
+   │   ├── audit.py
    │   ├── backends.py
    │   ├── lockouts.py
    │   ├── models.py
@@ -191,6 +192,13 @@ creating or modifying user accounts.
 This enables a shared failure counter for both authentication identifiers
 of the same account.
 
+The module also provides ``get_lockout_deadline`` and
+``get_lockout_remaining_seconds``. These helpers use the django-axes database
+records, resolved client IP address, and configured cool-off period to
+calculate the deadline of an active lockout and the remaining seconds.
+They support audit reporting and future authentication interfaces without
+reading log messages.
+
 ``accounts/validators.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -211,6 +219,24 @@ available when accounts are created.
 ~~~~~~~~~~~~~~~~~~~~
 
 Defines the Django application configuration for the accounts package.
+
+The ``ready()`` method registers the authentication audit signal receivers
+during application initialisation.
+
+``accounts/audit.py``
+~~~~~~~~~~~~~~~~~~~~~
+
+Defines signal receivers for successful login, authenticated logout, and
+newly triggered authentication lockouts. Login and logout use Django's
+authentication signals; lockouts use the django-axes signal.
+
+The receivers write structured messages to ``aether.audit``. Login and
+logout events include internal user identifiers and resolved client IP
+addresses. Lockout events include a keyed SHA-256 HMAC fingerprint of the
+normalised identifier, client IP address, failure count, configured duration,
+remaining-time snapshot, and a UTC deadline. No plaintext username or email
+is written to the custom lockout audit message. Anonymous logout events are
+ignored, and subsequent blocked requests are not logged as new lockouts.
 
 ``accounts/views.py``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -239,7 +265,10 @@ Contains automated tests specific to the accounts application, including:
 * inherited Django group and permission handling;
 * authentication lockout thresholds and identifier normalisation;
 * lockout expiration, counter resets, and account/IP isolation;
-* asynchronous lockout enforcement.
+* asynchronous lockout enforcement;
+* lockout deadline calculation, remaining time, and expiry;
+* login, logout, and lockout audit events, including sensitive-data handling
+  and suppression of repeated lockout events.
 
 
 Core application
@@ -489,15 +518,16 @@ including IPv4-mapped IPv6 addresses. Invalid addresses return ``None``.
 Development and test environments use ``django-ipware`` with
 ``REMOTE_ADDR`` as the only permitted address source.
 
-Production currently follows the documented Koyeb forwarding behaviour:
-the last address in ``X-Forwarded-For`` is selected and normalised.
-When that header is absent, the direct peer address is used.
+Production prioritises ``X-Forwarded-For`` over ``REMOTE_ADDR`` and
+currently selects the left-most address from the forwarded header.
 
-Production use assumes that requests reach Django through the trusted Koyeb
-ingress. This boundary must be verified during deployment.
+This policy assumes that requests reach Django through a trusted ingress
+that controls the forwarded header chain. The actual proxy behaviour
+and trust boundary must be verified before production deployment.
 
-The shared resolver is used by django-axes for authentication protection
-and can be reused by audit logging and other request-related components.
+The shared resolver is used by django-axes for authentication lockout
+protection and by the authentication audit handlers for recording
+client IP addresses.
 
 
 Project entry point

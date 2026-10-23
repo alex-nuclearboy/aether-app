@@ -58,12 +58,64 @@ The current configuration defines the following logger groups.
    environments.
 
 ``aether.audit``
-   Reserved for security-relevant and audit events. It defaults to ``INFO`` in
-   all environments.
+   Records security-relevant audit events independently of general application
+   logging. It defaults to ``INFO`` in all environments.
 
-The audit logger is part of the logging foundation, but audit events should be
-added only when corresponding application behaviour such as authentication,
-access control, integrations, or automation is implemented.
+
+Authentication audit events
+---------------------------
+
+``accounts/audit.py`` registers receivers for Django's authentication signals
+and the django-axes lockout signal through ``AccountsConfig.ready()``.
+Authentication security events are written to ``aether.audit``:
+
+``authentication.login_success``
+   Emitted at ``INFO`` level on successful login. Includes ``user_id`` and
+   ``client_ip``.
+
+``authentication.logout``
+   Emitted at ``INFO`` level on authenticated logout. Includes ``user_id`` and
+   ``client_ip``. Anonymous logout signals do not produce audit messages.
+
+``authentication.lockout``
+   Emitted at ``WARNING`` level when the failure threshold first triggers a
+   lockout. Includes ``identifier_hash``, ``client_ip``, ``failures``,
+   ``duration_seconds``, ``retry_after_seconds``, and ``locked_until``.
+
+Client IP addresses are resolved using
+``infrastructure.request.get_client_ip``. The ``identifier_hash`` is a
+keyed SHA-256 HMAC fingerprint of the case-normalised login identifier;
+plaintext usernames or email addresses are not included in custom lockout
+audit messages. Passwords, submitted credentials, and session identifiers
+are not included in these messages.
+
+``duration_seconds`` represents the configured cool-off duration.
+``retry_after_seconds`` is the remaining time at the moment of the audit
+event; it is a snapshot, not a live countdown. ``locked_until`` is the
+absolute deadline, written in UTC with second-level precision and an
+explicit UTC offset.
+
+Deadlines are derived from django-axes database records through
+``accounts.lockouts.get_lockout_deadline``. Subsequent requests can calculate
+the current remaining time using
+``accounts.lockouts.get_lockout_remaining_seconds``; neither helper reads
+log messages. Repeated requests during an existing lockout do not extend its
+deadline or produce additional custom lockout events under the current Axes
+policy. Failed-attempt tracking and lockout enforcement remain the
+responsibility of django-axes; its own sensitive-data masking is unchanged.
+
+Python's standard logging formatters provide the server log timestamp in the
+running process's local time. Aether does not convert that timestamp using
+Django's ``TIME_ZONE`` setting. A consistent server time-zone policy,
+preferably UTC in production, simplifies cross-system correlation. This is
+separate from the UTC ``locked_until`` field and from future user-facing
+local-time presentation.
+
+Client IP addresses and security-event metadata can be personal or sensitive
+data. Audit log access and retention must be controlled appropriately.
+
+Existing handlers route audit events to the development console and rotating
+local log file, or to the production console.
 
 
 Application logger naming
@@ -204,5 +256,12 @@ The tests verify:
 * production console-only logging;
 * independently configured logger levels;
 * propagation behaviour.
+
+Authentication audit events are tested in ``accounts/tests/test_audit.py``.
+The tests cover successful Django Admin login and logout, anonymous logout,
+lockout event fields, identifier fingerprints, UTC deadlines, remaining-time
+snapshots, and suppression of repeated lockout audit events.
+
+Lockout timing and expiry are tested in ``accounts/tests/test_lockouts.py``.
 
 See :doc:`testing` for the general testing and coverage policy.

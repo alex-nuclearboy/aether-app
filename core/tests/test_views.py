@@ -74,6 +74,8 @@ def test_favicons_are_discoverable():
         "favicons/favicon.ico",
         "favicons/favicon-16x16.png",
         "favicons/favicon-32x32.png",
+        "favicons/android-chrome-192x192.png",
+        "favicons/android-chrome-512x512.png",
         "favicons/apple-touch-icon.png",
         "favicons/site.webmanifest",
     )

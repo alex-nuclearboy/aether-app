@@ -69,9 +69,6 @@ The repository currently has the following top-level structure:
    │   ├── models.py
    │   ├── urls.py
    │   └── views.py
-   ├── infrastructure/
-   │   ├── __init__.py
-   │   └── request.py
    ├── docs/
    │   ├── source/
    │   │   ├── architecture/
@@ -86,6 +83,9 @@ The repository currently has the following top-level structure:
    │   ├── Makefile
    │   ├── make.bat
    │   └── README.md
+   ├── infrastructure/
+   │   ├── __init__.py
+   │   └── request.py
    ├── static/
    │   ├── css/
    │   │   ├── components/
@@ -299,7 +299,7 @@ currently required.
 
 Contains application-specific tests for home page routing, anonymous
 access, template inheritance, the header's home link, and discovery of
-the base stylesheet, logos, and favicon assets.
+stylesheets, logos, and favicon assets.
 
 
 Shared interface resources

@@ -79,7 +79,8 @@ The ``core`` application maintains a separate test package::
 
 The core tests verify root URL routing, anonymous access to the home page,
 shared template inheritance, the full home page logo, the clickable header
-brand, and discovery of the base stylesheet, logo files, and favicon assets.
+brand, and discovery of global, component-specific, and page-specific
+stylesheets, logo files, and favicon assets.
 
 
 Running tests

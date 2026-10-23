@@ -77,10 +77,21 @@ Authentication security events are written to ``aether.audit``:
    Emitted at ``INFO`` level on authenticated logout. Includes ``user_id`` and
    ``client_ip``. Anonymous logout signals do not produce audit messages.
 
+``authentication.login_failed``
+   Emitted at ``INFO`` level for a rejected login before lockout. Includes
+   ``identifier_hash`` and ``client_ip``. The threshold-crossing attempt is
+   represented by ``authentication.lockout`` instead.
+
 ``authentication.lockout``
    Emitted at ``WARNING`` level when the failure threshold first triggers a
    lockout. Includes ``identifier_hash``, ``client_ip``, ``failures``,
    ``duration_seconds``, ``retry_after_seconds``, and ``locked_until``.
+
+``authentication.lockout_denied``
+   Emitted at ``WARNING`` level for a subsequent blocked authentication POST.
+   Includes ``identifier_hash``, ``client_ip`` and the current
+   ``retry_after_seconds``. Ordinary login-page GET requests are not logged
+   as failed or denied authentication attempts.
 
 Client IP addresses are resolved using
 ``infrastructure.request.get_client_ip``. The ``identifier_hash`` is a
@@ -100,9 +111,15 @@ Deadlines are derived from django-axes database records through
 the current remaining time using
 ``accounts.lockouts.get_lockout_remaining_seconds``; neither helper reads
 log messages. Repeated requests during an existing lockout do not extend its
-deadline or produce additional custom lockout events under the current Axes
-policy. Failed-attempt tracking and lockout enforcement remain the
+deadline or repeat ``authentication.lockout``; blocked POST requests produce
+separate ``authentication.lockout_denied`` audit events. Failed-attempt tracking and lockout enforcement remain the
 responsibility of django-axes; its own sensitive-data masking is unchanged.
+
+``accounts.lockout_responses.lockout_response`` supplies HTTP 429 responses
+with a dynamic ``Retry-After`` header in seconds and ``Cache-Control:
+no-store``. The remaining time is recalculated for each blocked request,
+independently of the audit log. No dedicated lockout page or browser
+countdown is implemented yet.
 
 Python's standard logging formatters provide the server log timestamp in the
 running process's local time. Aether does not convert that timestamp using

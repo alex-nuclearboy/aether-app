@@ -59,6 +59,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_admin.py
        ├── test_audit.py
        ├── test_backends.py
+       ├── test_lockout_responses.py
        ├── test_lockouts.py
        ├── test_models.py
        └── test_validators.py
@@ -72,10 +73,14 @@ brute-force protection, including lockout thresholds, identifier
 normalisation, expiration, counter resets, and account/IP isolation.
 
 Authentication audit tests verify successful Django Admin login and logout,
-anonymous logout handling, and newly triggered lockout events. Checks cover
-resolved client IP addresses, keyed identifier fingerprints, lockout duration,
-remaining-time snapshots, UTC deadlines, and suppression of duplicate
-lockout events.
+anonymous logout handling, failed-login events, newly triggered lockouts, and
+repeat-denial events. They cover client IP addresses, protected identifiers,
+lockout duration, UTC deadlines, remaining-time snapshots, and the absence of
+plaintext credentials or duplicate threshold events.
+
+``accounts/tests/test_lockout_responses.py`` verifies HTTP 429 responses,
+recalculated ``Retry-After`` values, cache headers, and separate auditing of
+blocked POST requests. Ordinary GET requests do not generate denial events.
 
 Lockout helper tests also verify database-backed deadline calculation,
 remaining time decreasing across requests, expiry, username/email identity,

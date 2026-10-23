@@ -35,7 +35,9 @@ The repository currently has the following top-level structure:
    │   ├── tests/
    │   │   ├── __init__.py
    │   │   ├── test_admin.py
+   │   │   ├── test_audit.py
    │   │   ├── test_backends.py
+   │   │   ├── test_lockout_responses.py
    │   │   ├── test_lockouts.py
    │   │   ├── test_models.py
    │   │   └── test_validators.py
@@ -44,6 +46,7 @@ The repository currently has the following top-level structure:
    │   ├── apps.py
    │   ├── audit.py
    │   ├── backends.py
+   │   ├── lockout_responses.py
    │   ├── lockouts.py
    │   ├── models.py
    │   ├── validators.py
@@ -226,17 +229,26 @@ during application initialisation.
 ``accounts/audit.py``
 ~~~~~~~~~~~~~~~~~~~~~
 
-Defines signal receivers for successful login, authenticated logout, and
-newly triggered authentication lockouts. Login and logout use Django's
-authentication signals; lockouts use the django-axes signal.
+Defines signal receivers for successful login, failed login, authenticated
+logout, and newly triggered authentication lockouts. Django authentication
+signals report login and logout results; django-axes reports lockouts.
 
 The receivers write structured messages to ``aether.audit``. Login and
 logout events include internal user identifiers and resolved client IP
 addresses. Lockout events include a keyed SHA-256 HMAC fingerprint of the
 normalised identifier, client IP address, failure count, configured duration,
 remaining-time snapshot, and a UTC deadline. No plaintext username or email
-is written to the custom lockout audit message. Anonymous logout events are
-ignored, and subsequent blocked requests are not logged as new lockouts.
+is written to custom failed-login or lockout audit messages. Anonymous logout
+events are ignored; repeat blocked requests are audited separately rather than
+logged as newly triggered lockouts.
+
+``accounts/lockout_responses.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Implements the response callable used by django-axes for HTTP 429. It provides
+an up-to-date ``Retry-After`` header and prevents caching. It records a
+``authentication.lockout_denied`` audit event for repeated blocked POSTs,
+without creating an additional database model or extending the deadline.
 
 ``accounts/views.py``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -267,8 +279,9 @@ Contains automated tests specific to the accounts application, including:
 * lockout expiration, counter resets, and account/IP isolation;
 * asynchronous lockout enforcement;
 * lockout deadline calculation, remaining time, and expiry;
-* login, logout, and lockout audit events, including sensitive-data handling
-  and suppression of repeated lockout events.
+* successful and failed login, logout, and lockout audit events, including
+  sensitive-data handling and separate repeat-denial events;
+* HTTP 429 response headers and recalculated lockout wait times.
 
 
 Core application
@@ -519,15 +532,12 @@ Development and test environments use ``django-ipware`` with
 ``REMOTE_ADDR`` as the only permitted address source.
 
 Production prioritises ``X-Forwarded-For`` over ``REMOTE_ADDR`` and
-currently selects the left-most address from the forwarded header.
-
-This policy assumes that requests reach Django through a trusted ingress
-that controls the forwarded header chain. The actual proxy behaviour
+currently selects the left-most forwarded address. This requires a trusted
+ingress that sanitises incoming forwarded headers; the actual proxy chain
 and trust boundary must be verified before production deployment.
 
 The shared resolver is used by django-axes for authentication lockout
-protection and by the authentication audit handlers for recording
-client IP addresses.
+protection and by the authentication audit handlers for client IP logging.
 
 
 Project entry point

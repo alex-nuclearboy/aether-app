@@ -1,6 +1,7 @@
 """Tests for Aether authentication lockout helpers."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from asgiref.sync import async_to_sync
@@ -10,7 +11,11 @@ from django.test import RequestFactory
 from django.urls import reverse
 from django.utils import timezone
 
-from accounts.lockouts import get_lockout_username
+from accounts.lockouts import (
+    get_lockout_deadline,
+    get_lockout_remaining_seconds,
+    get_lockout_username,
+)
 from accounts.models import User
 
 CLIENT_IP = "192.0.2.10"
@@ -396,3 +401,121 @@ def test_async_authentication_respects_shared_lockout(member):
 
     attempt.refresh_from_db()
     assert attempt.failures_since_start == 3
+
+
+# ---------------------------------------------------------------------------
+# Lockout timing helpers
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_lockout_remaining_time_decreases(client, member):
+    """Recalculate remaining time without extending the deadline."""
+    request = RequestFactory().post(
+        "/admin/login/",
+        REMOTE_ADDR=CLIENT_IP,
+    )
+
+    assert get_lockout_deadline(
+        request, member.username
+    ) is None
+    assert get_lockout_remaining_seconds(
+        request, member.username
+    ) == 0
+
+    for _ in range(3):
+        login_attempt(
+            client, member.username, "wrong-password"
+        )
+
+    attempt = AccessAttempt.objects.get(
+        username=member.username.casefold(),
+        ip_address=CLIENT_IP,
+    )
+
+    deadline = (
+        attempt.attempt_time + timedelta(minutes=15)
+    )
+
+    assert get_lockout_deadline(
+        request, member.email.upper()
+    ) == deadline
+
+    with patch(
+        "accounts.lockouts.timezone.now",
+        return_value=attempt.attempt_time + timedelta(minutes=5),
+    ):
+        assert get_lockout_remaining_seconds(
+            request, member.username
+        ) == 600
+
+    with patch(
+        "accounts.lockouts.timezone.now",
+        return_value=attempt.attempt_time + timedelta(minutes=10),
+    ):
+        assert get_lockout_remaining_seconds(
+            request, member.username
+        ) == 300
+
+    with patch(
+        "accounts.lockouts.timezone.now",
+        return_value=deadline + timedelta(seconds=1),
+    ):
+        assert get_lockout_deadline(
+            request, member.username
+        ) is None
+        assert get_lockout_remaining_seconds(
+            request, member.username
+        ) == 0
+
+    other_request = RequestFactory().post(
+        "/admin/login/",
+        REMOTE_ADDR=OTHER_IP,
+    )
+
+    assert get_lockout_remaining_seconds(
+        other_request, member.username
+    ) == 0
+
+
+def test_lockout_deadline_rejects_empty_identifier(rf):
+    """Return no deadline or remaining time for an empty identifier."""
+    request = rf.post(
+        "/admin/login/",
+        REMOTE_ADDR=CLIENT_IP,
+    )
+
+    assert get_lockout_deadline(request, "") is None
+    assert get_lockout_remaining_seconds(request, "") == 0
+
+
+@pytest.mark.parametrize(
+    "unavailable",
+    ["get_cool_off", "get_client_ip"],
+)
+def test_lockout_deadline_requires_timing_and_ip(rf, unavailable):
+    """Return no deadline without cool-off duration or a client IP."""
+    request = rf.post(
+        "/admin/login/",
+        REMOTE_ADDR=CLIENT_IP,
+    )
+
+    with patch(
+        f"accounts.lockouts.{unavailable}",
+        return_value=None,
+    ):
+        assert get_lockout_deadline(request, "lockout.member") is None
+
+
+def test_lockout_deadline_rejects_empty_normalised_username(rf):
+    """Return no deadline when identifier normalisation fails."""
+    request = rf.post(
+        "/admin/login/",
+        REMOTE_ADDR=CLIENT_IP,
+    )
+
+    with patch(
+        "accounts.lockouts.get_lockout_username",
+        return_value="",
+    ):
+        assert get_lockout_deadline(request, "lockout.member") is None

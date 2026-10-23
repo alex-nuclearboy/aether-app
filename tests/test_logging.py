@@ -86,6 +86,9 @@ def test_development_logging_uses_colour_console(
 
     assert config["handlers"]["console"]["formatter"] == "colour"
     assert config["formatters"]["colour"]["log_colors"] == LOG_COLORS
+    assert config["formatters"]["colour"]["()"] == (
+        "colorlog.ColoredFormatter"
+    )
 
 
 def test_production_logging_uses_plain_console(
@@ -102,6 +105,7 @@ def test_production_logging_uses_plain_console(
     )
 
     assert config["handlers"]["console"]["formatter"] == "plain"
+    assert "()" not in config["formatters"]["plain"]
 
 
 def test_development_logging_creates_rotating_file_handler(

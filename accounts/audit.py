@@ -39,8 +39,10 @@ def identifier_fingerprint(identifier):
 def audit_login_success(*, request, user, **_kwargs):
     """Record a successful authentication event."""
     logger.info(
-        "authentication.login_success user_id=%s client_ip=%s",
+        "authentication.login_success user_id=%s "
+        "identifier_hash=%s client_ip=%s",
         user.pk,
+        identifier_fingerprint(user.username),
         get_client_ip(request),
     )
 
@@ -53,8 +55,10 @@ def audit_logout(*, request, user, **_kwargs):
     """Record an authenticated user's logout."""
     if user is not None:
         logger.info(
-            "authentication.logout user_id=%s client_ip=%s",
+            "authentication.logout user_id=%s "
+            "identifier_hash=%s client_ip=%s",
             user.pk,
+            identifier_fingerprint(user.username),
             get_client_ip(request),
         )
 

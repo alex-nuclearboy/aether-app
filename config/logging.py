@@ -86,7 +86,7 @@ def build_logging_config(
         "plain": {
             "format": (
                 "{asctime} {levelname:<8} "
-                "{name}: {message}"
+                "{name} request_id={request_id}: {message}"
             ),
             "style": "{",
         },
@@ -94,7 +94,7 @@ def build_logging_config(
             "()": "colorlog.ColoredFormatter",
             "format": (
                 "%(log_color)s%(asctime)s %(levelname)-8s "
-                "%(name)s:%(reset)s %(message)s"
+                "%(name)s request_id=%(request_id)s:%(reset)s %(message)s"
             ),
             "log_colors": LOG_COLORS,
         },
@@ -104,6 +104,7 @@ def build_logging_config(
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "colour" if debug else "plain",
+            "filters": ["request_id"],
         },
     }
 
@@ -121,6 +122,7 @@ def build_logging_config(
             "backupCount": 3,
             "encoding": "utf-8",
             "formatter": "plain",
+            "filters": ["request_id"],
         }
 
     application_handlers = (
@@ -132,6 +134,11 @@ def build_logging_config(
     return {
         "version": 1,
         "disable_existing_loggers": False,
+        "filters": {
+            "request_id": {
+                "()": "infrastructure.request_id.RequestIdFilter",
+            },
+        },
         "formatters": formatters,
         "handlers": handlers,
         "root": {
@@ -152,6 +159,11 @@ def build_logging_config(
             "django.db.backends": {
                 "handlers": application_handlers,
                 "level": levels.database,
+                "propagate": False,
+            },
+            "django.server": {
+                "handlers": ["console"],
+                "level": "ERROR",
                 "propagate": False,
             },
             "aether.audit": {

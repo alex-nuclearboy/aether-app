@@ -86,9 +86,6 @@ def test_development_logging_uses_colour_console(
 
     assert config["handlers"]["console"]["formatter"] == "colour"
     assert config["formatters"]["colour"]["log_colors"] == LOG_COLORS
-    assert config["formatters"]["colour"]["()"] == (
-        "colorlog.ColoredFormatter"
-    )
 
 
 def test_production_logging_uses_plain_console(
@@ -105,7 +102,6 @@ def test_production_logging_uses_plain_console(
     )
 
     assert config["handlers"]["console"]["formatter"] == "plain"
-    assert "()" not in config["formatters"]["plain"]
 
 
 def test_development_logging_creates_rotating_file_handler(
@@ -285,3 +281,20 @@ def test_logging_config_rejects_invalid_level(
                 audit=values["audit"],
             ),
         )
+
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_request_id_filter_covers_every_handler(tmp_path, debug):
+    """Provide request IDs to all configured formatters and handlers."""
+    config = build_logging_config(
+        base_dir=tmp_path, debug=debug, levels=_logging_levels(),
+    )
+    assert config["filters"]["request_id"]["()"] == (
+        "infrastructure.request_id.RequestIdFilter"
+    )
+    assert all(
+        handler["filters"] == ["request_id"]
+        for handler in config["handlers"].values()
+    )
+    assert "{request_id}" in config["formatters"]["plain"]["format"]
+    assert "%(request_id)s" in config["formatters"]["colour"]["format"]

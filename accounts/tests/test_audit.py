@@ -42,15 +42,25 @@ def test_admin_login_and_logout_are_audited(client):
 
         assert logout_response.status_code in (200, 302)
 
+    expected_hash = salted_hmac(
+        "aether.authentication.lockout",
+        user.username.casefold(),
+        algorithm="sha256",
+    ).hexdigest()
+
     assert log_info.call_args_list == [
         call(
-            "authentication.login_success user_id=%s client_ip=%s",
+            "authentication.login_success user_id=%s "
+            "identifier_hash=%s client_ip=%s",
             user.pk,
+            expected_hash,
             "192.0.2.10",
         ),
         call(
-            "authentication.logout user_id=%s client_ip=%s",
+            "authentication.logout user_id=%s "
+            "identifier_hash=%s client_ip=%s",
             user.pk,
+            expected_hash,
             "192.0.2.10",
         ),
     ]
@@ -220,3 +230,39 @@ def test_lockout_audit_skips_unavailable_timing(rf, missing):
     ):
         audit_lockout(request=request, username="unknown.member")
     log_warning.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_success_and_failed_login_share_identifier_fingerprint(client):
+    """Verify matching fingerprints for failed and successful logins."""
+    user = User.objects.create_user(
+        username="fingerprint.member",
+        email="fingerprint.member@example.test",
+        password="correct-password",
+        is_staff=True,
+    )
+    url = reverse("admin:login")
+    with patch("accounts.audit.logger.info") as audit_info:
+        failed = client.post(
+            url,
+            {"username": user.email.upper(), "password": "wrong-password"},
+            REMOTE_ADDR="192.0.2.61",
+        )
+        successful = client.post(
+            url,
+            {"username": user.username, "password": "correct-password"},
+            REMOTE_ADDR="192.0.2.61",
+        )
+    assert failed.status_code == 200
+    assert successful.status_code == 302
+    assert audit_info.call_count == 2
+    failure, success = audit_info.call_args_list
+    assert failure.args[0] == (
+        "authentication.login_failed identifier_hash=%s client_ip=%s"
+    )
+    assert success.args[0] == (
+        "authentication.login_success user_id=%s "
+        "identifier_hash=%s client_ip=%s"
+    )
+    assert success.args[1] == user.pk
+    assert failure.args[1] == success.args[2]

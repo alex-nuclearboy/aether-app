@@ -21,8 +21,8 @@ class RequestIdFilter(logging.Filter):
         return True
 
 
-def _finish(request, response):
-    """Attach correlation header and log rate-limited responses."""
+def _finalise_response(request, response):
+    """Attach the request ID and log the HTTP response."""
     response["X-Request-ID"] = request.request_id
 
     if response.status_code >= 500:
@@ -52,7 +52,7 @@ def request_id_middleware(get_response):
             request.request_id = uuid4().hex
             token = current_request_id.set(request.request_id)
             try:
-                return _finish(request, await get_response(request))
+                return _finalise_response(request, await get_response(request))
             finally:
                 current_request_id.reset(token)
 
@@ -62,7 +62,7 @@ def request_id_middleware(get_response):
             request.request_id = uuid4().hex
             token = current_request_id.set(request.request_id)
             try:
-                return _finish(request, get_response(request))
+                return _finalise_response(request, get_response(request))
             finally:
                 current_request_id.reset(token)
 

@@ -171,5 +171,10 @@ def build_logging_config(
                 "level": levels.audit,
                 "propagate": False,
             },
+            "aether.http": {
+                "handlers": application_handlers,
+                "level": "INFO",
+                "propagate": False,
+            },
         },
     }

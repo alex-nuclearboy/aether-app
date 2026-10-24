@@ -6,9 +6,9 @@ from unittest.mock import patch
 
 import pytest
 from asgiref.sync import async_to_sync
+from django.conf import settings
 from django.http import HttpResponse
 from django.urls import reverse
-from django.conf import settings
 
 from accounts.models import User
 from infrastructure.request_id import (
@@ -70,27 +70,37 @@ def test_rate_limit_creates_correlated_http_event(rf):
             lambda _request: HttpResponse(status=429)
         )(rf.post("/admin/login/"))
 
-    assert observed == [
-        (logging.WARNING, response["X-Request-ID"])
-    ]
+    assert observed == [(logging.WARNING, response["X-Request-ID"])]
 
 
-def test_server_error_is_logged_at_error_level(rf):
-    """Log HTTP 5xx responses at ERROR level."""
-    with patch("infrastructure.request_id.http_logger.log") as log:
+@pytest.mark.parametrize(
+    ("status_code", "expected_level"),
+    [
+        (200, logging.INFO),
+        (302, logging.INFO),
+        (404, logging.INFO),
+        (429, logging.WARNING),
+        (500, logging.ERROR),
+    ],
+)
+def test_http_response_logging_levels(
+    rf,
+    status_code,
+    expected_level,
+):
+    """Log HTTP responses at the appropriate severity."""
+    with patch("infrastructure.request_id.http_logger.log") as mock_log:
         response = request_id_middleware(
-            lambda _request: HttpResponse(status=500)
-        )(rf.get("/error/"))
+            lambda _request: HttpResponse(status=status_code)
+        )(rf.get("/test/"))
 
-    assert response.status_code == 500
-    assert response["X-Request-ID"]
-
-    log.assert_called_once_with(
-        logging.ERROR,
+    assert response.status_code == status_code
+    mock_log.assert_called_once_with(
+        expected_level,
         "http.response method=%s path=%s status_code=%s",
         "GET",
-        "/error/",
-        500,
+        "/test/",
+        status_code,
     )
 
 
@@ -136,10 +146,10 @@ def test_admin_lockout_logs_share_response_request_id(client):
 
     handler = CapturingHandler()
     handler.addFilter(RequestIdFilter())
-    audit = logging.getLogger("aether.audit")
-    http = logging.getLogger("aether.http")
-    audit.addHandler(handler)
-    http.addHandler(handler)
+    audit_logger = logging.getLogger("aether.audit")
+    http_logger = logging.getLogger("aether.http")
+    audit_logger.addHandler(handler)
+    http_logger.addHandler(handler)
     try:
         for _ in range(3):
             response = client.post(
@@ -148,23 +158,25 @@ def test_admin_lockout_logs_share_response_request_id(client):
                 REMOTE_ADDR="192.0.2.70",
             )
     finally:
-        audit.removeHandler(handler)
-        http.removeHandler(handler)
+        audit_logger.removeHandler(handler)
+        http_logger.removeHandler(handler)
         handler.close()
     assert response.status_code == 429
     assert response["X-Request-ID"]
-    lockout = [r for r in records if r.getMessage().startswith(
-        "authentication.lockout "
-    )]
-    denied = [
-        r
-        for r in records
-        if r.getMessage().startswith("http.response ")
-        and "status_code=429" in r.getMessage()
+    lockout = [
+        record
+        for record in records
+        if record.getMessage().startswith("authentication.lockout ")
     ]
-    assert len(lockout) == len(denied) == 1
+    rate_limited_responses = [
+        record
+        for record in records
+        if record.getMessage().startswith("http.response ")
+        and "status_code=429" in record.getMessage()
+    ]
+    assert len(lockout) == len(rate_limited_responses) == 1
     assert lockout[0].request_id == response["X-Request-ID"]
-    assert denied[0].request_id == response["X-Request-ID"]
+    assert rate_limited_responses[0].request_id == response["X-Request-ID"]
 
 
 def test_request_id_middleware_precedes_security_middleware():

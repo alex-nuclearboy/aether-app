@@ -270,7 +270,10 @@ CLIENT_IP_META_PRECEDENCE_ORDER = (
     else ("REMOTE_ADDR",)
 )
 
-CLIENT_IP_PROXY_ORDER = "left-most"
+# Development and tests use REMOTE_ADDR only.
+# Production uses the last X-Forwarded-For address appended by Koyeb.
+# The production branch in infrastructure.request handles this explicitly.
+CLIENT_IP_PROXY_ORDER = "right-most"
 CLIENT_IP_PROXY_COUNT = None
 CLIENT_IP_PROXY_TRUSTED_IPS = None
 

@@ -28,7 +28,7 @@ def test_normalise_ip(value, expected):
 @pytest.mark.parametrize("environment", ["development", "test"])
 @override_settings(
     CLIENT_IP_META_PRECEDENCE_ORDER=("REMOTE_ADDR",),
-    CLIENT_IP_PROXY_ORDER="left-most",
+    CLIENT_IP_PROXY_ORDER="right-most",
     CLIENT_IP_PROXY_COUNT=None,
     CLIENT_IP_PROXY_TRUSTED_IPS=None,
 )
@@ -48,7 +48,7 @@ def test_non_production_ignores_forwarded_headers(environment):
 @override_settings(
     ENVIRONMENT="test",
     CLIENT_IP_META_PRECEDENCE_ORDER=("REMOTE_ADDR",),
-    CLIENT_IP_PROXY_ORDER="left-most",
+    CLIENT_IP_PROXY_ORDER="right-most",
     CLIENT_IP_PROXY_COUNT=None,
     CLIENT_IP_PROXY_TRUSTED_IPS=None,
 )
@@ -65,7 +65,7 @@ def test_get_client_ip_handles_invalid_remote_address():
 @override_settings(
     ENVIRONMENT="test",
     CLIENT_IP_META_PRECEDENCE_ORDER=("REMOTE_ADDR",),
-    CLIENT_IP_PROXY_ORDER="left-most",
+    CLIENT_IP_PROXY_ORDER="right-most",
     CLIENT_IP_PROXY_COUNT=None,
     CLIENT_IP_PROXY_TRUSTED_IPS=None,
 )
@@ -175,7 +175,7 @@ def test_production_falls_back_to_remote_addr():
 @override_settings(
     ENVIRONMENT="development",
     CLIENT_IP_META_PRECEDENCE_ORDER=("REMOTE_ADDR",),
-    CLIENT_IP_PROXY_ORDER="left-most",
+    CLIENT_IP_PROXY_ORDER="right-most",
     CLIENT_IP_PROXY_COUNT=None,
     CLIENT_IP_PROXY_TRUSTED_IPS=None,
 )
@@ -200,7 +200,7 @@ def test_get_client_ip_passes_proxy_configuration(monkeypatch):
     assert get_client_ip(request) == "192.0.2.10"
 
     assert captured == {
-        "proxy_order": "left-most",
+        "proxy_order": "right-most",
         "proxy_count": None,
         "proxy_trusted_ips": None,
         "request_header_order": ("REMOTE_ADDR",),

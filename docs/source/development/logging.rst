@@ -81,12 +81,18 @@ logging field for every configured console and file handler. This permits
 messages from django-axes, Aether, and Django loggers produced during the
 same request to be correlated without changing each log call.
 
-The development server may emit its ``django.server`` access entry after the
-middleware context has been cleared, so such access records can contain
-``request_id=-``. Aether records an additional ``aether.http`` warning for
-HTTP 429 responses within the active request context, including method,
-path and status code. This is not a complete access log for all HTTP status
-codes.
+The ``aether.http`` logger records HTTP responses while the request
+context is active. Each record includes the request ID, HTTP method,
+path, and response status code.
+
+The logger is configured independently at ``INFO`` level in all
+environments. Ordinary responses are logged at ``INFO``, HTTP 429
+responses at ``WARNING``, and HTTP 5xx responses at ``ERROR``.
+
+Routine ``django.server`` access messages are suppressed to avoid
+duplicate HTTP records. Django may still emit diagnostic messages
+through ``django.request`` after the middleware context has been
+cleared; these records can contain ``request_id=-``.
 
 A request ID is neither an account identity nor a session identifier. Each
 HTTP request receives a different ID; distributed tracing, a persistent

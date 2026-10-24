@@ -164,11 +164,6 @@ in request-scoped server logs through the shared logging filter. They connect
 messages from the same HTTP request but are not evidence of authenticated
 identity. See :doc:`../development/logging` for request correlation.
 
-Request correlation is handled independently of user identity through
-server-generated ``X-Request-ID`` values and a request-scoped logging filter.
-Records from one HTTP request can therefore be linked without treating the
-request ID as a user or account identifier. See :doc:`../development/logging`.
-
 Custom authentication audit events do not expose plaintext usernames,
 email addresses, passwords, or submitted credentials.
 
@@ -211,5 +206,3 @@ Django Admin uses the protected authentication flow.
 
 Application-specific login and logout views, forms, URLs, and templates
 have not yet been introduced.
-
-A dedicated lockout status page has not yet been implemented.

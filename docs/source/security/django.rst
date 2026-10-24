@@ -74,15 +74,21 @@ Client IP resolution
 
 Aether uses a shared client IP resolver in ``infrastructure.request``.
 
-Development and test environments use ``REMOTE_ADDR`` and do not trust
-client-supplied forwarding headers.
+Development and test environments use ``REMOTE_ADDR`` through
+``django-ipware`` and ignore forwarded headers.
 
-Production prioritises ``X-Forwarded-For`` over ``REMOTE_ADDR`` and
-currently uses the left-most address selected by the shared resolver.
+Production prioritises ``X-Forwarded-For`` over ``REMOTE_ADDR``.
+The resolver explicitly selects the last forwarded address, following
+the documented behaviour of the Koyeb ingress. If the header is absent,
+it falls back to ``REMOTE_ADDR``.
 
-This policy assumes that the trusted ingress controls the forwarded
-header chain. The actual proxy behaviour and header trust boundary
-must be verified before production deployment.
+The production selection is implemented directly in
+``infrastructure.request``, independently of the django-ipware
+``CLIENT_IP_PROXY_ORDER`` setting.
+
+This policy assumes that requests reach the application through the
+trusted Koyeb ingress. The proxy trust boundary must be verified before
+production deployment and reviewed if additional proxies are introduced.
 
 The resolved address is validated and normalised using Python's
 ``ipaddress`` module. Invalid addresses return ``None``.

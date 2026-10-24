@@ -530,8 +530,10 @@ It is a regular Python package and is not included in ``INSTALLED_APPS``.
 Provides server-generated HTTP request correlation IDs. Hybrid middleware
 supports sync and async requests, stores the active ID in a ``ContextVar``,
 and returns it through the ``X-Request-ID`` response header. A logging filter
-adds it to console and file log records. For HTTP 429 responses the middleware
-also records an ``aether.http`` warning before the request context is cleared.
+adds the request ID to console and file log records. The middleware also
+records HTTP responses through ``aether.http`` before the request context is
+cleared, using ``INFO`` for ordinary responses, ``WARNING`` for HTTP 429, and
+``ERROR`` for HTTP 5xx.
 
 ``infrastructure/request.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -542,16 +544,16 @@ IP addresses.
 ``_normalise_ip()`` validates and canonicalises IPv4 and IPv6 addresses,
 including IPv4-mapped IPv6 addresses. Invalid addresses return ``None``.
 
-``get_client_ip()`` uses the environment-specific proxy policy defined in
-``config/settings.py``.
+``get_client_ip()`` resolves addresses according to the runtime environment.
 
 Development and test environments use ``django-ipware`` with
-``REMOTE_ADDR`` as the only permitted address source.
+``REMOTE_ADDR`` as the only permitted address source. Production explicitly
+selects the last ``X-Forwarded-For`` address, falling back to
+``REMOTE_ADDR`` when the header is absent.
 
-Production prioritises ``X-Forwarded-For`` over ``REMOTE_ADDR`` and
-currently selects the left-most forwarded address. This requires a trusted
-ingress that sanitises incoming forwarded headers; the actual proxy chain
-and trust boundary must be verified before production deployment.
+The production selection does not use the django-ipware
+``CLIENT_IP_PROXY_ORDER`` setting. See :doc:`../security/django`
+for the proxy trust policy and deployment requirements.
 
 The shared resolver is used by django-axes for authentication lockout
 protection and by the authentication audit handlers for client IP logging.

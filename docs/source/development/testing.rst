@@ -46,8 +46,8 @@ The current modules have separate responsibilities:
 
 ``test_request_id.py``
    Tests request ID generation, scope isolation, synchronous and asynchronous
-   middleware execution, logging enrichment, HTTP 429 reporting, and
-   end-to-end authentication event correlation.
+   middleware execution, logging enrichment, HTTP response logging levels,
+   and end-to-end authentication event correlation.
 
 ``test_request.py``
    Tests shared IP address normalisation, environment-specific client IP

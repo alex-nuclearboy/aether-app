@@ -90,7 +90,10 @@ def test_lockout_response_does_not_audit_get_requests(rf):
         ),
         patch("accounts.lockout_responses.logger.warning") as warning,
     ):
-        response = lockout_response(request, HttpResponse(), {"username": "unknown"})
+        response = lockout_response(
+            request,
+            HttpResponse(), {"username": "unknown"},
+        )
     assert response.status_code == 429
     assert response["Retry-After"] == "200"
     warning.assert_not_called()
@@ -106,7 +109,11 @@ def test_lockout_response_without_active_deadline(rf):
         ),
         patch("accounts.lockout_responses.logger.warning") as warning,
     ):
-        response = lockout_response(request, HttpResponse(), {"username": None})
+        response = lockout_response(
+            request,
+            HttpResponse(),
+            {"username": None},
+        )
     assert response.status_code == 429
     assert "Retry-After" not in response
     warning.assert_not_called()

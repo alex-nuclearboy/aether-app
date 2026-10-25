@@ -173,6 +173,10 @@ def test_development_loggers_use_console_and_file(
         "console",
         "file",
     ]
+    assert loggers["aether.http"]["handlers"] == [
+        "console",
+        "file",
+    ]
 
 
 def test_production_loggers_use_console_only(
@@ -194,6 +198,7 @@ def test_production_loggers_use_console_only(
     assert loggers["django"]["handlers"] == ["console"]
     assert loggers["django.db.backends"]["handlers"] == ["console"]
     assert loggers["aether.audit"]["handlers"] == ["console"]
+    assert loggers["aether.http"]["handlers"] == ["console"]
 
 
 def test_logging_levels_are_applied(
@@ -219,7 +224,9 @@ def test_logging_levels_are_applied(
         config["loggers"]["django.db.backends"]["level"]
         == "CRITICAL"
     )
+    assert config["loggers"]["django.server"]["level"] == "ERROR"
     assert config["loggers"]["aether.audit"]["level"] == "WARNING"
+    assert config["loggers"]["aether.http"]["level"] == "INFO"
 
 
 def test_configured_loggers_do_not_propagate(
@@ -234,9 +241,11 @@ def test_configured_loggers_do_not_propagate(
 
     for logger_name in (
         "aether",
+        "aether.audit",
+        "aether.http",
         "django",
         "django.db.backends",
-        "aether.audit",
+        "django.server",
     ):
         assert config["loggers"][logger_name]["propagate"] is False
 

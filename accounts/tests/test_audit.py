@@ -212,7 +212,10 @@ def test_failed_login_audit_ignores_missing_request_or_identifier(rf):
         audit_login_failed(request=None, credentials={"username": "unknown"})
         audit_login_failed(request=request, credentials={"username": None})
         request.axes_locked_out = True
-        audit_login_failed(request=request, credentials={"username": "unknown"})
+        audit_login_failed(
+            request=request,
+            credentials={"username": "unknown"},
+        )
     log_info.assert_not_called()
 
 

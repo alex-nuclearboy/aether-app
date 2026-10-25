@@ -35,6 +35,9 @@ load-plugins = ["pylint_django"]
 django-settings-module = "config.settings"
 ignore = ["migrations"]
 
+[tool.pylint.format]
+max-line-length = 79
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]

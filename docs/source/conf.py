@@ -1,6 +1,7 @@
 """Sphinx configuration for the Aether documentation."""
 
-# Sphinx configuration variables intentionally follow Sphinx naming conventions.
+# Sphinx configuration variables intentionally follow
+# Sphinx naming conventions.
 # pylint: disable=invalid-name,redefined-builtin
 
 import tomllib

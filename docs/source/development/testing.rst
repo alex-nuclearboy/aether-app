@@ -16,6 +16,7 @@ Project-level tests are stored in the root ``tests/`` package::
 
    tests/
    ├── __init__.py
+   ├── test_authentication_settings.py
    ├── test_database.py
    ├── test_django_entrypoints.py
    ├── test_logging.py
@@ -24,6 +25,9 @@ Project-level tests are stored in the root ``tests/`` package::
    └── test_settings.py
 
 The current modules have separate responsibilities:
+
+``test_authentication_settings.py``
+   Checks application authentication routes and default redirect settings.
 
 ``test_settings.py``
    Tests runtime environment handling, Django security configuration,
@@ -65,10 +69,12 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_admin.py
        ├── test_audit.py
        ├── test_backends.py
+       ├── test_forms.py
        ├── test_lockout_responses.py
        ├── test_lockouts.py
        ├── test_models.py
-       └── test_validators.py
+       ├── test_validators.py
+       └── test_views.py
 
 The accounts tests cover the configured user model, Django administration,
 database-level account identifier constraints, username validation rules,
@@ -77,6 +83,16 @@ inactive-user rejection, timing-attack mitigation, synchronous and
 asynchronous authentication, inherited Django group permissions, and
 brute-force protection, including lockout thresholds, identifier
 normalisation, expiration, counter resets, and account/IP isolation.
+
+``accounts/tests/test_forms.py`` checks that the application form extends
+Django's authentication form, presents the username-or-email label, and
+uses neutral validation text.
+
+``accounts/tests/test_views.py`` verifies the application login and logout
+routes, public login page, shared layout, username/email sign-in, safe
+redirects, CSRF protection, POST-only logout, and session invalidation.
+It also verifies cross-page Axes lockouts, retry timing, and shared audit
+events without reimplementing the existing account backend.
 
 Authentication audit tests verify successful Django Admin login and logout,
 anonymous logout handling, failed-login events, newly triggered lockouts,

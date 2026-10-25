@@ -114,15 +114,44 @@ with ``Cache-Control: no-store``. The response body contains a generic
 message without revealing whether the submitted account exists.
 
 No dedicated lockout status page or browser countdown has been implemented
-yet. Visiting the normal Django Admin login page (GET) is not itself a failed
-authentication attempt; the future lockout page will use the same timing
-helpers to refresh its countdown.
+yet. Visiting either login page (GET) is not itself a failed authentication
+attempt; a future lockout page can use the same timing helpers to refresh
+its countdown.
 
 ``accounts.lockouts.get_lockout_deadline`` determines the absolute deadline
 of an active username/IP lockout from django-axes database records.
 ``accounts.lockouts.get_lockout_remaining_seconds`` returns the current
 non-negative remaining time. A future lockout view can recalculate this value
 on every request, including page refreshes, without extending the lockout.
+
+Application login and logout
+----------------------------
+
+Aether provides its own sign-in page at ``/login/`` and a sign-out endpoint
+at ``/logout/``. Both use Django's session authentication infrastructure.
+The Django Admin login remains available separately at ``/admin/login/``.
+
+``AetherLoginView`` extends Django's ``LoginView`` and uses
+``AetherAuthenticationForm``. The form accepts either a username or an email
+address via Django's standard ``username`` credential and displays one
+neutral error message for invalid credentials. It does not implement
+password verification or authentication separately from the existing backend.
+
+Login POST requests are CSRF-protected. On success, users return to the
+``home`` route by default. Django's standard safe-redirect handling permits
+an internal ``next`` target while rejecting external destinations.
+
+The shared header offers a sign-in link to anonymous visitors and a
+CSRF-protected sign-out form to authenticated users. Django's ``LogoutView``
+accepts POST requests only, invalidates the session, and redirects to
+``home``. The public home page remains accessible without authentication.
+
+Django Admin and the application login share the Axes failure counters,
+15-minute lockouts, HTTP 429 responses, request IDs, and audit signals.
+Authentication forms must not duplicate those mechanisms. Dedicated
+account registration, password reset, and lockout-status pages are not yet
+implemented.
+
 
 Authentication audit logging
 ----------------------------
@@ -199,10 +228,8 @@ not an application-specific access level.
 Implementation scope
 --------------------
 
-The current implementation provides username-or-email authentication
-and brute-force protection through django-axes.
-
-Django Admin uses the protected authentication flow.
-
-Application-specific login and logout views, forms, URLs, and templates
-have not yet been introduced.
+The current implementation provides username-or-email authentication,
+application login and logout, and brute-force protection through django-axes.
+Django Admin and the application use the same protected authentication flow.
+Account registration, password reset, and dedicated lockout-status pages
+remain outside the current scope.

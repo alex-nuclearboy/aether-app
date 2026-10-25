@@ -62,9 +62,9 @@ The current configuration defines the following logger groups.
    logging. It defaults to ``INFO`` in all environments.
 
 ``aether.http``
-   HTTP response logging with an independent ``INFO`` threshold in all
-   environments. See `Request correlation`_ for event severity and
-   correlation behaviour.
+   Records HTTP responses independently at ``INFO`` level in all
+   environments. See `Request correlation`_ for severity and request IDs.
+
 
 Request correlation
 -------------------

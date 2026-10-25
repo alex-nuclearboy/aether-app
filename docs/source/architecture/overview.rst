@@ -29,6 +29,8 @@ The implemented foundation consists of:
 * PostgreSQL-backed brute-force protection through django-axes, with a
   three-failure threshold, a 15-minute lockout, and shared username/email
   failure counters;
+* application sign-in and sign-out using Django's session authentication,
+  a neutral username-or-email form, CSRF protection, and safe redirects;
 * server-generated request IDs for correlating HTTP and application logs;
 * authentication auditing for successful logins, logouts, and lockouts,
   including client IP addresses and protected account identifiers;
@@ -36,7 +38,8 @@ The implemented foundation consists of:
   with UTC deadlines available for future authentication interfaces;
 * a ``core`` Django application providing a public home page with the
   full Aether logo;
-* a shared base template with a fixed header and clickable brand link;
+* a shared base template with a fixed header, clickable brand link,
+  and session-aware sign-in/sign-out controls;
 * global, component-specific, and page-specific CSS, together with
   brand images, favicons, and Google Fonts typography;
 * automated testing through ``pytest`` and ``pytest-django``;

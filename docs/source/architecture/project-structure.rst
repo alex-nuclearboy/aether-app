@@ -37,18 +37,25 @@ The repository currently has the following top-level structure:
    │   │   ├── test_admin.py
    │   │   ├── test_audit.py
    │   │   ├── test_backends.py
+   │   │   ├── test_forms.py
    │   │   ├── test_lockout_responses.py
    │   │   ├── test_lockouts.py
    │   │   ├── test_models.py
-   │   │   └── test_validators.py
+   │   │   ├── test_validators.py
+   │   │   └── test_views.py
+   │   ├── templates/
+   │   │   └── accounts/
+   │   │       └── login.html
    │   ├── __init__.py
    │   ├── admin.py
    │   ├── apps.py
    │   ├── audit.py
    │   ├── backends.py
+   │   ├── forms.py
    │   ├── lockout_responses.py
    │   ├── lockouts.py
    │   ├── models.py
+   │   ├── urls.py
    │   ├── validators.py
    │   └── views.py
    ├── config/
@@ -96,7 +103,8 @@ The repository currently has the following top-level structure:
    │   │   ├── components/
    │   │   │   └── header.css
    │   │   ├── pages/
-   │   │   │   └── home.css
+   │   │   │   ├── home.css
+   │   │   └── login.css
    │   │   └── base.css
    │   ├── favicons/
    │   └── images/
@@ -108,6 +116,7 @@ The repository currently has the following top-level structure:
    │   └── base.html
    ├── tests/
    │   ├── __init__.py
+   │   ├── test_authentication_settings.py
    │   ├── test_database.py
    │   ├── test_django_entrypoints.py
    │   ├── test_logging.py
@@ -256,11 +265,31 @@ an up-to-date ``Retry-After`` header and prevents caching. It records a
 ``authentication.lockout_denied`` audit event for repeated blocked POSTs,
 without creating an additional database model or extending the deadline.
 
+``accounts/forms.py``
+~~~~~~~~~~~~~~~~~~~~~
+
+Defines ``AetherAuthenticationForm``, extending Django's standard
+``AuthenticationForm`` with a username-or-email label and neutral errors.
+Password verification remains in the existing authentication backend.
+
 ``accounts/views.py``
 ~~~~~~~~~~~~~~~~~~~~~
 
-Reserved for account-related views. Authentication views have not yet been
-implemented.
+Defines ``AetherLoginView``, extending Django's session ``LoginView``.
+It uses the accounts login template and the application authentication form.
+
+``accounts/urls.py``
+~~~~~~~~~~~~~~~~~~~~
+
+Registers application login at ``/login/`` and POST-only session logout at
+``/logout/``. The project URL configuration includes these routes while
+keeping Django Admin authentication independent.
+
+``accounts/templates/accounts/login.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the sign-in form, Django CSRF token, neutral validation messages,
+and a safe ``next`` field. It extends the shared Aether base template.
 
 ``accounts/migrations/``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -287,7 +316,9 @@ Contains automated tests specific to the accounts application, including:
 * lockout deadline calculation, remaining time, and expiry;
 * successful and failed login, logout, and lockout audit events, including
   sensitive-data handling and separate repeat-denial events;
-* HTTP 429 response headers and recalculated lockout wait times.
+* HTTP 429 response headers and recalculated lockout wait times;
+* application login form, CSRF, safe redirects, and POST-only logout;
+* shared session, Axes, and audit behaviour across Admin and application.
 
 
 Core application
@@ -364,8 +395,9 @@ fixed header and provides a ``page_styles`` block for page-specific CSS.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Defines the fixed application header. The compact Aether logo and application
-name form a single link to the home page. Navigation menus and a sidebar are
-not yet implemented.
+name form a single link to the home page. Anonymous visitors see a sign-in
+link; authenticated users see a POST-only, CSRF-protected sign-out form.
+A sidebar and additional navigation menus are not yet implemented.
 
 ``static/css/base.css``
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -376,13 +408,19 @@ page and main content area.
 ``static/css/components/header.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Contains the fixed header layout and brand-link styles.
+Contains the fixed header layout, brand-link styles, and account controls.
 
 ``static/css/pages/home.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Centres the full-size Aether logo within the home page's main content area.
 It is included by the home page template rather than by every page.
+
+``static/css/pages/login.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the application login form layout, field styling, validation
+messages, and keyboard focus indicators. It is loaded only on the login page.
 
 ``static/images/``
 ~~~~~~~~~~~~~~~~~~~
@@ -397,7 +435,7 @@ Contains browser favicons, the Apple touch icon, and the web application
 manifest. These assets are referenced from the shared base template.
 
 The interface currently loads Inter through Google Fonts. It has no footer or
-responsive layout implementation at this stage.
+responsive sidebar layout implementation at this stage.
 
 
 Django project configuration
@@ -730,8 +768,8 @@ The current package contains:
 
 ``tests/test_request_id.py``
    Verifies request ID generation, uniqueness, context isolation and cleanup,
-   synchronous and asynchronous middleware, HTTP response logging levels,
-   and authentication audit correlation.
+   sync and async middleware support, rate-limited HTTP reporting, and
+   authentication audit correlation.
 
 ``tests/test_request.py``
    Tests shared IP address normalisation, client IP resolution in development

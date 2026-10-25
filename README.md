@@ -131,9 +131,12 @@ uv run python manage.py runserver
 
 The public home page is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). It displays the full Aether logo in the centre of the main content area, beneath a fixed header containing a compact logo and a link to the home page.
 
-The interface does not yet include navigation menus, a sidebar, or authentication controls.
+The interface does not yet include a sidebar or additional navigation menus.
 
 The Django administration site remains available at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
+
+The public application sign-in page is available at
+[http://127.0.0.1:8000/login/](http://127.0.0.1:8000/login/). Enter a username or email address and the account password. Signed-in users can sign out using the button in the shared header. Both application login and Django Admin use the same brute-force protection and authentication audit.
 
 During local development, application logs are colourised in the console and are also written to the rotating `logs/aether.log` file. Logging levels can be controlled through the local environment configuration. See the [logging documentation](docs/source/development/logging.rst) for details.
 

@@ -4,7 +4,7 @@ from django.urls import reverse
 
 
 def test_login_uses_a_dedicated_centred_layout(client):
-    """Show a dedicated sign-in card without the shared navigation."""
+    """Show a dedicated sign-in card with the shared navigation."""
     response = client.get(reverse("login"))
 
     assert response.status_code == 200
@@ -12,7 +12,7 @@ def test_login_uses_a_dedicated_centred_layout(client):
     assert 'class="login__panel"' in content
     assert 'class="login__logo"' in content
     assert "Sign in to Aether" in content
-    assert 'class="site-header"' not in content
+    assert 'class="site-header"' in content
     assert 'css/pages/login.css' in content
     assert 'name="csrfmiddlewaretoken"' in content
     assert 'name="username"' in content

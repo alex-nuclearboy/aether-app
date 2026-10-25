@@ -412,7 +412,7 @@ Provides reusable Django form-field labels, widgets and validation messages.
 Application templates include this partial rather than repeating its markup.
 
 ``static/css/foundations/tokens.css``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Contains the light-only primitive and semantic colour palette, spacing,
 typography, control sizing and the mobile-first responsive viewport rules.
@@ -434,7 +434,7 @@ Defines reusable primary and quiet button variants, including links styled
 as buttons.
 
 ``static/css/components/form-field.css``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Defines shared label, widget and validation styles used by Django forms.
 

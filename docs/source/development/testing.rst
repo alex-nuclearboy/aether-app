@@ -17,6 +17,7 @@ Project-level tests are stored in the root ``tests/`` package::
    tests/
    ├── __init__.py
    ├── test_authentication_settings.py
+   ├── test_frontend.py
    ├── test_database.py
    ├── test_django_entrypoints.py
    ├── test_logging.py
@@ -28,6 +29,10 @@ The current modules have separate responsibilities:
 
 ``test_authentication_settings.py``
    Checks application authentication routes and default redirect settings.
+
+``test_frontend.py``
+   Tests shared form-field markup, reusable static stylesheets, the agreed
+   responsive thresholds, and base-template stylesheet inclusion.
 
 ``test_settings.py``
    Tests runtime environment handling, Django security configuration,

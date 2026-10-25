@@ -40,8 +40,9 @@ The implemented foundation consists of:
   full Aether logo;
 * a shared base template with a fixed header, clickable brand link,
   and session-aware sign-in/sign-out controls;
-* global, component-specific, and page-specific CSS, together with
-  brand images, favicons, and Google Fonts typography;
+* shared Django form-field markup, reusable button and input styling,
+  centralised light-only design tokens, and mobile-first responsive gutters;
+* page-specific CSS, brand images, favicons, and Google Fonts typography;
 * automated testing through ``pytest`` and ``pytest-django``;
 * branch coverage reporting and enforcement through ``pytest-cov``;
 * configurable application logging with coloured development output through

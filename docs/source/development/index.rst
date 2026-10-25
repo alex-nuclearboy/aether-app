@@ -13,3 +13,4 @@ Aether after the initial local setup is complete.
    code-quality
    continuous-integration
    documentation
+   frontend

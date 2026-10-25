@@ -100,17 +100,24 @@ The repository currently has the following top-level structure:
    │   └── request_id.py
    ├── static/
    │   ├── css/
+   │   │   ├── foundations/
+   │   │   │   └── tokens.css
    │   │   ├── components/
+   │   │   │   ├── button.css
+   │   │   │   ├── form-field.css
    │   │   │   └── header.css
    │   │   ├── pages/
    │   │   │   ├── home.css
-   │   │   └── login.css
-   │   │   └── base.css
+   │   │   │   └── login.css
+   │   │   ├── base.css
+   │   │   └── layout.css
    │   ├── favicons/
    │   └── images/
    │       ├── aether_logo.png
    │       └── aether_logo_full.png
    ├── templates/
+   │   ├── components/
+   │   │   └── form_field.html
    │   ├── includes/
    │   │   └── header.html
    │   └── base.html
@@ -119,6 +126,7 @@ The repository currently has the following top-level structure:
    │   ├── test_authentication_settings.py
    │   ├── test_database.py
    │   ├── test_django_entrypoints.py
+   │   ├── test_frontend.py
    │   ├── test_logging.py
    │   ├── test_request.py
    │   ├── test_request_id.py
@@ -387,40 +395,66 @@ Shared interface resources
 ``templates/base.html``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the shared HTML document, including page metadata, favicon links,
-Google Fonts, global stylesheets, and the main content block. It includes the
-fixed header and provides a ``page_styles`` block for page-specific CSS.
+Defines the document, favicon links, global CSS load order, and main content
+block. The shared stylesheets load before the page-specific ``page_styles``
+block.
 
 ``templates/includes/header.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the fixed application header. The compact Aether logo and application
-name form a single link to the home page. Anonymous visitors see a sign-in
-link; authenticated users see a POST-only, CSRF-protected sign-out form.
-A sidebar and additional navigation menus are not yet implemented.
+Provides the common site header and session-aware account navigation. The
+sign-in link and POST-only sign-out button reuse the shared button styles.
+
+``templates/components/form_field.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides reusable Django form-field labels, widgets and validation messages.
+Application templates include this partial rather than repeating its markup.
+
+``static/css/foundations/tokens.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Contains the light-only primitive and semantic colour palette, spacing,
+typography, control sizing and the mobile-first responsive viewport rules.
 
 ``static/css/base.css``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Contains global typography, shared layout variables, and base styles for the
-page and main content area.
+Contains document defaults, box sizing and common keyboard focus indicators.
+
+``static/css/layout.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Controls shared maximum content width and responsive page gutters.
+
+``static/css/components/button.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines reusable primary and quiet button variants, including links styled
+as buttons.
+
+``static/css/components/form-field.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines shared label, widget and validation styles used by Django forms.
 
 ``static/css/components/header.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Contains the fixed header layout, brand-link styles, and account controls.
+Defines the fixed header layout and site branding, using responsive tokens.
 
 ``static/css/pages/home.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Centres the full-size Aether logo within the home page's main content area.
-It is included by the home page template rather than by every page.
+Centres the Aether logo in the available home page content area.
 
 ``static/css/pages/login.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Provides the application login form layout, field styling, validation
-messages, and keyboard focus indicators. It is loaded only on the login page.
+Contains only login-page layout, title and introduction spacing; the fields,
+buttons and errors use the shared component styles.
+
+For the component and viewport rules, see :doc:`../development/frontend`.
 
 ``static/images/``
 ~~~~~~~~~~~~~~~~~~~
@@ -766,10 +800,14 @@ The current package contains:
    colour formatting, local file rotation, logger levels, propagation,
    and request ID filter configuration.
 
+``tests/test_frontend.py``
+   Tests shared form-field markup, reusable CSS files, breakpoint declarations,
+   and base-template stylesheet inclusion.
+
 ``tests/test_request_id.py``
    Verifies request ID generation, uniqueness, context isolation and cleanup,
-   sync and async middleware support, rate-limited HTTP reporting, and
-   authentication audit correlation.
+   synchronous and asynchronous middleware, HTTP response logging levels,
+   and authentication audit correlation.
 
 ``tests/test_request.py``
    Tests shared IP address normalisation, client IP resolution in development

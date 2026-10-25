@@ -10,6 +10,8 @@
     box-sizing: border-box;
     height: var(--header-height);
     padding: 0 24px;
+    display: flex;
+    align-items: center;
 
     background-color: #ffffff;
     border-bottom: 1px solid #e5e7eb;
@@ -41,4 +43,33 @@
 .site-brand:focus-visible {
     outline: 2px solid #2563eb;
     outline-offset: 4px;
+}
+
+.site-navigation {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin-left: auto;
+}
+
+.site-navigation__action {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.site-navigation__action:hover {
+    background-color: #f3f4f6;
+}
+
+.site-navigation__action:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
 }

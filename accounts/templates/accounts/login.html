@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign in | Aether{% endblock title %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/pages/login.css' %}">
+{% endblock page_styles %}
+
+{% block content %}
+<section class="login" aria-labelledby="login-title">
+    <h1 id="login-title" class="login__title">Sign in</h1>
+    <p class="login__description">Sign in to your Aether account.</p>
+
+    <form method="post" action="{% url 'login' %}" class="login__form">
+        {% csrf_token %}
+        {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="login__errors" role="alert">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="login__field">
+            <label for="{{ form.username.id_for_label }}">
+                {{ form.username.label }}
+            </label>
+            {{ form.username }}
+            {{ form.username.errors }}
+        </div>
+
+        <div class="login__field">
+            <label for="{{ form.password.id_for_label }}">
+                {{ form.password.label }}
+            </label>
+            {{ form.password }}
+            {{ form.password.errors }}
+        </div>
+
+        <button class="login__submit" type="submit">Sign in</button>
+    </form>
+</section>
+{% endblock content %}

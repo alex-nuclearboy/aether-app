@@ -11,4 +11,18 @@
         >
         <span class="site-brand__name">Aether</span>
     </a>
+    <nav class="site-navigation" aria-label="Account">
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="site-navigation__action" type="submit">
+                Sign out
+            </button>
+        </form>
+        {% else %}
+        <a class="site-navigation__action" href="{% url 'login' %}">
+            Sign in
+        </a>
+        {% endif %}
+    </nav>
 </header>

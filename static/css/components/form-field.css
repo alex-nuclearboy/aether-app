@@ -1,0 +1,33 @@
+/* Shared Django form fields and validation feedback. */
+
+.form-field {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.form-field__label {
+    font-weight: 500;
+}
+
+.form-field input {
+    display: block;
+    width: 100%;
+    min-height: var(--control-min-height);
+    padding: var(--space-3);
+    border: 1px solid var(--colour-input-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--colour-surface);
+    color: var(--colour-text);
+    font: inherit;
+}
+
+.form-field__errors,
+.form-errors {
+    color: var(--colour-error);
+}
+
+.form-field__errors .errorlist,
+.form-errors .errorlist {
+    margin: 0;
+    padding-left: var(--space-5);
+}

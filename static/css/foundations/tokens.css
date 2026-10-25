@@ -1,0 +1,76 @@
+/* Aether design tokens. Light appearance only. */
+
+:root {
+    /* Primitive colours: retain the current Aether palette. */
+    --colour-white: #ffffff;
+    --colour-neutral-100: #f3f4f6;
+    --colour-neutral-200: #e5e7eb;
+    --colour-neutral-400: #9ca3af;
+    --colour-neutral-600: #4b5563;
+    --colour-neutral-700: #374151;
+    --colour-neutral-800: #1f2937;
+    --colour-blue-600: #2563eb;
+    --colour-red-800: #991b1b;
+
+    /* Semantic colours: components use these, not hex values. */
+    --colour-surface: var(--colour-white);
+    --colour-text: var(--colour-neutral-800);
+    --colour-text-muted: var(--colour-neutral-600);
+    --colour-border: var(--colour-neutral-200);
+    --colour-input-border: var(--colour-neutral-400);
+    --colour-focus: var(--colour-blue-600);
+    --colour-error: var(--colour-red-800);
+    --colour-hover: var(--colour-neutral-100);
+    --colour-action: var(--colour-neutral-800);
+    --colour-action-hover: var(--colour-neutral-700);
+    --colour-action-text: var(--colour-white);
+
+    /* Shared sizing scales. */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 28px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --radius-sm: 6px;
+    --control-min-height: 44px;
+    --font-family-base: "Inter", system-ui, sans-serif;
+
+    /* Mobile first: 0–639px. */
+    --header-height: 56px;
+    --header-icon-size: 28px;
+    --header-brand-font-size: 1.125rem;
+    --header-brand-gap: var(--space-2);
+    --content-gutter: var(--space-4);
+    --content-max-width: 1280px;
+    --page-intro-spacing: var(--space-6);
+}
+
+/* Small tablet: 640–1023px. */
+@media (min-width: 640px) {
+    :root {
+        --header-height: 64px;
+        --header-icon-size: 32px;
+        --header-brand-font-size: 1.25rem;
+        --header-brand-gap: var(--space-3);
+        --content-gutter: var(--space-6);
+        --page-intro-spacing: var(--space-10);
+    }
+}
+
+/* Desktop: 1024–1439px. */
+@media (min-width: 1024px) {
+    :root {
+        --content-gutter: var(--space-8);
+    }
+}
+
+/* Wide desktop: 1440px and above. */
+@media (min-width: 1440px) {
+    :root {
+        --content-gutter: var(--space-10);
+    }
+}

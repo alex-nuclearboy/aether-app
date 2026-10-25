@@ -1,20 +1,19 @@
-/* Global styles for Aether. */
+/* Minimal document defaults; design values live in tokens.css. */
 
-:root {
-    --font-family-base: "Inter", system-ui, sans-serif;
-    --header-height: 64px;
-    --content-padding: 32px;
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 body {
     margin: 0;
     font-family: var(--font-family-base);
-    color: #1f2937;
-    background-color: #ffffff;
+    color: var(--colour-text);
+    background-color: var(--colour-surface);
 }
 
-main {
-    padding: calc(var(--header-height) + var(--content-padding))
-             var(--content-padding)
-             var(--content-padding);
+:where(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid var(--colour-focus);
+    outline-offset: 2px;
 }

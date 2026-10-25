@@ -1,75 +1,55 @@
-/* Fixed application header. */
+/* Fixed header; responsive sizes come from tokens.css. */
 
 .site-header {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    inset: 0 0 auto;
     z-index: 1000;
-
-    box-sizing: border-box;
-    height: var(--header-height);
-    padding: 0 24px;
     display: flex;
     align-items: center;
-
-    background-color: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
+    width: 100%;
+    height: var(--header-height);
+    padding-inline: var(--content-gutter);
+    background-color: var(--colour-surface);
+    border-bottom: 1px solid var(--colour-border);
 }
 
 .site-brand {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    flex-shrink: 1;
+    min-width: 0;
+    gap: var(--header-brand-gap);
     height: 100%;
-
     color: inherit;
     text-decoration: none;
 }
 
 .site-brand__icon {
     display: block;
-    width: 32px;
-    height: 32px;
+    width: var(--header-icon-size);
+    height: var(--header-icon-size);
+    flex-shrink: 0;
     object-fit: contain;
 }
 
 .site-brand__name {
-    font-size: 20px;
+    font-size: var(--header-brand-font-size);
     font-weight: 600;
     letter-spacing: -0.02em;
-}
-
-.site-brand:focus-visible {
-    outline: 2px solid #2563eb;
-    outline-offset: 4px;
 }
 
 .site-navigation {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     height: 100%;
     margin-left: auto;
 }
 
+.site-navigation form {
+    margin: 0;
+}
+
 .site-navigation__action {
-    display: inline-block;
-    padding: 8px 12px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.site-navigation__action:hover {
-    background-color: #f3f4f6;
-}
-
-.site-navigation__action:focus-visible {
-    outline: 2px solid #2563eb;
-    outline-offset: 2px;
+    white-space: nowrap;
 }

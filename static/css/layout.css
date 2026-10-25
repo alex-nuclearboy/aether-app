@@ -1,0 +1,10 @@
+/* Shared page layout and consistent responsive gutters. */
+
+#main-content {
+    width: 100%;
+    max-width: var(--content-max-width);
+    margin-inline: auto;
+    padding: calc(var(--header-height) + var(--content-gutter))
+             var(--content-gutter)
+             var(--content-gutter);
+}

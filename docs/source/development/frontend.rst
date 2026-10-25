@@ -88,16 +88,3 @@ shared site header. It retains the base document, shared form-field partial,
 stylesheets, CSRF protection, and Django authentication behaviour. No social
 login, registration, or password-reset links are displayed because these
 features are not implemented.
-
-Status colours and flash messages
----------------------------------
-
-Semantic success, information, warning, and error values are defined in
-``static/css/foundations/tokens.css``. Components consume these values rather
-than duplicating palette literals. Shared ``alert.css`` styles the severity
-classes used by ``templates/components/messages.html``.
-
-Django's messages framework renders one-time feedback after a redirect. The
-application logout adds a success message, displayed once on the destination
-page. The existing form validation errors and HTTP 429 response behaviour
-remain separate from this flash-message mechanism.

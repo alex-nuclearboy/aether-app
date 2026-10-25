@@ -7,29 +7,41 @@
 <link rel="stylesheet" href="{% static 'css/pages/login.css' %}">
 {% endblock page_styles %}
 
+{% block site_header %}{% endblock site_header %}
+
 {% block content %}
 <section class="login" aria-labelledby="login-title">
-    <h1 id="login-title" class="login__title">Sign in</h1>
-    <p class="login__description">Sign in to your Aether account.</p>
+    <a class="login__brand" href="{% url 'home' %}" aria-label="Aether home">
+        <img
+            class="login__logo"
+            src="{% static 'images/aether_logo.png' %}"
+            alt=""
+            width="48"
+            height="48"
+        >
+    </a>
+    <h1 id="login-title" class="login__title">Sign in to Aether</h1>
 
-    <form method="post" action="{% url 'login' %}" class="login__form">
-        {% csrf_token %}
-        {% if next %}
-        <input type="hidden" name="next" value="{{ next }}">
-        {% endif %}
+    <div class="login__panel">
+        <form method="post" action="{% url 'login' %}" class="login__form">
+            {% csrf_token %}
+            {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
 
-        {% if form.non_field_errors %}
-        <div class="alert alert--error" role="alert">
-            {{ form.non_field_errors }}
-        </div>
-        {% endif %}
+            {% if form.non_field_errors %}
+            <div class="alert form-errors" role="alert">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
 
-        {% include "components/form_field.html" with field=form.username only %}
-        {% include "components/form_field.html" with field=form.password only %}
+            {% include "components/form_field.html" with field=form.username only %}
+            {% include "components/form_field.html" with field=form.password only %}
 
-        <button class="button button--primary" type="submit">
-            Sign in
-        </button>
-    </form>
+            <button class="button button--primary login__submit" type="submit">
+                Sign in
+            </button>
+        </form>
+    </div>
 </section>
 {% endblock content %}

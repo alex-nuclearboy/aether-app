@@ -38,3 +38,21 @@
     border-color: var(--colour-info-border);
     color: var(--colour-info);
 }
+
+/* Compact inline validation feedback, separate from page flash messages. */
+.alert--form {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.alert__icon {
+    display: block;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+}

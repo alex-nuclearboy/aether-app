@@ -51,14 +51,18 @@
     <link rel="stylesheet" href="{% static 'css/components/button.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/form-field.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/alert.css' %}">
 
     <!-- Page-specific styles -->
     {% block page_styles %}{% endblock page_styles %}
 </head>
 <body>
+    {% block site_header %}
     {% include "includes/header.html" %}
+    {% endblock site_header %}
 
     <main id="main-content">
+        {% include "components/messages.html" %}
         {% block content %}{% endblock content %}
     </main>
 </body>

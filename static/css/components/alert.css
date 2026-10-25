@@ -1,0 +1,40 @@
+/* Semantic flash messages from Django's messages framework. */
+
+.flash-messages {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+}
+
+.alert {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid;
+    border-radius: var(--radius-sm);
+    background: var(--colour-info-surface);
+    border-color: var(--colour-info-border);
+    color: var(--colour-info);
+}
+
+.alert--success {
+    background: var(--colour-success-surface);
+    border-color: var(--colour-success-border);
+    color: var(--colour-success);
+}
+
+.alert--error {
+    background: var(--colour-error-surface);
+    border-color: var(--colour-error-border);
+    color: var(--colour-error);
+}
+
+.alert--warning {
+    background: var(--colour-warning-surface);
+    border-color: var(--colour-warning-border);
+    color: var(--colour-warning);
+}
+
+.alert--info {
+    background: var(--colour-info-surface);
+    border-color: var(--colour-info-border);
+    color: var(--colour-info);
+}

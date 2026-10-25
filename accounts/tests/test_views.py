@@ -82,6 +82,16 @@ def test_login_accepts_username_or_email(client, member, identifier):
     assert response["X-Request-ID"]
     assert str(client.session[SESSION_KEY]) == str(member.pk)
 
+    first = client.get(reverse("home"))
+
+    assert first.status_code == 200
+    assert b"You have signed in successfully." in first.content
+    assert b"alert--success" in first.content
+
+    second = client.get(reverse("home"))
+
+    assert b"You have signed in successfully." not in second.content
+
 
 @pytest.mark.django_db
 def test_login_shows_neutral_validation_error(client, member):
@@ -96,6 +106,13 @@ def test_login_shows_neutral_validation_error(client, member):
     assert b"Please enter a valid username or email" in response.content
     assert b"case-sensitive" not in response.content
     assert SESSION_KEY not in client.session
+
+    assert b"alert--error" in response.content
+    assert b"You have signed in successfully." not in response.content
+
+    home_response = client.get(reverse("home"))
+
+    assert b"You have signed in successfully." not in home_response.content
 
 
 @pytest.mark.django_db

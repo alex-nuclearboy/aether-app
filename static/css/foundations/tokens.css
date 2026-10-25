@@ -11,15 +11,38 @@
     --colour-neutral-800: #1f2937;
     --colour-blue-600: #2563eb;
     --colour-red-800: #991b1b;
+    --colour-red-100: #fef2f2;
+    --colour-red-200: #fecaca;
+    --colour-green-800: #166534;
+    --colour-green-100: #f0fdf4;
+    --colour-green-200: #bbf7d0;
+    --colour-amber-800: #92400e;
+    --colour-amber-100: #fffbeb;
+    --colour-amber-200: #fde68a;
+    --colour-blue-800: #1e40af;
+    --colour-blue-100: #eff6ff;
+    --colour-blue-200: #bfdbfe;
 
     /* Semantic colours: components use these, not hex values. */
     --colour-surface: var(--colour-white);
+    --colour-panel: var(--colour-neutral-100);
     --colour-text: var(--colour-neutral-800);
     --colour-text-muted: var(--colour-neutral-600);
     --colour-border: var(--colour-neutral-200);
     --colour-input-border: var(--colour-neutral-400);
     --colour-focus: var(--colour-blue-600);
     --colour-error: var(--colour-red-800);
+    --colour-success: var(--colour-green-800);
+    --colour-success-surface: var(--colour-green-100);
+    --colour-success-border: var(--colour-green-200);
+    --colour-error-surface: var(--colour-red-100);
+    --colour-error-border: var(--colour-red-200);
+    --colour-warning: var(--colour-amber-800);
+    --colour-warning-surface: var(--colour-amber-100);
+    --colour-warning-border: var(--colour-amber-200);
+    --colour-info: var(--colour-blue-800);
+    --colour-info-surface: var(--colour-blue-100);
+    --colour-info-border: var(--colour-blue-200);
     --colour-hover: var(--colour-neutral-100);
     --colour-action: var(--colour-neutral-800);
     --colour-action-hover: var(--colour-neutral-700);

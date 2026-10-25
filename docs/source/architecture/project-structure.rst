@@ -730,8 +730,8 @@ The current package contains:
 
 ``tests/test_request_id.py``
    Verifies request ID generation, uniqueness, context isolation and cleanup,
-   sync and async middleware support, rate-limited HTTP reporting, and
-   authentication audit correlation.
+   synchronous and asynchronous middleware, HTTP response logging levels,
+   and authentication audit correlation.
 
 ``tests/test_request.py``
    Tests shared IP address normalisation, client IP resolution in development

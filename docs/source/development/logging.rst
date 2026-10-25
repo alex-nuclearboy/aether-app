@@ -61,6 +61,10 @@ The current configuration defines the following logger groups.
    Records security-relevant audit events independently of general application
    logging. It defaults to ``INFO`` in all environments.
 
+``aether.http``
+   HTTP response logging with an independent ``INFO`` threshold in all
+   environments. See `Request correlation`_ for event severity and
+   correlation behaviour.
 
 Request correlation
 -------------------

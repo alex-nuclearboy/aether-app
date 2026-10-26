@@ -21,13 +21,11 @@
     font: inherit;
 }
 
-.form-field__errors,
-.form-errors {
+.form-field__errors {
     color: var(--colour-error);
 }
 
-.form-field__errors .errorlist,
-.form-errors .errorlist {
+.form-field__errors .errorlist {
     margin: 0;
     padding-left: var(--space-5);
 }

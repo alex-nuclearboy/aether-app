@@ -83,8 +83,12 @@ JavaScript theme switch, or additional palette is implemented at this stage.
 Login layout
 ------------
 
-The application sign-in page uses a dedicated, centred layout without the
-shared site header. It retains the base document, shared form-field partial,
-stylesheets, CSRF protection, and Django authentication behaviour. No social
-login, registration, or password-reset links are displayed because these
-features are not implemented.
+The application sign-in page uses a dedicated, centred layout within
+the shared base template. The fixed site header remains visible.
+
+The page includes its own logo, a sign-in panel, reusable form fields,
+and compact validation feedback. Authentication uses Django's standard
+session mechanism and CSRF protection.
+
+Social login, registration, and password-reset links are not displayed
+because these features are not implemented.

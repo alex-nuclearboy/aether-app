@@ -138,18 +138,24 @@ neutral error message for invalid credentials. It does not implement
 password verification or authentication separately from the existing backend.
 
 Login POST requests are CSRF-protected. On success, users return to the
-``home`` route by default. Django's standard safe-redirect handling permits
-an internal ``next`` target while rejecting external destinations.
+``home`` route by default. Django's standard safe-redirect handling
+permits an internal ``next`` target while rejecting external destinations.
 
-The shared header offers a sign-in link to anonymous visitors and a
-CSRF-protected sign-out form to authenticated users. Django's ``LogoutView``
-accepts POST requests only, invalidates the session, and redirects to
-``home``. The public home page remains accessible without authentication.
+``AetherLoginView`` creates a one-time Django success message after
+successful authentication. Invalid credentials produce neutral
+validation feedback within the login form.
+
+The shared fixed header offers a sign-in link to anonymous visitors and
+a CSRF-protected sign-out form to authenticated users.
+``AetherLogoutView`` extends Django's ``LogoutView``, accepts POST
+requests only, invalidates the session, redirects to ``home``, and
+creates a one-time success message. The public home page remains
+accessible without authentication.
 
 Django Admin and the application login share the Axes failure counters,
 15-minute lockouts, HTTP 429 responses, request IDs, and audit signals.
-Authentication forms must not duplicate those mechanisms. Dedicated
-account registration, password reset, and lockout-status pages are not yet
+Authentication forms do not duplicate those mechanisms. Dedicated
+account registration, password reset, and lockout-status pages are not
 implemented.
 
 

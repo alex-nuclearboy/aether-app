@@ -40,6 +40,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_forms.py
    │   │   ├── test_lockout_responses.py
    │   │   ├── test_lockouts.py
+   │   │   ├── test_login_ui.py
    │   │   ├── test_models.py
    │   │   ├── test_validators.py
    │   │   └── test_views.py
@@ -103,6 +104,7 @@ The repository currently has the following top-level structure:
    │   │   ├── foundations/
    │   │   │   └── tokens.css
    │   │   ├── components/
+   │   │   │   ├── alert.css
    │   │   │   ├── button.css
    │   │   │   ├── form-field.css
    │   │   │   └── header.css
@@ -117,7 +119,8 @@ The repository currently has the following top-level structure:
    │       └── aether_logo_full.png
    ├── templates/
    │   ├── components/
-   │   │   └── form_field.html
+   │   │   ├── form_field.html
+   │   │   └── messages.html
    │   ├── includes/
    │   │   └── header.html
    │   └── base.html
@@ -128,6 +131,7 @@ The repository currently has the following top-level structure:
    │   ├── test_django_entrypoints.py
    │   ├── test_frontend.py
    │   ├── test_logging.py
+   │   ├── test_messages.py
    │   ├── test_request.py
    │   ├── test_request_id.py
    │   └── test_settings.py
@@ -283,8 +287,12 @@ Password verification remains in the existing authentication backend.
 ``accounts/views.py``
 ~~~~~~~~~~~~~~~~~~~~~
 
-Defines ``AetherLoginView``, extending Django's session ``LoginView``.
-It uses the accounts login template and the application authentication form.
+Defines ``AetherLoginView`` and ``AetherLogoutView``, extending Django's
+standard session login and logout views.
+
+The login view uses ``AetherAuthenticationForm`` and the application login
+template. Both views create one-time success messages after successful
+sign-in or sign-out.
 
 ``accounts/urls.py``
 ~~~~~~~~~~~~~~~~~~~~
@@ -339,9 +347,11 @@ The ``core`` application provides general-purpose pages that do not belong to
 a specific application domain.
 
 The current implementation exposes a public home page at ``/``. The page
-displays the full Aether logo in the shared application layout. A fixed header
-links the compact Aether brand to the home page. Navigation menus, a sidebar,
-and authentication controls have not yet been implemented.
+displays the full Aether logo within the shared application layout.
+
+A fixed header links the compact Aether brand to the home page and
+provides sign-in or sign-out controls depending on authentication status.
+A sidebar and additional navigation menus are not implemented.
 
 ``core/apps.py``
 ~~~~~~~~~~~~~~~~
@@ -395,9 +405,11 @@ Shared interface resources
 ``templates/base.html``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the document, favicon links, global CSS load order, and main content
-block. The shared stylesheets load before the page-specific ``page_styles``
-block.
+Defines the shared HTML document, favicon links, and stylesheet load order.
+Shared stylesheets load before the page-specific ``page_styles`` block.
+
+The template includes the fixed site header on every page, renders
+one-time Django messages, and provides the main content block.
 
 ``templates/includes/header.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -410,6 +422,12 @@ sign-in link and POST-only sign-out button reuse the shared button styles.
 
 Provides reusable Django form-field labels, widgets and validation messages.
 Application templates include this partial rather than repeating its markup.
+
+``templates/components/messages.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Renders one-time Django notifications using the shared semantic alert
+component. Messages are displayed before the page-specific content.
 
 ``static/css/foundations/tokens.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -426,6 +444,12 @@ Contains document defaults, box sizing and common keyboard focus indicators.
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Controls shared maximum content width and responsive page gutters.
+
+``static/css/components/alert.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines shared success, error, warning, and informational alerts,
+including compact validation feedback for authentication forms.
 
 ``static/css/components/button.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -451,16 +475,17 @@ Centres the Aether logo in the available home page content area.
 ``static/css/pages/login.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Contains only login-page layout, title and introduction spacing; the fields,
-buttons and errors use the shared component styles.
+Defines the login-page layout, branding, title, panel, form spacing,
+and submit button width. Shared components provide the form controls,
+buttons, and validation feedback.
 
 For the component and viewport rules, see :doc:`../development/frontend`.
 
 ``static/images/``
 ~~~~~~~~~~~~~~~~~~~
 
-Contains the compact ``aether_logo.png`` used in the header and the full
-``aether_logo_full.png`` displayed on the home page.
+Contains ``aether_logo.png``, used in the shared header and login page,
+and ``aether_logo_full.png``, displayed on the home page.
 
 ``static/favicons/``
 ~~~~~~~~~~~~~~~~~~~~

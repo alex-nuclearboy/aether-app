@@ -1,6 +1,7 @@
 """Validation rules for Aether account identifiers."""
 
 from django.core.validators import RegexValidator
+from django.utils.translation import gettext_lazy as _
 
 
 USERNAME_PATTERN = (
@@ -9,7 +10,7 @@ USERNAME_PATTERN = (
 
 username_validator = RegexValidator(
     regex=USERNAME_PATTERN,
-    message=(
+    message=_(
         "Enter a username 3–32 characters long using only ASCII letters, "
         "digits, periods, underscores, and hyphens. The username must start "
         "and end with a letter or digit."

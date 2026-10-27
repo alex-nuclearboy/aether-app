@@ -81,3 +81,35 @@ def test_email_must_be_unique_case_insensitively() -> None:
             email="account@example.com",
             password="test-password",
         )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("email", ["", " ", "   "])
+def test_database_rejects_blank_email(
+    email: str,
+) -> None:
+    """Reject blank emails even when the manager is bypassed."""
+    with pytest.raises(IntegrityError), transaction.atomic():
+        User.objects.create(
+            username="test-member",
+            email=email,
+        )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("email", ["", " ", "   "])
+def test_database_rejects_blank_email_update(
+    email: str,
+) -> None:
+    """Enforce the email constraint during direct updates."""
+    user = User.objects.create_user(
+        username="test-member",
+        email="member@example.com",
+        password="test-password",
+    )
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        User.objects.filter(pk=user.pk).update(email=email)
+
+    user.refresh_from_db()
+    assert user.email == "member@example.com"

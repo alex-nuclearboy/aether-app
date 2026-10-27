@@ -22,6 +22,34 @@ The username validation rules prohibit ``@`` in usernames.
 Database-level case-insensitive unique constraints prevent ambiguous
 matches.
 
+User creation and email validation
+----------------------------------
+
+Every Aether user account requires an email address. The ``User`` model uses
+``AetherUserManager`` from ``accounts/managers.py`` as its default manager.
+The manager rejects missing, blank, malformed, and excessively long email
+addresses during ``create_user()``, ``create_superuser()``,
+``acreate_user()``, and ``acreate_superuser()``. It uses Django's standard
+``EmailField`` validation and preserves the usual email-domain normalisation.
+
+Django administration uses its standard user forms. The configured add form
+includes a required email field, which is validated before saving. The
+``createsuperuser`` management command also requires an email address.
+
+PostgreSQL enforces email uniqueness without regard to letter case and rejects
+empty or whitespace-only email values. These database constraints apply to
+direct ORM writes, including operations that bypass the user manager. They do
+not validate complete email syntax: ``save()``, ``objects.create()``, and
+``QuerySet.update()`` do not automatically run model field validation.
+
+Model field labels and project-defined validation messages use Django's
+translation mechanisms to support future interface localisation.
+
+These checks validate address format and presence, **not ownership**. Email
+verification, public registration, and activation links have not yet been
+implemented. Creating a user through Django Admin or ``createsuperuser`` does
+not send an email verification message.
+
 Password verification
 ---------------------
 
@@ -97,7 +125,8 @@ Authentication attempts are tracked in PostgreSQL using the Axes
 database handler.
 
 The required database tables are created by the migrations provided
-with django-axes. No additional accounts migrations are required.
+with django-axes. No additional accounts migrations are required for Axes
+lockout tracking; separate accounts migrations manage user-model constraints.
 
 The Axes database records are used for authentication attempt tracking and
 lockout enforcement. Authentication audit events are handled separately
@@ -234,8 +263,9 @@ not an application-specific access level.
 Implementation scope
 --------------------
 
-The current implementation provides username-or-email authentication,
-application login and logout, and brute-force protection through django-axes.
-Django Admin and the application use the same protected authentication flow.
-Account registration, password reset, and dedicated lockout-status pages
+The current implementation provides validated email requirements for account
+creation, username-or-email authentication, application login and logout, and
+brute-force protection through django-axes. Django Admin and the application
+use the same protected authentication flow. Public registration, email
+ownership verification, password reset, and dedicated lockout-status pages
 remain outside the current scope.

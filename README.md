@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, explicit runtime environment classification and production safety validation, a custom Django user model, username-or-email authentication with brute-force protection, authentication audit logging, request correlation IDs, and lockout timing helpers, a branded home page with a fixed header, shared Django templates, and separate global, component, and page-specific CSS, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
+The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, explicit runtime environment classification and production safety validation, a custom Django user model with mandatory validated email for managed user creation and database-level email presence constraints, username-or-email authentication with brute-force protection, authentication audit logging, request correlation IDs, and lockout timing helpers, a branded home page with a fixed header, shared Django templates, and separate global, component, and page-specific CSS, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
 
 ## Requirements
 
@@ -119,7 +119,7 @@ Create a Django superuser for access to the administration site:
 uv run python manage.py createsuperuser
 ```
 
-Django will prompt you for a username, email address, and password. The superuser account is intended for local administration and development; do not reuse production credentials.
+Django will prompt you for a username, email address, and password. Email is required and validated; creating a superuser does not send an email verification message. The superuser account is intended for local administration and development; do not reuse production credentials.
 
 ### Run the application
 

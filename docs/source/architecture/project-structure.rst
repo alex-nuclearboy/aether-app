@@ -41,6 +41,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_lockout_responses.py
    │   │   ├── test_lockouts.py
    │   │   ├── test_login_ui.py
+   │   │   ├── test_managers.py
    │   │   ├── test_models.py
    │   │   ├── test_validators.py
    │   │   └── test_views.py
@@ -55,6 +56,7 @@ The repository currently has the following top-level structure:
    │   ├── forms.py
    │   ├── lockout_responses.py
    │   ├── lockouts.py
+   │   ├── managers.py
    │   ├── models.py
    │   ├── urls.py
    │   ├── validators.py
@@ -167,8 +169,9 @@ letter or digit.
 
 Username and email uniqueness are both enforced case-insensitively at the
 database level while their stored values are not forcibly converted entirely
-to lowercase. Email addresses continue to use Django's standard email-field
-validation.
+to lowercase. Every account requires a non-blank email address. Account creation
+through the custom user manager additionally validates email syntax and length
+using Django's ``EmailField``.
 
 The authentication backend accepts either a username or an email address,
 with case-insensitive matching. It inherits Django's standard password
@@ -187,7 +190,22 @@ protect account identifiers.
 The model retains ``username`` as Django's ``USERNAME_FIELD`` while enforcing
 the project-specific username length and syntax rules. Functional unique
 constraints prevent usernames and email addresses that differ only by letter
-case from representing separate accounts.
+case from representing separate accounts. A PostgreSQL check constraint rejects
+empty and whitespace-only email addresses, including direct ORM writes that
+bypass the custom user manager.
+
+``accounts/managers.py``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines ``AetherUserManager``, extending Django's ``UserManager``. The
+``User`` model exposes it through ``objects``. The manager requires an email
+address and applies Django email-field validation when creating users and
+superusers through synchronous and asynchronous methods. It preserves Django's
+standard account creation and email-domain normalisation behaviour.
+
+The manager does not automatically validate arbitrary ``save()`` operations,
+``QuerySet.create()``, or ``QuerySet.update()`` calls. Form validation and
+database constraints remain separate enforcement layers.
 
 ``accounts/backends.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -319,8 +337,9 @@ account identifier rules and database constraints.
 
 Contains automated tests specific to the accounts application, including:
 
-* user model behaviour and database constraints;
-* Django administration integration;
+* user model behaviour and database constraints, including non-blank email;
+* synchronous and asynchronous user-manager email validation;
+* Django administration integration, including required email on creation;
 * account identifier validation and case-insensitive uniqueness;
 * username-or-email authentication with case-insensitive lookups;
 * password verification, inactive-user rejection, and timing-attack mitigation;

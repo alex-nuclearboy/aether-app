@@ -60,6 +60,10 @@ Create a local superuser::
 
    uv run python manage.py createsuperuser
 
+A username, valid email address, and password are required. This command
+does not send an email verification message. See
+:doc:`../security/authentication` for the account creation policy.
+
 Application
 -----------
 

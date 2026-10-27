@@ -83,6 +83,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_lockout_responses.py
        ├── test_lockouts.py
        ├── test_login_ui.py
+       ├── test_managers.py
        ├── test_models.py
        ├── test_validators.py
        └── test_views.py
@@ -94,6 +95,20 @@ inactive-user rejection, timing-attack mitigation, synchronous and
 asynchronous authentication, inherited Django group permissions, and
 brute-force protection, including lockout thresholds, identifier
 normalisation, expiration, counter resets, and account/IP isolation.
+
+``accounts/tests/test_managers.py`` checks that the custom manager requires
+valid email addresses for synchronous and asynchronous user and superuser
+creation, normalises email domains, and preserves standard password and
+superuser behaviour.
+
+``accounts/tests/test_models.py`` includes PostgreSQL constraint tests for
+empty and whitespace-only email values, including direct ORM creation and
+updates that bypass manager-level validation. Existing tests also cover
+case-insensitive identifier uniqueness.
+
+``accounts/tests/test_admin.py`` verifies that the custom user model is
+registered and that the standard user-add form includes a required email
+field.
 
 ``accounts/tests/test_forms.py`` checks that the application form extends
 Django's authentication form, presents the username-or-email label, and

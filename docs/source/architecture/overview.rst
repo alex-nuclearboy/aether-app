@@ -21,8 +21,9 @@ The implemented foundation consists of:
 * PostgreSQL 18 for local development through Docker Compose;
 * dependency and virtual-environment management through ``uv``;
 * a project-specific Django user model provided by the ``accounts`` application,
-  with explicit username syntax and case-insensitive username and email
-  uniqueness;
+  with explicit username syntax, mandatory validated email on managed account
+  creation, and PostgreSQL constraints for non-blank email addresses and
+  case-insensitive username and email uniqueness;
 * synchronous and asynchronous authentication by username or email with
   case-insensitive lookups, using Django's standard password and permissions
   mechanisms;

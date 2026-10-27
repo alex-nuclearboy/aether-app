@@ -57,6 +57,28 @@ and configure connection lifetime, health checks, and the connection timeout.
 See :doc:`../architecture/configuration` for the configuration model and
 :doc:`../reference/environment-variables` for individual variables.
 
+Account identifier constraints
+------------------------------
+
+The ``accounts.User`` model uses database constraints to protect account
+identifiers. In PostgreSQL, ``Lower("username")`` and ``Lower("email")``
+unique constraints prevent duplicates differing only in letter case.
+
+The ``accounts_user_email_not_blank`` check constraint requires at least one
+non-whitespace character in each email value. It applies even when user
+records are inserted or updated through ORM operations that bypass
+``AetherUserManager``. This is a presence constraint, not complete email
+syntax validation. Django forms and the custom user manager validate syntax
+on their respective creation paths.
+
+Before applying an email-constraint migration to a database containing user
+records, check for existing empty or whitespace-only addresses and resolve
+any violations. Keep historical migrations intact; generate new migrations
+when user-model constraints change.
+
+See :doc:`../security/authentication` for account-creation rules and
+:doc:`testing` for PostgreSQL constraint tests.
+
 Useful commands
 ---------------
 

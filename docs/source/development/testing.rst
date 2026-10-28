@@ -105,7 +105,9 @@ superuser behaviour.
 ``accounts/tests/test_models.py`` includes PostgreSQL constraint tests for
 empty and whitespace-only email values, including direct ORM creation and
 updates that bypass manager-level validation. Existing tests also cover
-case-insensitive identifier uniqueness.
+case-insensitive identifier uniqueness, default-unverified email state,
+persisted verification, case-insensitive matching, changes of email address,
+independence from ``is_active``, and non-editability of the verification field.
 
 ``accounts/tests/test_admin.py`` verifies that the custom user model is
 registered and that the standard user-add form includes a required email

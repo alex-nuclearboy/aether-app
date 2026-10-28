@@ -24,6 +24,8 @@ The implemented foundation consists of:
   with explicit username syntax, mandatory validated email on managed account
   creation, and PostgreSQL constraints for non-blank email addresses and
   case-insensitive username and email uniqueness;
+* persistent per-account email verification state, initially unverified and
+  matched against the current email independently from account activation;
 * synchronous and asynchronous authentication by username or email with
   case-insensitive lookups, using Django's standard password and permissions
   mechanisms;

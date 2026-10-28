@@ -47,9 +47,28 @@ Django Admin fieldset label use Django's translation mechanisms to support
 future interface localisation.
 
 These checks validate address format and presence, **not ownership**. Email
-verification, public registration, and activation links have not yet been
-implemented. Creating a user through Django Admin or ``createsuperuser`` does
-not send an email verification message.
+verification links, public registration, and activation links have not yet
+been implemented. Creating a user through Django Admin or ``createsuperuser``
+does not send an email verification message.
+
+Email verification state
+------------------------
+
+The ``User`` model stores the last explicitly verified address in
+``verified_email``. New accounts have an empty value and are therefore
+unverified. The read-only ``is_email_verified`` property returns ``True``
+only when ``verified_email`` is non-empty and matches the user's current
+``email`` case-insensitively. Changing ``email`` to a different address makes
+this property ``False`` without requiring custom ``save()`` logic.
+
+The verification state is independent of Django's ``is_active`` flag. Marking
+an email as verified does not grant login access or reactivate an inactive
+account. The ``verified_email`` field is excluded from ordinary model forms.
+
+No email is verified automatically by account creation. Token generation,
+confirmation links, sending messages, and profile controls have not yet been
+implemented. The state will be updated only after a future verification
+workflow confirms control of the address.
 
 Password verification
 ---------------------

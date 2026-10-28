@@ -195,6 +195,11 @@ case from representing separate accounts. A PostgreSQL check constraint rejects
 empty and whitespace-only email addresses, including direct ORM writes that
 bypass the custom user manager.
 
+The model also stores the most recently verified email address in the
+non-editable ``verified_email`` field. The ``is_email_verified`` property
+compares that address with the current email without changing account
+activation or authentication permissions. New accounts are unverified.
+
 ``accounts/managers.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -332,7 +337,7 @@ and a safe ``next`` field. It extends the shared Aether base template.
 
 Contains database migrations for the accounts application. The custom user
 model is introduced in ``0001_initial.py``, while later migrations evolve the
-account identifier rules and database constraints.
+account identifier rules, database constraints, and email verification state.
 
 ``accounts/tests/``
 ~~~~~~~~~~~~~~~~~~~

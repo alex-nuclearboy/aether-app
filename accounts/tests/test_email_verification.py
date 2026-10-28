@@ -1,5 +1,7 @@
 """Tests for email verification tokens and the verification service."""
 
+# pylint: disable=redefined-outer-name
+
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -78,7 +80,11 @@ def test_malformed_token_is_rejected(user: User) -> None:
 def test_token_expires(user: User) -> None:
     """Expire tokens according to Django's configured timeout."""
     issued_at = datetime(2026, 10, 28, 12, 0, 0)
-    with patch.object(email_verification_token, "_now", return_value=issued_at):
+    with patch.object(
+        email_verification_token,
+        "_now",
+        return_value=issued_at,
+    ):
         token = email_verification_token.make_token(user)
 
     with patch.object(

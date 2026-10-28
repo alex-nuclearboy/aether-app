@@ -79,6 +79,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_admin.py
        ├── test_audit.py
        ├── test_backends.py
+       ├── test_commands.py
        ├── test_forms.py
        ├── test_lockout_responses.py
        ├── test_lockouts.py
@@ -108,7 +109,12 @@ case-insensitive identifier uniqueness.
 
 ``accounts/tests/test_admin.py`` verifies that the custom user model is
 registered and that the standard user-add form includes a required email
-field.
+field, rejects missing or malformed addresses, and accepts a valid address.
+
+``accounts/tests/test_commands.py`` verifies ``createsuperuser`` in
+non-interactive mode, including successful creation with a valid email,
+rejection of missing or malformed addresses, and preservation of standard
+superuser permissions.
 
 ``accounts/tests/test_forms.py`` checks that the application form extends
 Django's authentication form, presents the username-or-email label, and

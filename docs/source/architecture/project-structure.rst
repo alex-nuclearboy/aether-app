@@ -37,6 +37,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_admin.py
    │   │   ├── test_audit.py
    │   │   ├── test_backends.py
+   │   │   ├── test_commands.py
    │   │   ├── test_forms.py
    │   │   ├── test_lockout_responses.py
    │   │   ├── test_lockouts.py
@@ -257,7 +258,8 @@ character.
 
 Registers the custom user model with Django administration and extends the
 standard user administration configuration so the required email address is
-available when accounts are created.
+available when accounts are created. The additional fieldset uses Django's
+translation machinery and the standard ``Personal info`` label.
 
 ``accounts/apps.py``
 ~~~~~~~~~~~~~~~~~~~~
@@ -339,7 +341,10 @@ Contains automated tests specific to the accounts application, including:
 
 * user model behaviour and database constraints, including non-blank email;
 * synchronous and asynchronous user-manager email validation;
-* Django administration integration, including required email on creation;
+* Django administration integration, including required email and form
+  validation on creation;
+* ``createsuperuser`` command integration, including required email and
+  successful non-interactive account creation;
 * account identifier validation and case-insensitive uniqueness;
 * username-or-email authentication with case-insensitive lookups;
 * password verification, inactive-user rejection, and timing-attack mitigation;

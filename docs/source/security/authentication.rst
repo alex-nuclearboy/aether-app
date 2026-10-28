@@ -42,8 +42,9 @@ direct ORM writes, including operations that bypass the user manager. They do
 not validate complete email syntax: ``save()``, ``objects.create()``, and
 ``QuerySet.update()`` do not automatically run model field validation.
 
-Model field labels and project-defined validation messages use Django's
-translation mechanisms to support future interface localisation.
+Model field labels, project-defined validation messages, and the additional
+Django Admin fieldset label use Django's translation mechanisms to support
+future interface localisation.
 
 These checks validate address format and presence, **not ownership**. Email
 verification, public registration, and activation links have not yet been

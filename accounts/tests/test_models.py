@@ -113,3 +113,87 @@ def test_database_rejects_blank_email_update(
 
     user.refresh_from_db()
     assert user.email == "member@example.com"
+
+
+@pytest.mark.django_db
+def test_new_user_email_is_not_verified() -> None:
+    """New accounts start without a verified email address."""
+    user = User.objects.create_user(
+        username="test-member",
+        email="member@example.com",
+        password="test-password",
+    )
+
+    assert user.verified_email == ""
+    assert user.is_email_verified is False
+
+
+@pytest.mark.django_db
+def test_current_email_can_be_marked_as_verified() -> None:
+    """Persist verification of the user's current email address."""
+    user = User.objects.create_user(
+        username="test-member",
+        email="member@example.com",
+        password="test-password",
+    )
+    user.verified_email = user.email
+    user.save(update_fields=["verified_email"])
+    user.refresh_from_db()
+
+    assert user.verified_email == "member@example.com"
+    assert user.is_email_verified is True
+
+
+@pytest.mark.django_db
+def test_verified_email_comparison_is_case_insensitive() -> None:
+    """Compare verified addresses using the account email policy."""
+    user = User.objects.create_user(
+        username="test-member",
+        email="Member@example.com",
+        password="test-password",
+    )
+    user.verified_email = "member@EXAMPLE.COM"
+
+    assert user.is_email_verified is True
+
+
+@pytest.mark.django_db
+def test_email_change_invalidates_current_verification() -> None:
+    """Do not treat a changed email as verified, even after ORM updates."""
+    user = User.objects.create_user(
+        username="test-member",
+        email="old@example.com",
+        password="test-password",
+    )
+    user.verified_email = user.email
+    user.save(update_fields=["verified_email"])
+
+    User.objects.filter(pk=user.pk).update(email="new@example.com")
+    user.refresh_from_db()
+
+    assert user.verified_email == "old@example.com"
+    assert user.is_email_verified is False
+
+
+@pytest.mark.django_db
+def test_verification_does_not_activate_an_inactive_user() -> None:
+    """Keep email ownership independent of account activation status."""
+    user = User.objects.create_user(
+        username="test-member",
+        email="member@example.com",
+        password="test-password",
+        is_active=False,
+    )
+    user.verified_email = user.email
+    user.save(update_fields=["verified_email"])
+    user.refresh_from_db()
+
+    assert user.is_email_verified is True
+    assert user.is_active is False
+
+
+def test_verified_email_is_not_directly_editable() -> None:
+    """Exclude the verification marker from ordinary model forms."""
+    field = User._meta.get_field("verified_email")
+
+    assert field.editable is False

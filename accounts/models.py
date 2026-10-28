@@ -37,6 +37,22 @@ class User(AbstractUser):
         },
     )
 
+    verified_email = models.EmailField(
+        _("verified email"),
+        blank=True,
+        default="",
+        editable=False,
+    )
+
+    @property
+    def is_email_verified(self) -> bool:
+        """Return whether the current email address is verified."""
+        return bool(
+            self.verified_email
+            and str(self.email).casefold()
+            == str(self.verified_email).casefold()
+        )
+
     class Meta:
         verbose_name = _("user")
         verbose_name_plural = _("users")

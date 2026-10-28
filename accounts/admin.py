@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.utils.translation import gettext_lazy as _
 
 from accounts.models import User
 
@@ -12,7 +13,7 @@ class AetherUserAdmin(UserAdmin):
 
     add_fieldsets = UserAdmin.add_fieldsets + (
         (
-            "Personal information",
+            _("Personal info"),
             {
                 "fields": ("email",),
             },

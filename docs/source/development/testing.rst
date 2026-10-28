@@ -80,6 +80,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_audit.py
        ├── test_backends.py
        ├── test_commands.py
+       ├── test_email_verification.py
        ├── test_forms.py
        ├── test_lockout_responses.py
        ├── test_lockouts.py
@@ -108,6 +109,12 @@ updates that bypass manager-level validation. Existing tests also cover
 case-insensitive identifier uniqueness, default-unverified email state,
 persisted verification, case-insensitive matching, changes of email address,
 independence from ``is_active``, and non-editability of the verification field.
+
+``accounts/tests/test_email_verification.py`` covers token validity,
+expiration, account binding, email and password changes, invalidation
+after verification, malformed tokens, transaction-safe state updates,
+repeated confirmation attempts, unknown users, and independence from
+account activation.
 
 ``accounts/tests/test_admin.py`` verifies that the custom user model is
 registered and that the standard user-add form includes a required email

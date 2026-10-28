@@ -38,6 +38,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_audit.py
    │   │   ├── test_backends.py
    │   │   ├── test_commands.py
+   │   │   ├── test_email_verification.py
    │   │   ├── test_forms.py
    │   │   ├── test_lockout_responses.py
    │   │   ├── test_lockouts.py
@@ -54,11 +55,13 @@ The repository currently has the following top-level structure:
    │   ├── apps.py
    │   ├── audit.py
    │   ├── backends.py
+   │   ├── email_verification.py
    │   ├── forms.py
    │   ├── lockout_responses.py
    │   ├── lockouts.py
    │   ├── managers.py
    │   ├── models.py
+   │   ├── tokens.py
    │   ├── urls.py
    │   ├── validators.py
    │   └── views.py
@@ -212,6 +215,20 @@ standard account creation and email-domain normalisation behaviour.
 The manager does not automatically validate arbitrary ``save()`` operations,
 ``QuerySet.create()``, or ``QuerySet.update()`` calls. Form validation and
 database constraints remain separate enforcement layers.
+
+``accounts/tokens.py``
+~~~~~~~~~~~~~~~~~~~~~~
+
+Defines the email verification token generator using Django's standard
+password-reset token infrastructure. Tokens are bound to the account,
+its current email address, and verification state.
+
+``accounts/email_verification.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the transaction-safe server-side email verification service.
+It validates tokens and persists the verified address without changing
+account activation or permissions.
 
 ``accounts/backends.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~

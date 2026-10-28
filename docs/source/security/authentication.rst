@@ -65,10 +65,34 @@ The verification state is independent of Django's ``is_active`` flag. Marking
 an email as verified does not grant login access or reactivate an inactive
 account. The ``verified_email`` field is excluded from ordinary model forms.
 
-No email is verified automatically by account creation. Token generation,
-confirmation links, sending messages, and profile controls have not yet been
-implemented. The state will be updated only after a future verification
-workflow confirms control of the address.
+No email is verified automatically by account creation. Aether provides
+a dedicated token generator and a server-side verification service. The
+service validates the token and persists the current email address in
+``verified_email`` without modifying ``is_active``.
+
+Email delivery, confirmation URLs, profile controls, and public registration
+have not yet been implemented.
+
+Email verification tokens
+-------------------------
+
+``accounts.tokens.EmailVerificationTokenGenerator`` extends Django's
+``PasswordResetTokenGenerator`` with a separate key salt and a token hash
+bound to the user's primary key, password, current email address, verified
+email address, and token timestamp.
+
+Tokens expire according to Django's ``PASSWORD_RESET_TIMEOUT`` setting.
+Changing the account password or email invalidates an existing token.
+Successful verification changes ``verified_email`` and invalidates the
+previous token.
+
+``accounts.email_verification.verify_email`` validates the token while
+holding a PostgreSQL row lock inside an atomic transaction. Invalid,
+expired, previously consumed, or mismatched tokens do not modify the
+account. Email verification does not activate inactive accounts.
+
+Email sending and HTTP confirmation endpoints will be implemented
+separately.
 
 Password verification
 ---------------------

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Confirm email" %} | Aether{% endblock title %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/pages/email-verification.css' %}">
+{% endblock page_styles %}
+
+{% block content %}
+<section class="email-verification" aria-labelledby="verify-title">
+    <h1 id="verify-title">{% trans "Confirm email" %}</h1>
+    {% if valid_token %}
+    <p>{% trans "Confirm that you want to verify this email address." %}</p>
+    <form method="post" action="{% url 'email_verification_confirm' uidb64=uidb64 token=token %}">
+        {% csrf_token %}
+        <button class="button button--primary" type="submit">
+            {% trans "Confirm email" %}
+        </button>
+    </form>
+    {% else %}
+    <p>{% trans "This verification link is invalid or has expired." %}</p>
+    {% endif %}
+</section>
+{% endblock content %}

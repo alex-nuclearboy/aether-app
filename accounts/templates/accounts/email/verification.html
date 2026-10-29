@@ -1,0 +1,10 @@
+{% load i18n %}<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>{% trans "Verify your Aether email address" %}</title></head>
+<body>
+    <h1>{% trans "Verify your Aether email address" %}</h1>
+    <p>{% trans "To confirm your email address, open this link:" %}</p>
+    <p><a href="{{ verification_url }}">{% trans "Confirm email" %}</a></p>
+    <p>{% trans "If you did not request this message, you can ignore it." %}</p>
+</body>
+</html>

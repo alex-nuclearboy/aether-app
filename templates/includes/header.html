@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 
 <header class="site-header">
     <a class="site-brand" href="{% url 'home' %}">
@@ -13,6 +13,9 @@
     </a>
     <nav class="site-navigation" aria-label="Account">
         {% if user.is_authenticated %}
+        <a class="button button--quiet site-navigation__action" href="{% url 'profile' %}">
+            {% trans "My profile" %}
+        </a>
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
             <button class="button button--quiet site-navigation__action" type="submit">

@@ -44,6 +44,13 @@ class User(AbstractUser):
         editable=False,
     )
 
+    email_verification_sent_at = models.DateTimeField(
+        _("email verification last requested at"),
+        null=True,
+        blank=True,
+        editable=False,
+    )
+
     @property
     def is_email_verified(self) -> bool:
         """Return whether the current email address is verified."""

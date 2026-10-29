@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "My profile" %} | Aether{% endblock title %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/pages/profile.css' %}">
+{% endblock page_styles %}
+
+{% block content %}
+<section class="profile" aria-labelledby="profile-title">
+    <h1 id="profile-title">{% trans "My profile" %}</h1>
+    <div class="profile__panel">
+        <h2>{% trans "Account information" %}</h2>
+        <dl class="profile__details">
+            <div class="profile__field">
+                <dt>{% trans "Username" %}</dt>
+                <dd>{{ user.username }}</dd>
+            </div>
+            <div class="profile__field">
+                <dt>{% trans "Email address" %}</dt>
+                <dd>{{ user.email }}</dd>
+            </div>
+        </dl>
+        <div class="profile__verification">
+            <h2>{% trans "Email verification" %}</h2>
+            {% if user.is_email_verified %}
+            <p class="profile__status profile__status--verified">
+                {% trans "Verified" %}
+            </p>
+            {% else %}
+            <p class="profile__status profile__status--unverified">
+                {% trans "Not verified" %}
+            </p>
+            <p>{% trans "Confirm your email address to verify that it belongs to you." %}</p>
+            <form method="post" action="{% url 'email_verification_request' %}">
+                {% csrf_token %}
+                <button class="button button--primary" type="submit">
+                    {% trans "Send verification email" %}
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock content %}

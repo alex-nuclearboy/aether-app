@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Email verification" %} | Aether{% endblock title %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/pages/email-verification.css' %}">
+{% endblock page_styles %}
+
+{% block content %}
+<section class="email-verification" aria-labelledby="result-title">
+    <h1 id="result-title">{% trans "Email verification" %}</h1>
+    <p>{% trans "You can return to the application." %}</p>
+    {% if user.is_authenticated %}
+    <a class="button button--primary" href="{% url 'profile' %}">{% trans "My profile" %}</a>
+    {% else %}
+    <a class="button button--primary" href="{% url 'login' %}">{% trans "Sign in" %}</a>
+    {% endif %}
+</section>
+{% endblock content %}

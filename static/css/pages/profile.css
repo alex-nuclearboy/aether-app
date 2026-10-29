@@ -1,0 +1,60 @@
+/* Read-only profile; future editing forms remain separate features. */
+
+.profile {
+    width: min(100%, 680px);
+    margin: var(--space-8) auto;
+}
+
+.profile h1 {
+    margin: 0 0 var(--space-6);
+}
+
+.profile__panel {
+    padding: var(--space-6);
+    background: var(--colour-panel);
+    border: 1px solid var(--colour-border);
+    border-radius: var(--radius-sm);
+}
+
+.profile__panel h2 {
+    margin: 0 0 var(--space-4);
+    font-size: 1.125rem;
+}
+
+.profile__details {
+    margin: 0;
+}
+
+.profile__field {
+    padding-block: var(--space-3);
+    overflow-wrap: anywhere;
+}
+
+.profile__field dt {
+    color: var(--colour-text-muted);
+    margin-bottom: var(--space-1);
+}
+
+.profile__field dd {
+    margin: 0;
+    font-weight: 600;
+}
+
+.profile__verification {
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--colour-border);
+}
+
+.profile__status {
+    margin-bottom: var(--space-3);
+    font-weight: 600;
+}
+
+.profile__status--verified {
+    color: var(--colour-success);
+}
+
+.profile__status--unverified {
+    color: var(--colour-warning);
+}

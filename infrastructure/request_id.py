@@ -21,6 +21,14 @@ class RequestIdFilter(logging.Filter):
         return True
 
 
+def _logged_request_path(request):
+    """Never write an email verification token to HTTP access logs."""
+    match = getattr(request, "resolver_match", None)
+    if match is not None and match.url_name == "email_verification_confirm":
+        return "/email/verify/<redacted>/"
+    return request.path
+
+
 def _finalise_response(request, response):
     """Attach the request ID and log the HTTP response."""
     response["X-Request-ID"] = request.request_id
@@ -36,7 +44,7 @@ def _finalise_response(request, response):
         log_level,
         "http.response method=%s path=%s status_code=%s",
         request.method,
-        request.path,
+        _logged_request_path(request),
         response.status_code,
     )
 

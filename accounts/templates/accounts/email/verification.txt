@@ -1,0 +1,6 @@
+{% load i18n %}{% trans "Verify your Aether email address" %}
+
+{% trans "To confirm your email address, open this link:" %}
+{{ verification_url }}
+
+{% trans "If you did not request this message, you can ignore it." %}

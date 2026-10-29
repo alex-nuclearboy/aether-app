@@ -14,5 +14,6 @@ implemented.
 
    django
    authentication
+   profile
    secrets
    dependencies

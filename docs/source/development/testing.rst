@@ -170,6 +170,20 @@ brand, and discovery of global, component-specific, and page-specific
 stylesheets, logo files, and favicon assets.
 
 
+Profile and verification flow
+-----------------------------
+
+``accounts/tests/test_profile_verification.py`` verifies profile access,
+read-only rendering, CSRF and POST-only actions, multipart delivery,
+recipient selection, delivery cooldown and failure recovery, anonymous
+confirmation, token invalidation, stale-address rejection, no-store and
+referrer protections, and token redaction from HTTP logs. Delivery uses
+Django's in-memory test mailer and does not contact the SMTP provider.
+
+Run these integration tests with::
+
+   uv run pytest accounts/tests/test_profile_verification.py -v --no-cov
+
 Running tests
 -------------
 

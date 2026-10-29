@@ -45,17 +45,25 @@ The repository currently has the following top-level structure:
    │   │   ├── test_login_ui.py
    │   │   ├── test_managers.py
    │   │   ├── test_models.py
+   │   │   ├── test_profile_verification.py
    │   │   ├── test_validators.py
    │   │   └── test_views.py
    │   ├── templates/
    │   │   └── accounts/
-   │   │       └── login.html
+   │   │       ├── email/
+   │   │       │   ├── verification.html
+   │   │       │   └── verification.txt
+   │   │       ├── email_verification_confirm.html
+   │   │       ├── email_verification_result.html
+   │   │       ├── login.html
+   │   │       └── profile.html
    │   ├── __init__.py
    │   ├── admin.py
    │   ├── apps.py
    │   ├── audit.py
    │   ├── backends.py
    │   ├── email_verification.py
+   │   ├── emails.py
    │   ├── forms.py
    │   ├── lockout_responses.py
    │   ├── lockouts.py
@@ -115,8 +123,10 @@ The repository currently has the following top-level structure:
    │   │   │   ├── form-field.css
    │   │   │   └── header.css
    │   │   ├── pages/
+   │   │   │   ├── email-verification.css
    │   │   │   ├── home.css
-   │   │   │   └── login.css
+   │   │   │   ├── login.css
+   │   │   │   └── profile.css
    │   │   ├── base.css
    │   │   └── layout.css
    │   ├── favicons/
@@ -203,6 +213,10 @@ non-editable ``verified_email`` field. The ``is_email_verified`` property
 compares that address with the current email without changing account
 activation or authentication permissions. New accounts are unverified.
 
+The non-editable ``email_verification_sent_at`` field records the last
+verification email request for a PostgreSQL-backed delivery cooldown. It does
+not represent ownership verification and is not an account-activation flag.
+
 ``accounts/managers.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -229,6 +243,14 @@ its current email address, and verification state.
 Provides the transaction-safe server-side email verification service.
 It validates tokens and persists the verified address without changing
 account activation or permissions.
+
+``accounts/emails.py``
+~~~~~~~~~~~~~~~~~~~~~~
+
+Generates a confirmation link with the existing token generator and sends
+plain-text and HTML email through Django's configured mailer. The service
+reserves a send slot using a PostgreSQL row lock, applies a 60-second resend
+cooldown, and restores the reservation after failed delivery when appropriate.
 
 ``accounts/backends.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -336,12 +358,21 @@ The login view uses ``AetherAuthenticationForm`` and the application login
 template. Both views create one-time success messages after successful
 sign-in or sign-out.
 
+``ProfileView`` displays the read-only profile to authenticated users.
+``RequestEmailVerificationView`` processes CSRF-protected POST requests for
+verification emails. ``EmailVerificationConfirmView`` provides a public
+confirmation page on GET and invokes the existing verification service only
+on POST. ``EmailVerificationResultView`` displays a token-free result page.
+
 ``accounts/urls.py``
 ~~~~~~~~~~~~~~~~~~~~
 
 Registers application login at ``/login/`` and POST-only session logout at
-``/logout/``. The project URL configuration includes these routes while
-keeping Django Admin authentication independent.
+``/logout/``. It also exposes the authenticated profile at ``/profile/``,
+the POST-only email request at ``/profile/verify-email/``, the public
+confirmation page at ``/email/verify/<uidb64>/<token>/``, and the token-free
+result page at ``/email/verification-result/``. Django Admin authentication
+remains independent.
 
 ``accounts/templates/accounts/login.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -349,12 +380,37 @@ keeping Django Admin authentication independent.
 Provides the sign-in form, Django CSRF token, neutral validation messages,
 and a safe ``next`` field. It extends the shared Aether base template.
 
+``accounts/templates/accounts/profile.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Displays the current username, email address, and verification status without
+editing controls. Unverified users can request a message through a
+CSRF-protected POST form.
+
+``accounts/templates/accounts/email/``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Contains the plain-text and HTML templates for verification emails.
+
+``accounts/templates/accounts/email_verification_confirm.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Displays the confirmation form on GET without changing verification state.
+The confirmation is submitted via POST with a CSRF token.
+
+``accounts/templates/accounts/email_verification_result.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Displays the result after confirmation at a URL that contains no token.
+
 ``accounts/migrations/``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Contains database migrations for the accounts application. The custom user
 model is introduced in ``0001_initial.py``, while later migrations evolve the
-account identifier rules, database constraints, and email verification state.
+account identifier rules, database constraints, email verification state, and
+verification-message cooldown. Migration files are generated with Django's
+``makemigrations`` command.
 
 ``accounts/tests/``
 ~~~~~~~~~~~~~~~~~~~
@@ -380,6 +436,11 @@ Contains automated tests specific to the accounts application, including:
   sensitive-data handling and separate repeat-denial events;
 * HTTP 429 response headers and recalculated lockout wait times;
 * application login form, CSRF, safe redirects, and POST-only logout;
+* profile access, read-only account details, and email verification status;
+* verification email delivery, recipient selection, resend cooldown, and
+  delivery failure recovery;
+* public token confirmation, CSRF-protected POST, token invalidation, and
+  token redaction from application HTTP logs;
 * shared session, Axes, and audit behaviour across Admin and application.
 
 
@@ -397,6 +458,7 @@ displays the full Aether logo within the shared application layout.
 
 A fixed header links the compact Aether brand to the home page and
 provides sign-in or sign-out controls depending on authentication status.
+Authenticated users can also open their profile from the header.
 A sidebar and additional navigation menus are not implemented.
 
 ``core/apps.py``
@@ -461,7 +523,8 @@ one-time Django messages, and provides the main content block.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides the common site header and session-aware account navigation. The
-sign-in link and POST-only sign-out button reuse the shared button styles.
+sign-in link, authenticated profile link, and POST-only sign-out button reuse
+the shared button styles.
 
 ``templates/components/form_field.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -524,6 +587,16 @@ Centres the Aether logo in the available home page content area.
 Defines the login-page layout, branding, title, panel, form spacing,
 and submit button width. Shared components provide the form controls,
 buttons, and validation feedback.
+
+``static/css/pages/profile.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines the read-only account profile layout and verification status styling.
+
+``static/css/pages/email-verification.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines the confirmation form and token-free result page layouts.
 
 For the component and viewport rules, see :doc:`../development/frontend`.
 
@@ -629,8 +702,9 @@ Defines the root URL configuration for the Django project.
 The root URL configuration exposes the Django administration interface at
 ``/admin/`` and includes the ``core`` application routes at ``/``.
 
-Additional application-specific routes will be introduced as their
-corresponding functionality is implemented.
+The root URL configuration includes application routes for authentication,
+the read-only profile, and email verification. Additional routes will be
+introduced alongside their functionality.
 
 ``config/asgi.py``
 ~~~~~~~~~~~~~~~~~~
@@ -676,7 +750,8 @@ and returns it through the ``X-Request-ID`` response header. A logging filter
 adds the request ID to console and file log records. The middleware also
 records HTTP responses through ``aether.http`` before the request context is
 cleared, using ``INFO`` for ordinary responses, ``WARNING`` for HTTP 429, and
-``ERROR`` for HTTP 5xx.
+``ERROR`` for HTTP 5xx. Confirmation URLs containing verification tokens are
+redacted in the application HTTP log.
 
 ``infrastructure/request.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1002,8 +1077,9 @@ The documentation is organised by purpose rather than by Python package:
 
 ``security/``
    Security-related documentation covering Django security configuration,
-   username-or-email authentication, brute-force protection, secret handling,
-   dependency security, and future OAuth concerns.
+   username-or-email authentication, email verification, profile access,
+   brute-force protection, secret handling, dependency security, and future
+   OAuth concerns.
 
 ``reference/``
    Precise technical reference material such as environment variables and

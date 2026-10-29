@@ -47,9 +47,11 @@ Django Admin fieldset label use Django's translation mechanisms to support
 future interface localisation.
 
 These checks validate address format and presence, **not ownership**. Email
-verification links, public registration, and activation links have not yet
-been implemented. Creating a user through Django Admin or ``createsuperuser``
-does not send an email verification message.
+ownership is confirmed separately using a verification link and a
+CSRF-protected confirmation form. Public registration and registration
+activation have not yet been implemented. Creating a user through Django
+Admin or ``createsuperuser`` does not automatically send a verification
+message.
 
 Email verification state
 ------------------------
@@ -70,8 +72,10 @@ a dedicated token generator and a server-side verification service. The
 service validates the token and persists the current email address in
 ``verified_email`` without modifying ``is_active``.
 
-Email delivery, confirmation URLs, profile controls, and public registration
-have not yet been implemented.
+The authenticated profile displays the current email and its verification
+status. Unverified users can request a verification message, and the public
+confirmation endpoint allows verification without signing in. Public
+registration and profile editing have not yet been implemented.
 
 Email verification tokens
 -------------------------
@@ -91,8 +95,9 @@ holding a PostgreSQL row lock inside an atomic transaction. Invalid,
 expired, previously consumed, or mismatched tokens do not modify the
 account. Email verification does not activate inactive accounts.
 
-Email sending and HTTP confirmation endpoints will be implemented
-separately.
+The verification workflow uses this service from the public confirmation
+endpoint. Opening a valid link on GET does not modify the account; a
+CSRF-protected POST performs verification.
 
 Password verification
 ---------------------
@@ -232,6 +237,32 @@ account registration, password reset, and lockout-status pages are not
 implemented.
 
 
+Profile and email confirmation
+------------------------------
+
+The authenticated read-only profile at ``/profile/`` displays the current
+username, email address, and ``is_email_verified`` status. Unverified users
+can request a verification email through a CSRF-protected POST to
+``/profile/verify-email/``. The server always uses the current account email
+address rather than accepting an arbitrary recipient from the form.
+
+The sending service uses the existing token generator and Django's configured
+mailer to send both plain-text and HTML versions of the message. A durable
+``email_verification_sent_at`` timestamp in PostgreSQL enforces a 60-second
+resend cooldown per account. It does not affect the verification state.
+
+The public confirmation page at ``/email/verify/<uidb64>/<token>/`` permits
+GET requests without consuming the token. A CSRF-protected POST invokes the
+existing verification service and redirects to the token-free
+``/email/verification-result/`` page. Confirmation responses prevent caching
+and use ``Referrer-Policy: origin`` to avoid exposing the token in referrer
+paths. Application HTTP logs redact confirmation URL components.
+
+The profile currently has no editing controls. Changing account data or email,
+and registration-specific login restrictions, will be implemented separately.
+See :doc:`profile` for the full flow and security considerations.
+
+
 Authentication audit logging
 ----------------------------
 
@@ -308,8 +339,9 @@ Implementation scope
 --------------------
 
 The current implementation provides validated email requirements for account
-creation, username-or-email authentication, application login and logout, and
+creation, username-or-email authentication, application login and logout,
+read-only profiles, and user-requested email verification, together with
 brute-force protection through django-axes. Django Admin and the application
-use the same protected authentication flow. Public registration, email
-ownership verification, password reset, and dedicated lockout-status pages
-remain outside the current scope.
+use the same protected authentication flow. Public registration, profile
+editing, password reset, and dedicated lockout-status pages remain outside
+the current scope.

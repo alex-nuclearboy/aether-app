@@ -39,6 +39,9 @@ The implemented foundation consists of:
   including client IP addresses and protected account identifiers;
 * database-backed lockout deadline and remaining-time calculations,
   with UTC deadlines available for future authentication interfaces;
+* a read-only authenticated account profile, CSRF-protected email
+  verification requests, multipart confirmation messages, a PostgreSQL-backed
+  send cooldown, and a public POST-only email confirmation action;
 * a ``core`` Django application providing a public home page with the
   full Aether logo;
 * a shared base template with a fixed header, clickable brand link,

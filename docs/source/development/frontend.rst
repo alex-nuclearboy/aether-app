@@ -92,3 +92,16 @@ session mechanism and CSRF protection.
 
 Social login, registration, and password-reset links are not displayed
 because these features are not implemented.
+
+Profile and email verification pages
+------------------------------------
+
+``accounts/templates/accounts/profile.html`` is a read-only authenticated
+page. Its styles are defined in ``static/css/pages/profile.css``. It reuses
+the shared header, buttons, alerts, design tokens, and CSRF support.
+
+The confirmation and result pages use dedicated account templates and
+``static/css/pages/email-verification.css``. Email messages have separate
+plain-text and HTML templates in ``accounts/templates/accounts/email/``.
+Future email-editing forms will be introduced as a separate feature rather
+than added to the current read-only profile.

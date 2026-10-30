@@ -44,6 +44,7 @@ def test_username_rejects_case_insensitive_duplicate():
 
     assert not form.is_valid()
     assert "username" in form.errors
+    assert form.errors.as_data()["username"][0].code == "unique"
 
 
 def test_email_rejects_case_insensitive_duplicate():

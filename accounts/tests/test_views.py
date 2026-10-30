@@ -11,8 +11,10 @@ from django.urls import resolve, reverse
 from django.utils import timezone
 
 from accounts.audit import identifier_fingerprint
+from accounts.email_verification import verify_email
 from accounts.forms import AetherAuthenticationForm
 from accounts.models import User
+from accounts.tokens import email_verification_token
 from accounts.views import AetherLoginView
 
 
@@ -354,3 +356,40 @@ def test_login_and_logout_use_existing_audit(client, member):
     assert audit_log.call_args_list[0].args[2] == (
         audit_log.call_args_list[1].args[2]
     )
+
+
+@pytest.mark.django_db
+def test_login_requires_verified_email_for_public_registration(client, member):
+    """Show neutral login failure until a pending account verifies email."""
+    member.email_verification_required = True
+    member.save(update_fields=["email_verification_required"])
+
+    login_url = reverse("login")
+    credentials = {
+        "username": member.email,
+        "password": "correct-password",
+    }
+
+    response = client.post(
+        login_url,
+        credentials,
+        REMOTE_ADDR="192.0.2.150",
+    )
+
+    assert response.status_code == 200
+    errors = response.context["form"].errors.as_data()
+    assert errors["__all__"][0].code == "invalid_login"
+    assert SESSION_KEY not in client.session
+
+    token = email_verification_token.make_token(member)
+    assert verify_email(member.pk, token)
+
+    response = client.post(
+        login_url,
+        credentials,
+        REMOTE_ADDR="192.0.2.151",
+    )
+
+    assert response.status_code == 302
+    assert response["Location"] == reverse("home")
+    assert str(client.session[SESSION_KEY]) == str(member.pk)

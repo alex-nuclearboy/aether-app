@@ -23,6 +23,16 @@ class UsernameOrEmailBackend(ModelBackend):
 
         return {"username__iexact": identifier}
 
+    def user_can_authenticate(self, user):
+        """Require verified email only for accounts with that access policy."""
+        return (
+            super().user_can_authenticate(user)
+            and (
+                not user.email_verification_required
+                or user.is_email_verified
+            )
+        )
+
     @sensitive_variables("password")
     def authenticate(self, request, username=None, password=None, **kwargs):
         """Authenticate using Django's password verification."""

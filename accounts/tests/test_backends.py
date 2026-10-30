@@ -12,7 +12,9 @@ from django.contrib.auth import (
 from django.contrib.auth.models import Group, Permission
 
 from accounts.backends import UsernameOrEmailBackend
+from accounts.email_verification import verify_email
 from accounts.models import User
+from accounts.tokens import email_verification_token
 
 
 TEST_PASSWORD = "test-password"
@@ -199,3 +201,91 @@ def test_async_missing_credentials_are_rejected() -> None:
     assert async_to_sync(backend.aauthenticate)(
         None, username="aether.member"
     ) is None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "identifier",
+    ["AETHER.MEMBER", "AETHER.MEMBER@EXAMPLE.COM"],
+)
+def test_required_email_verification_blocks_login_until_confirmed(
+    identifier: str,
+) -> None:
+    """Block both login identifiers until the current email is verified."""
+    user = create_test_user()
+    user.email_verification_required = True
+    user.save(update_fields=["email_verification_required"])
+
+    assert user.is_active is True
+    assert user.is_email_verified is False
+    assert authenticate(username=identifier, password=TEST_PASSWORD) is None
+
+    token = email_verification_token.make_token(user)
+    assert verify_email(user.pk, token)
+    user.refresh_from_db()
+
+    assert user.email_verification_required is True
+    assert user.is_email_verified is True
+    assert authenticate(username=identifier, password=TEST_PASSWORD) == user
+
+
+@pytest.mark.django_db
+def test_verified_requirement_rejects_changed_email() -> None:
+    """Reapply the requirement when the verified address changes."""
+    user = create_test_user()
+    user.email_verification_required = True
+    user.verified_email = user.email
+    user.save(update_fields=["email_verification_required", "verified_email"])
+
+    assert authenticate(username=user.username, password=TEST_PASSWORD) == user
+
+    user.email = "changed@example.com"
+    user.save(update_fields=["email"])
+
+    assert not user.is_email_verified
+    assert authenticate(username=user.username, password=TEST_PASSWORD) is None
+    assert authenticate(username=user.email, password=TEST_PASSWORD) is None
+
+
+@pytest.mark.django_db
+def test_verification_does_not_override_inactive_status() -> None:
+    """Keep inactive users blocked even after email verification."""
+    user = create_test_user()
+    user.email_verification_required = True
+    user.is_active = False
+    user.verified_email = user.email
+    user.save(
+        update_fields=[
+            "email_verification_required",
+            "is_active",
+            "verified_email",
+        ]
+    )
+
+    assert user.is_email_verified
+    assert authenticate(username=user.username, password=TEST_PASSWORD) is None
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "identifier",
+    ["aether.member", "aether.member@example.com"],
+)
+def test_async_requires_verified_email(identifier: str) -> None:
+    """Apply the same registration policy to asynchronous authentication."""
+    user = create_test_user()
+    user.email_verification_required = True
+    user.save(update_fields=["email_verification_required"])
+
+    assert async_to_sync(aauthenticate)(
+        username=identifier,
+        password=TEST_PASSWORD,
+    ) is None
+
+    token = email_verification_token.make_token(user)
+    assert verify_email(user.pk, token)
+
+    assert async_to_sync(aauthenticate)(
+        username=identifier,
+        password=TEST_PASSWORD,
+    ) == user

@@ -197,3 +197,31 @@ def test_verified_email_is_not_directly_editable() -> None:
     field = User._meta.get_field("verified_email")
 
     assert field.editable is False
+
+
+@pytest.mark.django_db
+def test_managed_users_do_not_require_verified_email_for_login() -> None:
+    """Preserve login access for existing manager-created accounts."""
+    user = User.objects.create_user(
+        username="regular-member",
+        email="regular@example.com",
+        password="test-password",
+    )
+    admin = User.objects.create_superuser(
+        username="admin-member",
+        email="admin@example.com",
+        password="test-password",
+    )
+
+    assert user.email_verification_required is False
+    assert admin.email_verification_required is False
+    assert user.is_active is True
+    assert user.is_email_verified is False
+
+
+def test_email_verification_requirement_is_not_editable() -> None:
+    """Hide registration access policy from ordinary model forms."""
+    field = User._meta.get_field("email_verification_required")
+
+    assert field.default is False
+    assert field.editable is False

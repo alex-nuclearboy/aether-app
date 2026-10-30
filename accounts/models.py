@@ -44,6 +44,12 @@ class User(AbstractUser):
         editable=False,
     )
 
+    email_verification_required = models.BooleanField(
+        _("email verification required for sign-in"),
+        default=False,
+        editable=False,
+    )
+
     email_verification_sent_at = models.DateTimeField(
         _("email verification last requested at"),
         null=True,

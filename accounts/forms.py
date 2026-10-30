@@ -47,8 +47,9 @@ class AetherRegistrationForm(UserCreationForm):
         """Always require email verification for public registrations."""
         user = super().save(commit=False)
         user.email_verification_required = True
+
         if commit:
             user.save()
-            if hasattr(self, "save_m2m"):
-                self.save_m2m()
+            self.save_m2m()
+
         return user

@@ -560,7 +560,8 @@ use Django template translation tags.
 ``templates/components/form_field.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Provides reusable Django form-field labels, widgets and validation messages.
+Provides reusable Django form-field labels, widgets, help text and
+validation errors. Help and error IDs match Django's built-in ARIA references.
 Application templates include this partial rather than repeating its markup.
 
 ``templates/components/messages.html``
@@ -601,7 +602,8 @@ as buttons.
 ``static/css/components/form-field.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines shared label, widget and validation styles used by Django forms.
+Defines shared label, widget, help-text and validation styles used by Django
+forms.
 
 ``static/css/components/header.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -979,8 +981,8 @@ The current package contains:
    and request ID filter configuration.
 
 ``tests/test_frontend.py``
-   Tests shared form-field markup, reusable CSS files, breakpoint declarations,
-   and base-template stylesheet inclusion.
+   Tests shared form-field markup and its help/error ARIA references, reusable
+   CSS files, breakpoint declarations, and base-template stylesheet inclusion.
 
 ``tests/test_template_translations.py``
    Tests active-language HTML attributes on application pages and verification

@@ -33,8 +33,9 @@ The current modules have separate responsibilities:
    Checks application authentication routes and default redirect settings.
 
 ``test_frontend.py``
-   Tests shared form-field markup, reusable static stylesheets, the agreed
-   responsive thresholds, and base-template stylesheet inclusion.
+   Tests shared form-field markup, help text and validation-error ARIA
+   associations, reusable static stylesheets, the agreed responsive
+   thresholds, and base-template stylesheet inclusion.
 
 ``test_template_translations.py``
    Checks HTML language attributes on rendered pages and verification email

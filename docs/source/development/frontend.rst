@@ -19,6 +19,13 @@ Do not create a template partial for a simple button: use the shared CSS
 component template only when markup is repeated or accessibility requires
 consistent internal structure.
 
+The shared form-field component renders Django's field ``help_text`` and
+validation errors. It uses ``<field ID>_helptext`` and ``<field ID>_error``
+IDs so Django 6.1 can associate the messages with input widgets using its
+built-in ``aria-describedby`` and ``aria-invalid`` attributes. These IDs
+must remain aligned if the component markup changes. Password guidance
+comes from Django's configured validators; do not duplicate its text.
+
 CSS layers
 ----------
 

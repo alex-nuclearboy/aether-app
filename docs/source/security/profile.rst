@@ -29,6 +29,13 @@ Django templates, and ``EmailMultiAlternatives`` sends both alternatives
 through the existing default ``MAILERS`` backend. Local development uses the
 console backend; production uses the configured SMTP provider (Mailjet).
 
+One delivery reservation per account is permitted in any 60-second window.
+The ``User.email_verification_sent_at`` timestamp is stored in PostgreSQL and
+checked under ``select_for_update()`` within an atomic transaction. The row
+lock is released before SMTP delivery, avoiding network I/O inside the
+transaction. A failed send clears only its own reservation, allowing a retry.
+The timestamp is account-level; it does not represent a verified email.
+
 Verification link origin
 ------------------------
 
@@ -47,13 +54,6 @@ both the plain-text and HTML email versions.
 
 Production proxy settings must be validated against the actual hosting
 configuration. They must not be inferred from local development.
-
-One delivery reservation per account is permitted in any 60-second window.
-The ``User.email_verification_sent_at`` timestamp is stored in PostgreSQL and
-checked under ``select_for_update()`` within an atomic transaction. The row
-lock is released before SMTP delivery, avoiding network I/O inside the
-transaction. A failed send clears only its own reservation, allowing a retry.
-The timestamp is account-level; it does not represent a verified email.
 
 Link confirmation
 -----------------

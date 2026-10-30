@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Sign in | Aether{% endblock title %}
+{% block title %}{% trans "Sign in" %} | Aether{% endblock title %}
 
 {% block page_styles %}
 <link rel="stylesheet" href="{% static 'css/pages/login.css' %}">
@@ -9,7 +9,7 @@
 
 {% block content %}
 <section class="login" aria-labelledby="login-title">
-    <a class="login__brand" href="{% url 'home' %}" aria-label="Aether home">
+    <a class="login__brand" href="{% url 'home' %}" aria-label="{% trans 'Aether home' %}">
         <img
             class="login__logo"
             src="{% static 'images/aether_logo.png' %}"
@@ -18,7 +18,7 @@
             height="48"
         >
     </a>
-    <h1 id="login-title" class="login__title">Sign in to Aether</h1>
+    <h1 id="login-title" class="login__title">{% trans "Sign in to Aether" %}</h1>
 
     <div class="login__panel">
         <form method="post" action="{% url 'login' %}" class="login__form">
@@ -46,7 +46,7 @@
             {% endif %}
 
             <button class="button button--primary login__submit" type="submit">
-                Sign in
+                {% trans "Sign in" %}
             </button>
         </form>
     </div>

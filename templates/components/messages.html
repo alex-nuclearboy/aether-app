@@ -1,5 +1,6 @@
+{% load i18n %}
 {% if messages %}
-<div class="flash-messages" aria-label="Notifications">
+<div class="flash-messages" aria-label="{% trans 'Notifications' %}">
     {% for message in messages %}
     <div
         class="alert alert--{{ message.level_tag }}"

@@ -1,5 +1,5 @@
-{% load i18n %}<!DOCTYPE html>
-<html lang="en">
+{% load i18n %}{% get_current_language as CURRENT_LANGUAGE %}<!DOCTYPE html>
+<html lang="{{ CURRENT_LANGUAGE }}">
 <head><meta charset="UTF-8"><title>{% trans "Verify your Aether email address" %}</title></head>
 <body>
     <h1>{% trans "Verify your Aether email address" %}</h1>

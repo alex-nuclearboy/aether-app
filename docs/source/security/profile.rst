@@ -29,6 +29,25 @@ Django templates, and ``EmailMultiAlternatives`` sends both alternatives
 through the existing default ``MAILERS`` backend. Local development uses the
 console backend; production uses the configured SMTP provider (Mailjet).
 
+Verification link origin
+------------------------
+
+Verification URLs are built using ``request.build_absolute_uri()``.
+The generated scheme and host therefore depend on Django's view of the
+incoming HTTP request.
+
+Local development uses HTTP and does not require a public domain.
+Production verification emails must contain the public HTTPS origin
+of the deployed application.
+
+Before enabling production email verification, confirm that the
+deployment proxy preserves the correct public host and that Django
+recognises the original HTTPS request. Verify the resulting URL in
+both the plain-text and HTML email versions.
+
+Production proxy settings must be validated against the actual hosting
+configuration. They must not be inferred from local development.
+
 One delivery reservation per account is permitted in any 60-second window.
 The ``User.email_verification_sent_at`` timestamp is stored in PostgreSQL and
 checked under ``select_for_update()`` within an atomic transaction. The row

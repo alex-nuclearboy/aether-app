@@ -69,6 +69,19 @@ The project therefore does not currently configure
 ``SECURE_PROXY_SSL_HEADER``. Trusting a forwarded protocol header will be
 considered only after the production proxy behaviour has been verified.
 
+Before production deployment, verify the proxy's handling of the
+original request scheme and public host. Configure
+``SECURE_PROXY_SSL_HEADER`` only if the trusted proxy strips untrusted
+incoming protocol headers and sets its own verified values.
+
+Confirm that ``request.is_secure()`` is true for public HTTPS
+requests and that verification emails contain the expected HTTPS
+domain. Also check CSRF validation, allowed hosts, HTTPS redirection,
+and secure cookies under the final deployment configuration.
+
+These checks are required before public registration and production
+email verification are enabled.
+
 Client IP resolution
 --------------------
 

@@ -274,6 +274,12 @@ def test_confirmation_accepts_valid_csrf_origin(member):
         HTTP_ORIGIN="http://testserver",
     )
 
+    assert response.status_code == 302
+    assert response["Location"] == reverse("email_verification_result")
+
+    member.refresh_from_db()
+    assert member.is_email_verified
+
 
 def test_http_logs_redact_verification_tokens(client, member):
     """Keep secret tokens out of Aether's request correlation logs."""

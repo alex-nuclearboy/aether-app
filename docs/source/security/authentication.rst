@@ -53,6 +53,31 @@ activation have not yet been implemented. Creating a user through Django
 Admin or ``createsuperuser`` does not automatically send a verification
 message.
 
+Public registration validation (backend only)
+---------------------------------------------
+
+``AetherRegistrationForm`` extends Django's ``UserCreationForm``. It uses
+Aether's username model validator and the standard Django password validators
+and password-confirmation rules. Django already checks username uniqueness
+case-insensitively; the form also checks email uniqueness with
+``email__iexact`` and preserves email-domain normalisation.
+
+The form saves public registration accounts with
+``email_verification_required=True`` and an initially unverified email.
+``accounts.registration.create_registration_user`` is the supported
+transactional persistence entry point for the future public view. It catches
+only recognised PostgreSQL username/email uniqueness violations that occur
+after successful form validation and raises field-specific
+``ValidationError`` errors (code ``unique``). The future view must attach
+these errors through ``form.add_error(None, error)`` and re-render the form.
+Other database failures must not be presented as duplicate identifiers.
+
+This stage adds validation and account creation logic only; there is still
+no public registration URL, page, verification email trigger, or public
+resend endpoint. Those will be implemented in a later stage using the existing
+email verification service. Standard Django Admin and CLI creation flows are
+unchanged.
+
 Email verification state
 ------------------------
 
@@ -126,8 +151,9 @@ This requirement is persistent: if the current email later becomes
 unverified, login is blocked again until it is confirmed. The future
 email-change service must clear ``verified_email`` when the address changes.
 
-The registration form, public resend flow, and registration rate limits are
-not yet implemented. The current stage adds only the access policy.
+The registration form and transactional creation service are now implemented.
+The public registration view, email delivery trigger, resend flow, and
+registration rate limits are still pending.
 
 Password verification
 ---------------------

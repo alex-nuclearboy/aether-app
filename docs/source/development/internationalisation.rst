@@ -60,6 +60,20 @@ messages, including password policy errors. If customised error presentation
 is needed, preserve ``ValidationError`` codes and parameters so that
 localisation and testing are not tied to English text.
 
+Registration form validation
+----------------------------
+
+``AetherRegistrationForm`` inherits Django's ``UserCreationForm`` so standard
+password messages, confirmation errors, and username validation are handled
+through Django's own translated validation framework. The custom duplicate
+email check and transactional uniqueness-race handler reuse the lazy
+``User.email`` and ``User.username`` model field messages with error code
+``unique``. These errors remain attached to the corresponding form fields.
+
+Test error codes and field placement rather than hard-coded English wording.
+The current English-only interface is unchanged; future Aether translation
+catalogs must include all project-defined account validation messages.
+
 Adding languages later
 ----------------------
 

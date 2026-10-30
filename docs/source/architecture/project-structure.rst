@@ -34,6 +34,7 @@ The repository currently has the following top-level structure:
    │   │   └── ...
    │   ├── tests/
    │   │   ├── __init__.py
+   │   │   ├── registration_helpers.py
    │   │   ├── test_admin.py
    │   │   ├── test_audit.py
    │   │   ├── test_backends.py
@@ -47,6 +48,8 @@ The repository currently has the following top-level structure:
    │   │   ├── test_managers.py
    │   │   ├── test_models.py
    │   │   ├── test_profile_verification.py
+   │   │   ├── test_registration_form.py
+   │   │   ├── test_registration_service.py
    │   │   ├── test_validators.py
    │   │   └── test_views.py
    │   ├── templates/
@@ -70,6 +73,7 @@ The repository currently has the following top-level structure:
    │   ├── lockouts.py
    │   ├── managers.py
    │   ├── models.py
+   │   ├── registration.py
    │   ├── tokens.py
    │   ├── urls.py
    │   ├── validators.py
@@ -356,7 +360,18 @@ without creating an additional database model or extending the deadline.
 
 Defines ``AetherAuthenticationForm``, extending Django's standard
 ``AuthenticationForm`` with a username-or-email label and neutral errors.
-Password verification remains in the existing authentication backend.
+``AetherRegistrationForm`` extends Django's ``UserCreationForm`` to validate
+username, email, and matching passwords through the standard model and
+password validators. The form checks email uniqueness case-insensitively
+and sets the email-verification-required policy before saving.
+
+``accounts/registration.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Creates public-registration accounts transactionally using the validated
+form. On PostgreSQL uniqueness races, maps known constraint names to
+field-specific ``ValidationError`` results without hiding unrelated
+integrity errors. It does not send email or expose a registration endpoint.
 
 ``accounts/views.py``
 ~~~~~~~~~~~~~~~~~~~~~

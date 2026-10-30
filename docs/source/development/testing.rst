@@ -81,6 +81,7 @@ own ``tests/`` package. The accounts application currently uses::
    accounts/
    └── tests/
        ├── __init__.py
+       ├── registration_helpers.py
        ├── test_admin.py
        ├── test_audit.py
        ├── test_backends.py
@@ -94,6 +95,8 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_managers.py
        ├── test_models.py
        ├── test_profile_verification.py
+       ├── test_registration_form.py
+       ├── test_registration_service.py
        ├── test_validators.py
        └── test_views.py
 
@@ -142,6 +145,21 @@ superuser permissions.
 ``accounts/tests/test_forms.py`` checks that the application form extends
 Django's authentication form, presents the username-or-email label, and
 uses neutral validation text.
+
+``accounts/tests/registration_helpers.py`` supplies shared, synthetic
+registration form data to both registration test modules.
+
+``accounts/tests/test_registration_form.py`` checks required fields,
+case-insensitive identifier uniqueness, username syntax, email
+normalisation, Django's standard password validation and confirmation,
+error codes, and the email-verification-required policy on form saves.
+
+``accounts/tests/test_registration_service.py`` checks transactional account
+creation, uniqueness conflicts occurring after successful form validation,
+field-specific errors, rejection of invalid forms, and propagation of
+unrelated database failures. The race tests simulate the interval between
+validation and insertion using PostgreSQL constraints, not concurrency
+scheduling or arbitrary error-string parsing.
 
 ``accounts/tests/test_interface_translations.py`` verifies lazy account
 validation labels and runtime translation of login/logout feedback and

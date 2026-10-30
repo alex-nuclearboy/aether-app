@@ -57,8 +57,9 @@ logs should also be configured not to record these sensitive paths.
 Confirming an email address never changes ``is_active``, permissions, or the
 user's authenticated session. Existing accounts created through Django Admin
 or ``createsuperuser`` may continue to sign in while unverified, as previously
-agreed. Restricting login during future public registration is a separate
-account lifecycle concern and is not implemented here.
+agreed. Accounts with ``email_verification_required=True`` cannot sign in
+until their current email is verified. This policy is enforced in the
+username-or-email backend and is independent of ``is_active``.
 
 Future account changes
 ----------------------
@@ -74,6 +75,7 @@ validation and reauthentication checks; the present read-only profile does
 not anticipate or expose any such form.
 
 The shared email-sending service and the public confirmation endpoint can be
-reused by the future registration workflow. Registration-specific account
-activation or pending-registration state must be designed independently of
-``is_active`` and ``verified_email``.
+reused by the future registration workflow. Public registration will create
+users with ``email_verification_required=True``; no additional activation
+state or change to ``is_active`` is required. The registration UI, resend
+recovery, and public-request rate limits remain future work.

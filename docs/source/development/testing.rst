@@ -100,8 +100,9 @@ own ``tests/`` package. The accounts application currently uses::
 The accounts tests cover the configured user model, Django administration,
 database-level account identifier constraints, username validation rules,
 case-insensitive username and email authentication, password verification,
-inactive-user rejection, timing-attack mitigation, synchronous and
-asynchronous authentication, inherited Django group permissions, and
+inactive-user rejection, verification-required login restrictions,
+timing-attack mitigation, synchronous and asynchronous authentication,
+inherited Django group permissions, and
 brute-force protection, including lockout thresholds, identifier
 normalisation, expiration, counter resets, and account/IP isolation.
 
@@ -115,7 +116,13 @@ empty and whitespace-only email values, including direct ORM creation and
 updates that bypass manager-level validation. Existing tests also cover
 case-insensitive identifier uniqueness, default-unverified email state,
 persisted verification, case-insensitive matching, changes of email address,
-independence from ``is_active``, and non-editability of the verification field.
+independence from ``is_active``, non-editability of verification fields,
+and default access for accounts created by the manager and superuser tools.
+
+``accounts/tests/test_backends.py`` additionally verifies that public-style
+accounts are rejected before email verification and permitted afterwards,
+including both login identifiers, asynchronous authentication, email changes,
+and continued rejection of inactive users.
 
 ``accounts/tests/test_email_verification.py`` covers token validity,
 expiration, account binding, email and password changes, invalidation
@@ -149,7 +156,9 @@ and no links to authentication features that are not implemented.
 routes, public login page, shared layout, username/email sign-in, safe
 redirects, CSRF protection, POST-only logout, and session invalidation.
 It also verifies cross-page Axes lockouts, retry timing, and shared audit
-events without reimplementing the existing account backend.
+events without reimplementing the existing account backend. A login-level
+regression test checks the neutral error for a verification-required user
+and successful login after confirmation.
 
 Authentication audit tests verify successful Django Admin login and logout,
 anonymous logout handling, failed-login events, newly triggered lockouts,

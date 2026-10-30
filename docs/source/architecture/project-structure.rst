@@ -191,7 +191,9 @@ using Django's ``EmailField``.
 
 The authentication backend accepts either a username or an email address,
 with case-insensitive matching. It inherits Django's standard password
-hash verification, active-user checks, and group/permission handling.
+hash verification, active-user checks, and group/permission handling. An
+additional per-account verification requirement protects future public
+registrations without altering access for existing Admin/CLI accounts.
 
 Django groups and permissions remain available through ``AbstractUser`` and
 will be used when application access rules are introduced. No project-specific
@@ -214,6 +216,10 @@ The model also stores the most recently verified email address in the
 non-editable ``verified_email`` field. The ``is_email_verified`` property
 compares that address with the current email without changing account
 activation or authentication permissions. New accounts are unverified.
+
+The non-editable ``email_verification_required`` flag defaults to ``False``
+and controls whether a verified current email is necessary for sign-in.
+It is separate from ownership verification and Django's ``is_active`` flag.
 
 The non-editable ``email_verification_sent_at`` field records the last
 verification email request for a PostgreSQL-backed delivery cooldown. It does
@@ -266,7 +272,9 @@ case-insensitive.
 
 Synchronous and asynchronous authentication use Django's password
 verification and timing-attack mitigation mechanisms. The backend
-also preserves Django's inactive-user checks and permission system.
+preserves Django's inactive-user checks and permission system and adds
+``user_can_authenticate()`` enforcement for accounts that explicitly
+require verified email to sign in.
 
 The module also defines ``AsyncAxesStandaloneBackend``, which provides
 asynchronous compatibility for the django-axes lockout checks.

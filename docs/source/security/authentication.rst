@@ -63,9 +63,12 @@ only when ``verified_email`` is non-empty and matches the user's current
 ``email`` case-insensitively. Changing ``email`` to a different address makes
 this property ``False`` without requiring custom ``save()`` logic.
 
-The verification state is independent of Django's ``is_active`` flag. Marking
-an email as verified does not grant login access or reactivate an inactive
-account. The ``verified_email`` field is excluded from ordinary model forms.
+Email ownership verification is separate from Django's ``is_active`` flag.
+When an account has ``email_verification_required=True``, authentication
+requires both ``is_active`` and a currently verified email address. Accounts
+without that requirement can sign in while unverified. Confirming an email
+does not activate a disabled account or create a login session. The
+``verified_email`` field is excluded from ordinary model forms.
 
 No email is verified automatically by account creation. Aether provides
 a dedicated token generator and a server-side verification service. The
@@ -99,6 +102,33 @@ The verification workflow uses this service from the public confirmation
 endpoint. Opening a valid link on GET does not modify the account; a
 CSRF-protected POST performs verification.
 
+Email verification sign-in policy
+---------------------------------
+
+The non-editable ``User.email_verification_required`` field is ``False`` by
+default. Accounts created through Django Admin, ``createsuperuser``, or the
+ordinary ``create_user()`` API retain the current behaviour: lack of email
+verification alone does not prevent login.
+
+``UsernameOrEmailBackend.user_can_authenticate()`` first applies Django's
+standard active-account check and then rejects accounts for which
+``email_verification_required`` is ``True`` and ``is_email_verified`` is
+``False``. This applies to both username and email sign-in, synchronously and
+asynchronously. Django Axes continues to enforce its existing lockout policy.
+The login form displays the same neutral invalid-credentials message and does
+not reveal the verification requirement to unauthenticated visitors.
+
+The future public-registration flow will create accounts with
+``email_verification_required=True``. On successful email confirmation,
+``verify_email()`` updates ``verified_email``; the backend then permits login
+without changing ``is_active`` or automatically authenticating the user.
+This requirement is persistent: if the current email later becomes
+unverified, login is blocked again until it is confirmed. The future
+email-change service must clear ``verified_email`` when the address changes.
+
+The registration form, public resend flow, and registration rate limits are
+not yet implemented. The current stage adds only the access policy.
+
 Password verification
 ---------------------
 
@@ -108,6 +138,9 @@ Django's timing-attack mitigation is retained for unknown accounts.
 Incorrect passwords and inactive users are rejected.
 
 Both synchronous and asynchronous authentication are supported.
+
+The backend also enforces the per-account email verification requirement
+while preserving the existing neutral authentication error messages.
 
 The backend does not explicitly log submitted credentials or passwords.
 Sensitive password variables are protected in exception reports.
@@ -263,8 +296,9 @@ existing verification service and redirects to the token-free
 and use ``Referrer-Policy: origin`` to avoid exposing the token in referrer
 paths. Application HTTP logs redact confirmation URL components.
 
-The profile currently has no editing controls. Changing account data or email,
-and registration-specific login restrictions, will be implemented separately.
+The profile currently has no editing controls. Changing account data or
+email, and the public registration interface, will be implemented separately.
+The registration-specific sign-in policy is already enforced by the backend.
 See :doc:`profile` for the full flow and security considerations.
 
 

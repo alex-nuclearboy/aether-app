@@ -26,6 +26,9 @@ The implemented foundation consists of:
   case-insensitive username and email uniqueness;
 * persistent per-account email verification state, initially unverified and
   matched against the current email independently from account activation;
+* a per-account sign-in policy that requires current email verification only
+  for accounts explicitly marked as requiring it, without changing Django's
+  ``is_active`` semantics or existing Admin/CLI account access;
 * synchronous and asynchronous authentication by username or email with
   case-insensitive lookups, using Django's standard password and permissions
   mechanisms;

@@ -21,6 +21,16 @@
     font: inherit;
 }
 
+.form-field__help {
+    color: var(--colour-text-muted);
+    font-size: 0.875rem;
+}
+
+.form-field__help ul {
+    margin: 0;
+    padding-left: var(--space-5);
+}
+
 .form-field__errors {
     color: var(--colour-error);
 }

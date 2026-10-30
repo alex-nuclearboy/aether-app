@@ -14,6 +14,15 @@ class SampleForm(forms.Form):
     identifier = forms.CharField(label="Identifier")
 
 
+class DescribedForm(forms.Form):
+    """Exercise Django's built-in help/error accessibility attributes."""
+
+    identifier = forms.CharField(
+        label="Identifier",
+        help_text="Enter a unique identifier.",
+    )
+
+
 def test_form_field_component_renders_label_and_input():
     """Reuse consistent markup for Django form fields."""
     field = SampleForm()["identifier"]
@@ -38,6 +47,36 @@ def test_form_field_component_renders_validation_errors():
 
     assert 'class="form-field__errors"' in html
     assert "This field is required." in html
+
+
+def test_form_field_connects_help_text_to_input():
+    """Render the help ID expected by Django's aria-describedby."""
+    field = DescribedForm()["identifier"]
+    html = render_to_string(
+        "components/form_field.html", {"field": field}
+    )
+
+    assert 'id="id_identifier_helptext"' in html
+    assert "Enter a unique identifier." in html
+    assert 'aria-describedby="id_identifier_helptext"' in html
+
+
+def test_form_field_connects_errors_and_help_to_input():
+    """Associate both field errors and help text with the widget."""
+    form = DescribedForm(data={"identifier": ""})
+    assert not form.is_valid()
+    html = render_to_string(
+        "components/form_field.html",
+        {"field": form["identifier"]},
+    )
+
+    assert 'id="id_identifier_helptext"' in html
+    assert 'id="id_identifier_error"' in html
+    assert 'aria-invalid="true"' in html
+    assert (
+        'aria-describedby="id_identifier_helptext id_identifier_error"'
+        in html
+    )
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@ import logging
 
 from django.conf import settings
 from django.http import HttpResponse
+from django.utils.translation import gettext as _
 
 from accounts.audit import identifier_fingerprint
 from accounts.lockouts import (
@@ -29,7 +30,7 @@ def lockout_response(request, _original_response, credentials):
     remaining = get_lockout_remaining_seconds(request, identifier)
 
     response = HttpResponse(
-        "Too many failed login attempts. Please try again later.",
+        _("Too many failed login attempts. Please try again later."),
         status=settings.AXES_HTTP_RESPONSE_CODE,
         content_type="text/plain; charset=utf-8",
     )

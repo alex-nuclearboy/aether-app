@@ -35,7 +35,7 @@ class AetherLoginView(LoginView):
     def form_valid(self, form):
         """Authenticate the user and confirm a successful sign-in."""
         response = super().form_valid(form)
-        messages.success(self.request, "You have signed in successfully.")
+        messages.success(self.request, _("You have signed in successfully."))
         return response
 
 
@@ -45,7 +45,7 @@ class AetherLogoutView(LogoutView):
     def post(self, request, *args, **kwargs):
         """Keep Django's POST-only logout and queue success feedback."""
         response = super().post(request, *args, **kwargs)
-        messages.success(request, "You have signed out successfully.")
+        messages.success(request, _("You have signed out successfully."))
         return response
 
 

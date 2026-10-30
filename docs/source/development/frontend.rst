@@ -105,3 +105,13 @@ The confirmation and result pages use dedicated account templates and
 plain-text and HTML templates in ``accounts/templates/accounts/email/``.
 Future email-editing forms will be introduced as a separate feature rather
 than added to the current read-only profile.
+
+Internationalisation
+--------------------
+
+User-visible page titles, navigation, buttons, notifications, and ARIA labels
+are marked with Django template ``{% trans %}``. The shared base template
+and verification email HTML set their ``lang`` attribute from the active
+Django translation language. See :doc:`internationalisation` for Python
+message conventions, standard Django validation messages, and the limits
+of the current single-language configuration.

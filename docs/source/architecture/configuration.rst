@@ -125,6 +125,17 @@ Production uses plain console logging only.
 
 See :doc:`../development/logging` for the complete logging behaviour.
 
+Internationalisation
+--------------------
+
+``DJANGO_LANGUAGE_CODE`` sets the current single application language
+(default ``en-gb``), and ``USE_I18N`` remains enabled. Django Admin is not
+customised for language selection, and the site does not yet provide a
+language switch. Application strings are marked for future translation;
+actual non-English Aether translations require locale catalogs.
+
+See :doc:`../development/internationalisation` for coding conventions.
+
 Email configuration
 -------------------
 

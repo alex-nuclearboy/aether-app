@@ -48,3 +48,8 @@ When functionality changes, update the most specific relevant page instead of
 copying the same explanation into several sections. Reference pages should stay
 concise; explanatory and operational context belongs in the corresponding
 development or architecture page.
+
+When introducing a new Sphinx page, include it in the relevant section
+``index.rst`` toctree and update the repository inventory in
+:doc:`../architecture/project-structure` when the documented file layout
+changes. Keep cross-references consistent with the implemented features.

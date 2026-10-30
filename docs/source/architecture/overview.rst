@@ -46,6 +46,9 @@ The implemented foundation consists of:
   full Aether logo;
 * a shared base template with a fixed header, clickable brand link,
   and session-aware sign-in/sign-out controls;
+* translation-ready Python feedback and template labels, with active-language
+  HTML metadata; the application still uses one configured language without
+  a language switch or project translation catalogs;
 * shared Django form-field markup, reusable button and input styling,
   centralised light-only design tokens, and mobile-first responsive gutters;
 * page-specific CSS, brand images, favicons, and Google Fonts typography;

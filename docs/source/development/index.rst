@@ -14,3 +14,4 @@ Aether after the initial local setup is complete.
    continuous-integration
    documentation
    frontend
+   internationalisation

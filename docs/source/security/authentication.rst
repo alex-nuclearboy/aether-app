@@ -223,6 +223,11 @@ permits an internal ``next`` target while rejecting external destinations.
 successful authentication. Invalid credentials produce neutral
 validation feedback within the login form.
 
+User-facing login/logout feedback and the Axes HTTP 429 response use
+Django runtime translations. Model and form validation strings are marked
+with lazy translations; standard Django authentication error translations
+remain unchanged. See :doc:`../development/internationalisation`.
+
 The shared fixed header offers a sign-in link to anonymous visitors and
 a CSRF-protected sign-out form to authenticated users.
 ``AetherLogoutView`` extends Django's ``LogoutView``, accepts POST

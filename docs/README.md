@@ -25,7 +25,7 @@ use when preferred.
 ## Documentation structure
 
 - `getting-started/` — complete local development setup and first run.
-- `development/` — database operation, automated testing, logging, quality checks, CI, and documentation workflow.
+- `development/` — database operation, automated testing, logging, quality checks, CI, frontend, internationalisation, and documentation workflow.
 - `architecture/` — current technical foundation, configuration model, and repository structure.
 - `deployment/` — confirmed production target and deployment status.
 - `integrations/` — current and planned external-service integrations, including verified provider-specific configuration.

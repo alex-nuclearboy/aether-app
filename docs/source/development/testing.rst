@@ -24,7 +24,8 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── test_messages.py
    ├── test_request.py
    ├── test_request_id.py
-   └── test_settings.py
+   ├── test_settings.py
+   └── test_template_translations.py
 
 The current modules have separate responsibilities:
 
@@ -34,6 +35,10 @@ The current modules have separate responsibilities:
 ``test_frontend.py``
    Tests shared form-field markup, reusable static stylesheets, the agreed
    responsive thresholds, and base-template stylesheet inclusion.
+
+``test_template_translations.py``
+   Checks HTML language attributes on rendered pages and verification email
+   templates, as well as translation markers in shared UI templates.
 
 ``test_messages.py``
    Tests semantic Django message rendering, shared alert styles,
@@ -82,11 +87,13 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_commands.py
        ├── test_email_verification.py
        ├── test_forms.py
+       ├── test_interface_translations.py
        ├── test_lockout_responses.py
        ├── test_lockouts.py
        ├── test_login_ui.py
        ├── test_managers.py
        ├── test_models.py
+       ├── test_profile_verification.py
        ├── test_validators.py
        └── test_views.py
 
@@ -128,6 +135,11 @@ superuser permissions.
 ``accounts/tests/test_forms.py`` checks that the application form extends
 Django's authentication form, presents the username-or-email label, and
 uses neutral validation text.
+
+``accounts/tests/test_interface_translations.py`` verifies lazy account
+validation labels and runtime translation of login/logout feedback and
+lockout responses. The separate project-level template translation tests
+are listed above.
 
 ``accounts/tests/test_login_ui.py`` checks that the dedicated sign-in
 layout includes the shared fixed header, its own logo, the login form,

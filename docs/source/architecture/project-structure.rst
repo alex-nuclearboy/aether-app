@@ -40,6 +40,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_commands.py
    │   │   ├── test_email_verification.py
    │   │   ├── test_forms.py
+   │   │   ├── test_interface_translations.py
    │   │   ├── test_lockout_responses.py
    │   │   ├── test_lockouts.py
    │   │   ├── test_login_ui.py
@@ -150,7 +151,8 @@ The repository currently has the following top-level structure:
    │   ├── test_messages.py
    │   ├── test_request.py
    │   ├── test_request_id.py
-   │   └── test_settings.py
+   │   ├── test_settings.py
+   │   └── test_template_translations.py
    ├── .env.example
    ├── .gitignore
    ├── .python-version
@@ -441,7 +443,9 @@ Contains automated tests specific to the accounts application, including:
   delivery failure recovery;
 * public token confirmation, CSRF-protected POST, token invalidation, and
   token redaction from application HTTP logs;
-* shared session, Axes, and audit behaviour across Admin and application.
+* shared session, Axes, and audit behaviour across Admin and application;
+* translation hooks for account labels, validation text, login/logout feedback,
+  and lockout responses.
 
 
 Core application
@@ -480,7 +484,8 @@ Defines the ``home`` URL pattern for the root path ``/``.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Defines the home page template, which extends the shared base layout,
-loads its own stylesheet, and displays the full Aether logo as the page heading.
+loads its own stylesheet, displays the full Aether logo as the page heading,
+and marks the page title for translation.
 
 ``core/admin.py``
 ~~~~~~~~~~~~~~~~~
@@ -516,15 +521,18 @@ Shared interface resources
 Defines the shared HTML document, favicon links, and stylesheet load order.
 Shared stylesheets load before the page-specific ``page_styles`` block.
 
-The template includes the fixed site header on every page, renders
-one-time Django messages, and provides the main content block.
+The ``lang`` attribute follows Django's active translation language rather
+than a fixed English value. The template includes the fixed site header on
+every page, renders one-time Django messages, and provides the main content
+block.
 
 ``templates/includes/header.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides the common site header and session-aware account navigation. The
 sign-in link, authenticated profile link, and POST-only sign-out button reuse
-the shared button styles.
+the shared button styles. User-visible navigation and accessibility labels
+use Django template translation tags.
 
 ``templates/components/form_field.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -536,7 +544,8 @@ Application templates include this partial rather than repeating its markup.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Renders one-time Django notifications using the shared semantic alert
-component. Messages are displayed before the page-specific content.
+component. The notification region has a translatable accessibility label.
+Messages are displayed before the page-specific content.
 
 ``static/css/foundations/tokens.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -950,6 +959,10 @@ The current package contains:
    Tests shared form-field markup, reusable CSS files, breakpoint declarations,
    and base-template stylesheet inclusion.
 
+``tests/test_template_translations.py``
+   Tests active-language HTML attributes on application pages and verification
+   email templates, and translation markers in shared interface templates.
+
 ``tests/test_request_id.py``
    Verifies request ID generation, uniqueness, context isolation and cleanup,
    synchronous and asynchronous middleware, HTTP response logging levels,
@@ -1059,7 +1072,9 @@ The documentation is organised by purpose rather than by Python package:
 
 ``development/``
    Development workflows such as PostgreSQL, automated testing, logging, code
-   quality, continuous integration, and documentation maintenance.
+   quality, continuous integration, frontend conventions, internationalisation,
+   and documentation maintenance. The ``internationalisation.rst`` page records
+   current translation rules and the scope of future language support.
 
 ``architecture/``
    Explanations of the project structure, configuration model, and architectural

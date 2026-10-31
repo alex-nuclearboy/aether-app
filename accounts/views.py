@@ -20,10 +20,9 @@ from accounts.emails import (
     VerificationEmailStatus,
     send_verification_email,
 )
+from accounts.forms import AetherAuthenticationForm, AetherRegistrationForm
 from accounts.models import User
 from accounts.tokens import email_verification_token
-
-from accounts.forms import AetherAuthenticationForm
 
 
 class AetherLoginView(LoginView):
@@ -47,6 +46,24 @@ class AetherLogoutView(LogoutView):
         response = super().post(request, *args, **kwargs)
         messages.success(request, _("You have signed out successfully."))
         return response
+
+
+class AetherRegistrationView(TemplateView):
+    """Display the registration form without enabling account creation."""
+
+    template_name = "accounts/register.html"
+
+    def get(self, request, *args, **kwargs):
+        """Direct signed-in users to their existing account profile."""
+        if request.user.is_authenticated:
+            return redirect("profile")
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Render the existing validated registration form on GET."""
+        context = super().get_context_data(**kwargs)
+        context["form"] = AetherRegistrationForm()
+        return context
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

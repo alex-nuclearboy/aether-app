@@ -5,6 +5,7 @@ from django.urls import path
 from accounts.views import (
     AetherLoginView,
     AetherLogoutView,
+    AetherRegistrationView,
     EmailVerificationConfirmView,
     EmailVerificationResultView,
     ProfileView,
@@ -14,6 +15,7 @@ from accounts.views import (
 
 urlpatterns = [
     path("login/", AetherLoginView.as_view(), name="login"),
+    path("register/", AetherRegistrationView.as_view(), name="register"),
     path("logout/", AetherLogoutView.as_view(), name="logout"),
     path("profile/", ProfileView.as_view(), name="profile"),
     path(

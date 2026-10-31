@@ -44,3 +44,7 @@
     width: 100%;
     margin-top: var(--space-1);
 }
+
+.login__register {
+    margin-top: var(--space-5);
+}

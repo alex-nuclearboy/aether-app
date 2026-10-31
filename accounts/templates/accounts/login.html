@@ -50,5 +50,10 @@
             </button>
         </form>
     </div>
+
+    <p class="login__register">
+        {% trans "Don't have an account?" %}
+        <a href="{% url 'register' %}">{% trans "Create an account" %}</a>
+    </p>
 </section>
 {% endblock content %}

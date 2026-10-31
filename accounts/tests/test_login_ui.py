@@ -20,6 +20,15 @@ def test_login_uses_a_dedicated_centred_layout(client):
     assert 'type="submit"' in content
 
 
+def test_login_links_to_registration_preview(client):
+    """Offer an accessible route to the registration form preview."""
+    response = client.get(reverse("login"))
+    content = response.content.decode()
+
+    assert 'href="' + reverse("register") + '"' in content
+    assert "Create an account" in content
+
+
 def test_login_does_not_offer_unimplemented_sign_in_options(client):
     """Avoid unused social providers and password-reset links."""
     response = client.get(reverse("login"))
@@ -28,4 +37,3 @@ def test_login_does_not_offer_unimplemented_sign_in_options(client):
     assert "Continue with Google" not in content
     assert "Continue with Apple" not in content
     assert "Forgot password" not in content
-    assert "Create an account" not in content

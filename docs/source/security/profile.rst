@@ -8,7 +8,8 @@ The authenticated account profile is available at ``/profile/``. The page
 shows the current username and email address and the computed
 ``is_email_verified`` status. It is deliberately read-only: changing email,
 username, password, and other account details will be introduced separately.
-No public registration UI is provided at this stage.
+A GET-only registration preview is available, but no public account creation
+or recovery flow is enabled yet.
 
 The shared header links to the profile only for authenticated users.
 Django Admin retains its standard appearance and account management UI.

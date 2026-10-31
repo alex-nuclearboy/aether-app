@@ -97,6 +97,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_models.py
        ├── test_profile_verification.py
        ├── test_registration_form.py
+       ├── test_registration_page.py
        ├── test_registration_service.py
        ├── test_validators.py
        └── test_views.py
@@ -155,6 +156,10 @@ case-insensitive identifier uniqueness, username syntax, email
 normalisation, Django's standard password validation and confirmation,
 error codes, and the email-verification-required policy on form saves.
 
+``accounts/tests/test_registration_page.py`` verifies the GET-only registration
+preview, four form fields, CSRF markup, localised HTML language, disabled
+POST creation, and signed-in redirect behaviour.
+
 ``accounts/tests/test_registration_service.py`` checks transactional account
 creation, uniqueness conflicts occurring after successful form validation,
 field-specific errors, rejection of invalid forms, and propagation of
@@ -169,7 +174,8 @@ are listed above.
 
 ``accounts/tests/test_login_ui.py`` checks that the dedicated sign-in
 layout includes the shared fixed header, its own logo, the login form,
-and no links to authentication features that are not implemented.
+and the registration page link without unimplemented social sign-in or
+password-reset options.
 
 ``accounts/tests/test_views.py`` verifies the application login and logout
 routes, public login page, shared layout, username/email sign-in, safe

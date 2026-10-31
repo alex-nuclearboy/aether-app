@@ -49,6 +49,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_models.py
    │   │   ├── test_profile_verification.py
    │   │   ├── test_registration_form.py
+   │   │   ├── test_registration_page.py
    │   │   ├── test_registration_service.py
    │   │   ├── test_validators.py
    │   │   └── test_views.py
@@ -60,6 +61,7 @@ The repository currently has the following top-level structure:
    │   │       ├── email_verification_confirm.html
    │   │       ├── email_verification_result.html
    │   │       ├── login.html
+   │   │       ├── register.html
    │   │       └── profile.html
    │   ├── __init__.py
    │   ├── admin.py
@@ -131,6 +133,7 @@ The repository currently has the following top-level structure:
    │   │   │   ├── email-verification.css
    │   │   │   ├── home.css
    │   │   │   ├── login.css
+   │   │   │   ├── register.css
    │   │   │   └── profile.css
    │   │   ├── base.css
    │   │   └── layout.css
@@ -383,6 +386,10 @@ The login view uses ``AetherAuthenticationForm`` and the application login
 template. Both views create one-time success messages after successful
 sign-in or sign-out.
 
+``AetherRegistrationView`` renders a public registration form on GET and
+redirects signed-in visitors to the profile. POST account creation is
+not enabled yet (HTTP 405).
+
 ``ProfileView`` displays the read-only profile to authenticated users.
 ``RequestEmailVerificationView`` processes CSRF-protected POST requests for
 verification emails. ``EmailVerificationConfirmView`` provides a public
@@ -392,8 +399,9 @@ on POST. ``EmailVerificationResultView`` displays a token-free result page.
 ``accounts/urls.py``
 ~~~~~~~~~~~~~~~~~~~~
 
-Registers application login at ``/login/`` and POST-only session logout at
-``/logout/``. It also exposes the authenticated profile at ``/profile/``,
+Registers application login at ``/login/``, the GET-only registration
+preview at ``/register/`` (POST returns HTTP 405), and POST-only session
+logout at ``/logout/``. It also exposes the authenticated profile at ``/profile/``,
 the POST-only email request at ``/profile/verify-email/``, the public
 confirmation page at ``/email/verify/<uidb64>/<token>/``, and the token-free
 result page at ``/email/verification-result/``. Django Admin authentication
@@ -404,6 +412,12 @@ remains independent.
 
 Provides the sign-in form, Django CSRF token, neutral validation messages,
 and a safe ``next`` field. It extends the shared Aether base template.
+
+``accounts/templates/accounts/register.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Displays the existing registration form, standard Django password guidance,
+and a disabled submit button. It does not create users or send email yet.
 
 ``accounts/templates/accounts/profile.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -461,6 +475,7 @@ Contains automated tests specific to the accounts application, including:
   sensitive-data handling and separate repeat-denial events;
 * HTTP 429 response headers and recalculated lockout wait times;
 * application login form, CSRF, safe redirects, and POST-only logout;
+* public registration GET preview, disabled POST, and authenticated redirect;
 * profile access, read-only account details, and email verification status;
 * verification email delivery, recipient selection, resend cooldown, and
   delivery failure recovery;
@@ -621,6 +636,12 @@ Centres the Aether logo in the available home page content area.
 Defines the login-page layout, branding, title, panel, form spacing,
 and submit button width. Shared components provide the form controls,
 buttons, and validation feedback.
+
+``static/css/pages/register.css``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines the compact registration form preview layout using existing Aether
+design tokens and shared field components.
 
 ``static/css/pages/profile.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

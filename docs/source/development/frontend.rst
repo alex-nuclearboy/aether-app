@@ -97,8 +97,21 @@ The page includes its own logo, a sign-in panel, reusable form fields,
 and compact validation feedback. Authentication uses Django's standard
 session mechanism and CSRF protection.
 
-Social login, registration, and password-reset links are not displayed
-because these features are not implemented.
+The sign-in page links to the GET-only registration preview. Social sign-in
+and password-reset links remain absent because those features are not
+implemented.
+
+Registration preview layout
+---------------------------
+
+``accounts/templates/accounts/register.html`` uses the existing shared form
+fields and a separate ``static/css/pages/register.css`` stylesheet, matching
+the centred composition of the sign-in page. Username, email, password, and
+password confirmation come from ``AetherRegistrationForm``; password help
+text and validation messages are supplied by Django. All new interface copy
+uses ``{% trans %}``. The action button is disabled and the HTTP endpoint
+rejects POST (405) until the registration delivery and abuse protections are
+implemented. Signed-in visitors are redirected to the profile.
 
 Profile and email verification pages
 ------------------------------------

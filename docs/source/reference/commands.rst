@@ -94,7 +94,7 @@ Run a specific test module::
 
 Run an individual test::
 
-   uv run pytest tests/test_settings.py::test_expand_database_url_without_references
+   uv run pytest tests/test_settings_database.py::test_expand_database_url_without_references
 
 Quality checks
 --------------

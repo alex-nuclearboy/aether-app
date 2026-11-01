@@ -97,5 +97,6 @@ not anticipate or expose any such form.
 The shared email-sending service and the public confirmation endpoint can be
 reused by the future registration workflow. Public registration will create
 users with ``email_verification_required=True``; no additional activation
-state or change to ``is_active`` is required. The registration UI, resend
-recovery, and public-request rate limits remain future work.
+state or change to ``is_active`` is required. The GET-only registration
+preview is implemented; account creation on POST, public resend recovery, and
+public-request rate limits remain future work.

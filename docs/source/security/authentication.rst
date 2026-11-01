@@ -48,13 +48,13 @@ future interface localisation.
 
 These checks validate address format and presence, **not ownership**. Email
 ownership is confirmed separately using a verification link and a
-CSRF-protected confirmation form. Public registration and registration
-activation have not yet been implemented. Creating a user through Django
-Admin or ``createsuperuser`` does not automatically send a verification
-message.
+CSRF-protected confirmation form. The public registration page currently
+supports GET only; submission and automatic email delivery after registration
+have not yet been implemented. Creating a user through Django Admin or
+``createsuperuser`` does not automatically send a verification message.
 
-Public registration validation (backend only)
----------------------------------------------
+Public registration validation and preview
+------------------------------------------
 
 ``AetherRegistrationForm`` extends Django's ``UserCreationForm``. It uses
 Aether's username model validator and the standard Django password validators
@@ -102,8 +102,9 @@ service validates the token and persists the current email address in
 
 The authenticated profile displays the current email and its verification
 status. Unverified users can request a verification message, and the public
-confirmation endpoint allows verification without signing in. Public
-registration and profile editing have not yet been implemented.
+confirmation endpoint allows verification without signing in. The public
+registration form is available as a GET-only preview; account creation through
+that page and profile editing have not yet been implemented.
 
 Email verification tokens
 -------------------------

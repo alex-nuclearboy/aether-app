@@ -159,7 +159,7 @@ test or CI environment uses ``DJANGO_DEBUG=False``.
 Testing
 -------
 
-``tests/test_settings.py`` verifies the security configuration model,
+``tests/test_settings_security.py`` verifies the security configuration model,
 including:
 
 * runtime environment normalisation and validation;

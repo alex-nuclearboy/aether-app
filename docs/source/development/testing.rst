@@ -24,7 +24,11 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── test_messages.py
    ├── test_request.py
    ├── test_request_id.py
+   ├── settings_helpers.py
    ├── test_settings.py
+   ├── test_settings_database.py
+   ├── test_settings_email.py
+   ├── test_settings_security.py
    └── test_template_translations.py
 
 The current modules have separate responsibilities:
@@ -45,11 +49,24 @@ The current modules have separate responsibilities:
    Tests semantic Django message rendering, shared alert styles,
    and one-time success feedback after logout.
 
+``settings_helpers.py``
+   Provides synthetic environments, isolated settings-module execution,
+   and reusable PostgreSQL configuration helpers.
+
 ``test_settings.py``
-   Tests runtime environment handling, Django security configuration,
-   production safety validation, database URL expansion, PostgreSQL
-   configuration, connection options, logging overrides, email backend
-   selection, production SMTP validation, and module-level settings behaviour.
+   Tests environment-file loading, core settings validation, and logging
+   overrides.
+
+``test_settings_database.py``
+   Tests database URL expansion, PostgreSQL-only validation, and connection
+   options.
+
+``test_settings_security.py``
+   Tests environment validation, production security requirements,
+   HTTPS-related settings, and client IP resolution.
+
+``test_settings_email.py``
+   Tests development and production email backends and SMTP configuration.
 
 ``test_database.py``
    Contains integration tests that verify the configured PostgreSQL backend
@@ -247,7 +264,7 @@ Run one test module::
 
 Run one individual test::
 
-   uv run pytest tests/test_settings.py::test_expand_database_url_without_references
+   uv run pytest tests/test_settings_database.py::test_expand_database_url_without_references
 
 The standard ``pytest`` command also runs the configured coverage checks.
 

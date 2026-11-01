@@ -158,7 +158,11 @@ The repository currently has the following top-level structure:
    │   ├── test_messages.py
    │   ├── test_request.py
    │   ├── test_request_id.py
+   │   ├── settings_helpers.py
    │   ├── test_settings.py
+   │   ├── test_settings_database.py
+   │   ├── test_settings_email.py
+   │   ├── test_settings_security.py
    │   └── test_template_translations.py
    ├── .env.example
    ├── .gitignore
@@ -982,11 +986,25 @@ Django project entry points.
 
 The current package contains:
 
+``tests/settings_helpers.py``
+   Provides synthetic environment settings, isolated settings-module execution,
+   and shared helpers for PostgreSQL configuration tests.
+
 ``tests/test_settings.py``
-   Tests runtime environment handling, Django security configuration,
-   production safety validation, PostgreSQL configuration, database URL
-   expansion, connection options, logging overrides, email backend selection,
-   production SMTP validation, and module-level settings behaviour.
+   Tests environment-file loading, core settings validation, and logging
+   overrides.
+
+``tests/test_settings_database.py``
+   Tests database URL expansion, PostgreSQL-only configuration, and connection
+   options.
+
+``tests/test_settings_security.py``
+   Tests runtime environment validation, production security requirements,
+   HTTPS-related settings, and client IP resolution.
+
+``tests/test_settings_email.py``
+   Tests development and production email backend configuration and SMTP
+   settings validation.
 
 ``tests/test_database.py``
    Contains integration tests that verify PostgreSQL as the configured database

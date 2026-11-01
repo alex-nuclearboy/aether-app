@@ -300,6 +300,17 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
+# Until public resend and abuse controls exist, registration stays gated.
+REGISTRATION_ENABLED = env.bool(
+    "AETHER_REGISTRATION_ENABLED",
+    default=False,
+)
+
+if ENVIRONMENT == "production" and REGISTRATION_ENABLED:
+    raise ImproperlyConfigured(
+        "Public registration cannot be enabled in production yet."
+    )
+
 AUTHENTICATION_BACKENDS = [
     "accounts.backends.AsyncAxesStandaloneBackend",
     "accounts.backends.UsernameOrEmailBackend",

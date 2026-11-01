@@ -2,10 +2,12 @@
 
 from smtplib import SMTPException
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.exceptions import ValidationError
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
@@ -22,6 +24,7 @@ from accounts.emails import (
 )
 from accounts.forms import AetherAuthenticationForm, AetherRegistrationForm
 from accounts.models import User
+from accounts.registration import create_registration_user
 from accounts.tokens import email_verification_token
 
 
@@ -49,7 +52,7 @@ class AetherLogoutView(LogoutView):
 
 
 class AetherRegistrationView(TemplateView):
-    """Display the registration form without enabling account creation."""
+    """Create pending accounts behind a local-only registration gate."""
 
     template_name = "accounts/register.html"
 
@@ -60,10 +63,49 @@ class AetherRegistrationView(TemplateView):
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        """Render the existing validated registration form on GET."""
+        """Preserve a bound form and show whether POST is available."""
         context = super().get_context_data(**kwargs)
-        context["form"] = AetherRegistrationForm()
+        if "form" not in context:
+            context["form"] = AetherRegistrationForm()
+        context["registration_enabled"] = settings.REGISTRATION_ENABLED
         return context
+
+    def post(self, request, *args, **kwargs):
+        """Validate, create, and email a pending registration account."""
+        if request.user.is_authenticated:
+            return redirect("profile")
+
+        if not settings.REGISTRATION_ENABLED:
+            return HttpResponseNotAllowed(["GET", "HEAD", "OPTIONS"])
+
+        form = AetherRegistrationForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        try:
+            user = create_registration_user(form)
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.render_to_response(self.get_context_data(form=form))
+
+        try:
+            send_verification_email(request, user.pk)
+        except (OSError, SMTPException):
+            messages.error(
+                request,
+                _(
+                    "Your account was created, but we couldn't send "
+                    "the verification email. Please try again later."
+                ),
+            )
+
+        return redirect("registration_check_email")
+
+
+class RegistrationCheckEmailView(TemplateView):
+    """Explain the next step without exposing an email address in a URL."""
+
+    template_name = "accounts/registration_check_email.html"
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

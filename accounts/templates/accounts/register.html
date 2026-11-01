@@ -41,6 +41,12 @@
             </div>
             {% endif %}
 
+            {% if registration_enabled %}
+            <button class="button button--primary register__submit"
+                    type="submit">
+                {% trans "Create account" %}
+            </button>
+            {% else %}
             <button class="button button--primary register__submit"
                     type="submit" disabled aria-disabled="true">
                 {% trans "Create account" %}
@@ -48,6 +54,7 @@
             <p class="register__unavailable">
                 {% trans "Registration is not available yet." %}
             </p>
+            {% endif %}
         </form>
     </div>
 

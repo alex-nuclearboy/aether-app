@@ -6,6 +6,7 @@ from accounts.views import (
     AetherLoginView,
     AetherLogoutView,
     AetherRegistrationView,
+    RegistrationCheckEmailView,
     EmailVerificationConfirmView,
     EmailVerificationResultView,
     ProfileView,
@@ -16,6 +17,11 @@ from accounts.views import (
 urlpatterns = [
     path("login/", AetherLoginView.as_view(), name="login"),
     path("register/", AetherRegistrationView.as_view(), name="register"),
+    path(
+        "register/check-email/",
+        RegistrationCheckEmailView.as_view(),
+        name="registration_check_email",
+    ),
     path("logout/", AetherLogoutView.as_view(), name="logout"),
     path("profile/", ProfileView.as_view(), name="profile"),
     path(

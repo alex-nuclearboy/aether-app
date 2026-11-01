@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Check your email" %} | Aether{% endblock title %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/pages/register.css' %}">
+{% endblock page_styles %}
+
+{% block content %}
+<section class="register" aria-labelledby="registration-result-title">
+    <h1 id="registration-result-title" class="register__title">
+        {% trans "Check your email" %}
+    </h1>
+    <div class="register__panel">
+        <p>
+            {% trans "If a verification email was delivered, open its link to confirm your address before signing in." %}
+        </p>
+        <p>
+            {% trans "Email resend is not available yet. Public registration remains disabled in production." %}
+        </p>
+        <a class="button button--primary" href="{% url 'login' %}">
+            {% trans "Sign in" %}
+        </a>
+    </div>
+</section>
+{% endblock content %}

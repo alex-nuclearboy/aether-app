@@ -15,6 +15,8 @@ The implemented foundation consists of:
   classification;
 * production safety validation for debug mode, allowed hosts, and secure
   session and CSRF cookies;
+* a default-off ``AETHER_REGISTRATION_ENABLED`` setting, with production
+  activation rejected until public recovery and abuse controls are ready;
 * shared client IP resolution with environment-specific proxy handling
   and IPv4/IPv6 normalisation;
 * PostgreSQL access through Psycopg 3;
@@ -27,7 +29,7 @@ The implemented foundation consists of:
 * a validated public-registration form and transactional account-creation
   service, with case-insensitive identifier checks, standard Django password
   rules, and PostgreSQL uniqueness-race handling (public GET preview only;
-  POST account creation remains disabled);
+  POST account creation remains disabled, independently of the new setting);
 * persistent per-account email verification state, initially unverified and
   matched against the current email independently from account activation;
 * a per-account sign-in policy that requires current email verification only
@@ -55,7 +57,7 @@ The implemented foundation consists of:
   and session-aware sign-in/sign-out controls;
 * translation-ready Python feedback and template labels, with active-language
   HTML metadata; the application still uses one configured language without
-  a language switch or project translation catalogs;
+  a language switch or project translation catalogues;
 * shared Django form-field markup, reusable button and input styling,
   centralised light-only design tokens, and mobile-first responsive gutters;
 * page-specific CSS, brand images, favicons, and Google Fonts typography;

@@ -63,7 +63,8 @@ or invalid. The current settings validate:
 * positive database connection timeout;
 * configured logging levels;
 * production email sender and SMTP configuration;
-* positive SMTP port and timeout values.
+* positive SMTP port and timeout values;
+* rejection of staged public registration in production.
 
 When ``AETHER_ENVIRONMENT`` is ``production``, Aether additionally requires:
 
@@ -78,6 +79,20 @@ When ``AETHER_ENVIRONMENT`` is ``production``, Aether additionally requires:
 
 These checks express application-level production invariants without deriving
 the runtime environment from ``DJANGO_DEBUG``.
+
+Staged registration setting
+---------------------------
+
+``REGISTRATION_ENABLED`` is loaded from ``AETHER_REGISTRATION_ENABLED``
+(default ``False``). Development and test environments may set it to
+``True`` for a future registration workflow. Production rejects an enabled
+flag with ``ImproperlyConfigured`` until public recovery and anti-abuse
+controls have been implemented.
+
+The setting is implemented, but the GET-only ``/register/`` preview does not
+yet use it. The submit button remains disabled and registration POST still
+returns HTTP 405, even if the setting is ``True`` in development. The setting
+does not create accounts or send verification emails at this stage.
 
 Django security configuration
 -----------------------------
@@ -132,7 +147,7 @@ Internationalisation
 (default ``en-gb``), and ``USE_I18N`` remains enabled. Django Admin is not
 customised for language selection, and the site does not yet provide a
 language switch. Application strings are marked for future translation;
-actual non-English Aether translations require locale catalogs.
+actual non-English Aether translations require locale catalogues.
 
 See :doc:`../development/internationalisation` for coding conventions.
 

@@ -15,7 +15,9 @@ separate production settings module.
 Production must explicitly declare ``AETHER_ENVIRONMENT=production``. The
 current settings then require Django debug mode to be disabled, require a
 non-wildcard allowed-host configuration, and require secure session and CSRF
-cookies.
+cookies. The current configuration also rejects
+``AETHER_REGISTRATION_ENABLED=True`` in production, pending public email
+recovery and anti-abuse controls. The setting defaults to ``False``.
 
 The production runtime also requires email delivery configuration: a default
 sender address together with a configured SMTP host and authentication

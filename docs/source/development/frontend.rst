@@ -113,6 +113,10 @@ uses ``{% trans %}``. The action button is disabled and the HTTP endpoint
 rejects POST (405) until the registration delivery and abuse protections are
 implemented. Signed-in visitors are redirected to the profile.
 
+The ``AETHER_REGISTRATION_ENABLED`` configuration setting has been added but
+is not yet connected to this page. Enabling it in development does not
+activate the submit button or permit POST requests at this stage.
+
 Profile and email verification pages
 ------------------------------------
 

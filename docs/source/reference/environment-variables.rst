@@ -76,6 +76,19 @@ Django
    Boolean controlling whether Django adds the ``preload`` directive to the
    HSTS header. Defaults to ``False``.
 
+Registration (staged)
+---------------------
+
+``AETHER_REGISTRATION_ENABLED``
+   Boolean, default ``False``. Configures ``REGISTRATION_ENABLED`` in Django.
+   Development and test environments may explicitly set it to ``True``;
+   production rejects that combination with ``ImproperlyConfigured`` until
+   public recovery and abuse controls are in place.
+
+   This is a configuration safeguard only. The current ``/register/`` page
+   remains GET-only, its submit button is disabled, and POST returns HTTP 405.
+   Enabling the setting in development does not yet enable registration.
+
 Email
 -----
 

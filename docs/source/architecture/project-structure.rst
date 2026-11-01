@@ -162,6 +162,7 @@ The repository currently has the following top-level structure:
    │   ├── test_settings.py
    │   ├── test_settings_database.py
    │   ├── test_settings_email.py
+   │   ├── test_settings_registration.py
    │   ├── test_settings_security.py
    │   └── test_template_translations.py
    ├── .env.example
@@ -697,6 +698,8 @@ The file currently handles:
 * environment-variable loading;
 * explicit runtime environment classification;
 * validation of required and production-sensitive configuration;
+* a default-off registration feature gate that cannot be enabled in
+  production until public recovery and abuse controls are available;
 * Django security settings;
 * environment-specific client IP resolution and proxy policy;
 * installed applications and middleware;
@@ -930,6 +933,7 @@ The current template includes configuration for:
 
 * runtime environment classification;
 * local Django and security settings;
+* a default-off staged registration setting;
 * the local default email sender;
 * the local PostgreSQL instance;
 * ``DATABASE_URL`` and database connection behaviour;
@@ -1005,6 +1009,11 @@ The current package contains:
 ``tests/test_settings_email.py``
    Tests development and production email backend configuration and SMTP
    settings validation.
+
+``tests/test_settings_registration.py``
+   Tests the default-off registration setting, explicit development opt-in,
+   and rejection of an enabled flag in production. The GET-only page does
+   not yet use this setting.
 
 ``tests/test_database.py``
    Contains integration tests that verify PostgreSQL as the configured database

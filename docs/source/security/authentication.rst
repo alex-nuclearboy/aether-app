@@ -78,6 +78,13 @@ and public resend are not yet enabled. These will be integrated with the
 existing verification service before public sign-up is activated.
 Django Admin and CLI creation flows are unchanged.
 
+The ``AETHER_REGISTRATION_ENABLED`` environment setting now configures
+``REGISTRATION_ENABLED`` (default ``False``). It can be enabled only outside
+production, but the current registration view does not yet consume the flag:
+POST still returns HTTP 405 and no account or verification email is created.
+Production rejects ``True`` during settings loading until public recovery
+and abuse controls are available.
+
 Email verification state
 ------------------------
 
@@ -387,10 +394,10 @@ See :doc:`../development/logging` for the log format, destinations, and
 sensitive-data handling.
 
 
-Authorization
+Authorisation
 -------------
 
-Authentication and authorization are separate responsibilities.
+Authentication and authorisation are separate responsibilities.
 
 The backend inherits Django's standard group and permission behaviour
 from ``ModelBackend``.

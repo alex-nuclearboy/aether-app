@@ -28,6 +28,7 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── test_settings.py
    ├── test_settings_database.py
    ├── test_settings_email.py
+   ├── test_settings_registration.py
    ├── test_settings_security.py
    └── test_template_translations.py
 
@@ -67,6 +68,11 @@ The current modules have separate responsibilities:
 
 ``test_settings_email.py``
    Tests development and production email backends and SMTP configuration.
+
+``test_settings_registration.py``
+   Tests the default-off registration setting, explicit development opt-in,
+   and rejection of an enabled flag in production. It does not test
+   registration POST, which has not yet been implemented.
 
 ``test_database.py``
    Contains integration tests that verify the configured PostgreSQL backend
@@ -261,6 +267,10 @@ Run the complete test suite::
 Run one test module::
 
    uv run pytest tests/test_settings.py
+
+Run the staged registration configuration tests::
+
+   uv run pytest tests/test_settings_registration.py
 
 Run one individual test::
 

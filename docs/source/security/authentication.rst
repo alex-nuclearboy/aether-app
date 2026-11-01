@@ -48,13 +48,13 @@ future interface localisation.
 
 These checks validate address format and presence, **not ownership**. Email
 ownership is confirmed separately using a verification link and a
-CSRF-protected confirmation form. The public registration page currently
-supports GET only; submission and automatic email delivery after registration
-have not yet been implemented. Creating a user through Django Admin or
-``createsuperuser`` does not automatically send a verification message.
+CSRF-protected confirmation form. Staged registration submission can create
+an unverified account and trigger email delivery in development or tests,
+when explicitly enabled. Django Admin and ``createsuperuser`` do not
+automatically send verification messages.
 
-Public registration validation and preview
-------------------------------------------
+Public registration validation and gated submission
+---------------------------------------------------
 
 ``AetherRegistrationForm`` extends Django's ``UserCreationForm``. It uses
 Aether's username model validator and the standard Django password validators
@@ -65,25 +65,27 @@ case-insensitively; the form also checks email uniqueness with
 The form saves public registration accounts with
 ``email_verification_required=True`` and an initially unverified email.
 ``accounts.registration.create_registration_user`` is the supported
-transactional persistence entry point for the future public view. It catches
-only recognised PostgreSQL username/email uniqueness violations that occur
-after successful form validation and raises field-specific
-``ValidationError`` errors (code ``unique``). The future view must attach
-these errors through ``form.add_error(None, error)`` and re-render the form.
-Other database failures must not be presented as duplicate identifiers.
+transactional account-creation entry point. It catches only recognised
+PostgreSQL username/email uniqueness violations that occur after successful
+form validation and raises field-specific ``ValidationError`` errors (code
+``unique``). The registration view uses ``form.add_error(None, error)`` to
+show these at the appropriate fields. Unrelated database failures are not
+misreported as duplicate identifiers.
 
-The public ``/register/`` route now displays the existing form on GET but
-rejects POST (HTTP 405): account creation, verification-email triggering,
-and public resend are not yet enabled. These will be integrated with the
-existing verification service before public sign-up is activated.
-Django Admin and CLI creation flows are unchanged.
+The public ``/register/`` route displays the form on GET. With
+``AETHER_REGISTRATION_ENABLED=False`` (the default), submission remains
+disabled and POST returns HTTP 405. When enabled in development or tests,
+POST validates the form, creates an unverified account and invokes the
+existing ``send_verification_email()`` service. No automatic sign-in occurs.
+Success redirects to the token-free ``/register/check-email/`` page.
+A recognised SMTP or operating-system delivery failure leaves the account
+created and shows a one-time error message on the result page. The account
+cannot sign in until the current email has been verified.
 
-The ``AETHER_REGISTRATION_ENABLED`` environment setting now configures
-``REGISTRATION_ENABLED`` (default ``False``). It can be enabled only outside
-production, but the current registration view does not yet consume the flag:
-POST still returns HTTP 405 and no account or verification email is created.
-Production rejects ``True`` during settings loading until public recovery
-and abuse controls are available.
+There is no public resend/recovery flow or registration-specific rate
+limiting yet. Production settings reject enabling the flag until these
+controls are implemented and reviewed. Django Admin and CLI account creation
+behaviour is unchanged.
 
 Email verification state
 ------------------------
@@ -109,9 +111,9 @@ service validates the token and persists the current email address in
 
 The authenticated profile displays the current email and its verification
 status. Unverified users can request a verification message, and the public
-confirmation endpoint allows verification without signing in. The public
-registration form is available as a GET-only preview; account creation through
-that page and profile editing have not yet been implemented.
+confirmation endpoint allows verification without signing in. Staged POST
+registration creates unverified accounts when enabled in development or
+tests. Public registration recovery and profile editing are not implemented.
 
 Email verification tokens
 -------------------------
@@ -151,7 +153,7 @@ asynchronously. Django Axes continues to enforce its existing lockout policy.
 The login form displays the same neutral invalid-credentials message and does
 not reveal the verification requirement to unauthenticated visitors.
 
-The future public-registration flow will create accounts with
+The staged public-registration flow creates accounts with
 ``email_verification_required=True``. On successful email confirmation,
 ``verify_email()`` updates ``verified_email``; the backend then permits login
 without changing ``is_active`` or automatically authenticating the user.
@@ -159,9 +161,9 @@ This requirement is persistent: if the current email later becomes
 unverified, login is blocked again until it is confirmed. The future
 email-change service must clear ``verified_email`` when the address changes.
 
-The registration form and transactional creation service are now implemented.
-The GET-only public registration view exists. Registration POST, email
-delivery trigger, public resend flow, and abuse protection are still pending.
+The registration form, transactional creation service and gated POST/email
+workflow are implemented. Public resend/recovery and registration-specific
+anti-abuse limits remain pending; production activation is prohibited.
 
 Password verification
 ---------------------
@@ -295,9 +297,10 @@ Django runtime translations. Model and form validation strings are marked
 with lazy translations; standard Django authentication error translations
 remain unchanged. See :doc:`../development/internationalisation`.
 
-The sign-in page also links to ``/register/``, a display-only registration
-preview. The shared fixed header offers a sign-in link to anonymous visitors and
-a CSRF-protected sign-out form to authenticated users.
+The sign-in page also links to ``/register/``, which accepts registration
+POST only behind the development/test flag. The shared fixed header offers a
+sign-in link to anonymous visitors and a CSRF-protected sign-out form to
+authenticated users.
 ``AetherLogoutView`` extends Django's ``LogoutView``, accepts POST
 requests only, invalidates the session, redirects to ``home``, and
 creates a one-time success message. The public home page remains
@@ -305,9 +308,10 @@ accessible without authentication.
 
 Django Admin and the application login share the Axes failure counters,
 15-minute lockouts, HTTP 429 responses, request IDs, and audit signals.
-Authentication forms do not duplicate those mechanisms. Dedicated
-account registration POST, password reset, and lockout-status pages are not
-implemented. The GET-only registration preview does not create accounts.
+Authentication forms do not duplicate those mechanisms. Registration POST
+is available only under the development/test flag. Public resend and
+registration-specific anti-abuse controls, password reset and dedicated
+lockout-status pages have not been implemented.
 
 
 Profile and email confirmation
@@ -332,7 +336,7 @@ and use ``Referrer-Policy: origin`` to avoid exposing the token in referrer
 paths. Application HTTP logs redact confirmation URL components.
 
 The profile currently has no editing controls. Changing account data or
-email, and public registration account creation, will be implemented separately.
+email, and production-ready public registration, remain separate work.
 The registration-specific sign-in policy is already enforced by the backend.
 See :doc:`profile` for the full flow and security considerations.
 
@@ -416,7 +420,7 @@ The current implementation provides validated email requirements for account
 creation, username-or-email authentication, application login and logout,
 read-only profiles, and user-requested email verification, together with
 brute-force protection through django-axes. Django Admin and the application
-use the same protected authentication flow. The public GET-only registration
-preview does not permit account creation. Registration POST, profile editing,
-password reset, and dedicated lockout-status pages remain outside the current
-scope.
+use the same protected authentication flow. Registration POST and email
+delivery are currently gated to development and tests. Production registration,
+public recovery and rate limiting, profile editing, password reset, and
+dedicated lockout-status pages remain outside the current scope.

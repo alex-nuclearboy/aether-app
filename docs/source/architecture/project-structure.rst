@@ -62,6 +62,7 @@ The repository currently has the following top-level structure:
    │   │       ├── email_verification_result.html
    │   │       ├── login.html
    │   │       ├── register.html
+   │   │       ├── registration_check_email.html
    │   │       └── profile.html
    │   ├── __init__.py
    │   ├── admin.py
@@ -391,9 +392,15 @@ The login view uses ``AetherAuthenticationForm`` and the application login
 template. Both views create one-time success messages after successful
 sign-in or sign-out.
 
-``AetherRegistrationView`` renders a public registration form on GET and
-redirects signed-in visitors to the profile. POST account creation is
-not enabled yet (HTTP 405).
+``AetherRegistrationView`` displays the registration form on GET and
+redirects authenticated visitors to the profile. With
+``REGISTRATION_ENABLED=False``, POST returns HTTP 405. With the flag enabled
+in development or tests, POST validates the form, creates an unverified
+account via ``create_registration_user()``, and invokes the existing email
+service. Recognised uniqueness conflicts appear beside the relevant form
+field; delivery failures create a one-time error message without deleting
+the account. ``RegistrationCheckEmailView`` shows a token-free result page.
+Production rejects an enabled registration flag.
 
 ``ProfileView`` displays the read-only profile to authenticated users.
 ``RequestEmailVerificationView`` processes CSRF-protected POST requests for
@@ -404,9 +411,10 @@ on POST. ``EmailVerificationResultView`` displays a token-free result page.
 ``accounts/urls.py``
 ~~~~~~~~~~~~~~~~~~~~
 
-Registers application login at ``/login/``, the GET-only registration
-preview at ``/register/`` (POST returns HTTP 405), and POST-only session
-logout at ``/logout/``. It also exposes the authenticated profile at ``/profile/``,
+Registers application login at ``/login/``, staged registration at
+``/register/``, the token-free ``/register/check-email/`` result page, and
+POST-only logout at ``/logout/``. It also exposes the authenticated profile
+at ``/profile/``,
 the POST-only email request at ``/profile/verify-email/``, the public
 confirmation page at ``/email/verify/<uidb64>/<token>/``, and the token-free
 result page at ``/email/verification-result/``. Django Admin authentication
@@ -421,8 +429,17 @@ and a safe ``next`` field. It extends the shared Aether base template.
 ``accounts/templates/accounts/register.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Displays the existing registration form, standard Django password guidance,
-and a disabled submit button. It does not create users or send email yet.
+Displays the registration form and standard Django password guidance. Its
+submit button is disabled unless the development/test registration flag is
+enabled. Invalid POST submissions render field errors without revealing the
+password values.
+
+``accounts/templates/accounts/registration_check_email.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Displays a token-free registration result with guidance on email confirmation
+and the current absence of public resend. It never includes the recipient
+address in the page URL.
 
 ``accounts/templates/accounts/profile.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -480,7 +497,9 @@ Contains automated tests specific to the accounts application, including:
   sensitive-data handling and separate repeat-denial events;
 * HTTP 429 response headers and recalculated lockout wait times;
 * application login form, CSRF, safe redirects, and POST-only logout;
-* public registration GET preview, disabled POST, and authenticated redirect;
+* registration GET, disabled-by-default and gated POST, form errors,
+  CSRF validation, email delivery and failure feedback, token-free result,
+  and authenticated redirect;
 * profile access, read-only account details, and email verification status;
 * verification email delivery, recipient selection, resend cooldown, and
   delivery failure recovery;
@@ -645,8 +664,8 @@ buttons, and validation feedback.
 ``static/css/pages/register.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the compact registration form preview layout using existing Aether
-design tokens and shared field components.
+Defines the compact staged registration and check-email layouts using
+existing Aether design tokens and shared field components.
 
 ``static/css/pages/profile.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1012,8 +1031,8 @@ The current package contains:
 
 ``tests/test_settings_registration.py``
    Tests the default-off registration setting, explicit development opt-in,
-   and rejection of an enabled flag in production. The GET-only page does
-   not yet use this setting.
+   and rejection of an enabled flag in production. Registration HTTP
+   behaviour is tested separately in ``accounts/tests/test_registration_page.py``.
 
 ``tests/test_database.py``
    Contains integration tests that verify PostgreSQL as the configured database

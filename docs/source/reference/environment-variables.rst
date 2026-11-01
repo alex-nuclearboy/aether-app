@@ -81,13 +81,14 @@ Registration (staged)
 
 ``AETHER_REGISTRATION_ENABLED``
    Boolean, default ``False``. Configures ``REGISTRATION_ENABLED`` in Django.
-   Development and test environments may explicitly set it to ``True``;
-   production rejects that combination with ``ImproperlyConfigured`` until
-   public recovery and abuse controls are in place.
+   When disabled, ``/register/`` serves GET with a disabled submit button and
+   responds to POST with HTTP 405.
 
-   This is a configuration safeguard only. The current ``/register/`` page
-   remains GET-only, its submit button is disabled, and POST returns HTTP 405.
-   Enabling the setting in development does not yet enable registration.
+   Development and test environments may set the flag to ``True`` to enable
+   registration POST, verification-email delivery and the token-free
+   ``/register/check-email/`` result page. Production rejects ``True`` with
+   ``ImproperlyConfigured`` until public email resend/recovery and anti-abuse
+   protections have been implemented and reviewed.
 
 Email
 -----

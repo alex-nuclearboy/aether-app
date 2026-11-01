@@ -8,8 +8,10 @@ Mailjet is the currently selected production email delivery provider for
 Aether.
 
 The application email verification service uses the default Django mailer.
-It delivers both plain-text and HTML messages. Public registration will reuse
-this service when implemented.
+It delivers both plain-text and HTML messages. Staged registration already
+reuses the same service when its development/test flag is enabled. Production
+public registration remains disabled pending resend/recovery and anti-abuse
+controls.
 
 Aether connects to Mailjet through Django's standard SMTP backend rather than
 through a Mailjet-specific SDK or API integration. The application therefore

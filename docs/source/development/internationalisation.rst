@@ -14,7 +14,7 @@ unchanged and uses the configured Django language.
 Marking a message for translation does **not** translate it into Polish,
 Ukrainian, or another language automatically. Django ships translations
 for its own standard messages. Aether-specific translations will need
-project catalogs when additional languages are introduced.
+project catalogues when additional languages are introduced.
 
 Python strings
 --------------
@@ -71,8 +71,11 @@ email check and transactional uniqueness-race handler reuse the lazy
 ``unique``. These errors remain attached to the corresponding form fields.
 
 Test error codes and field placement rather than hard-coded English wording.
-The current English-only interface is unchanged; future Aether translation
-catalogs must include all project-defined account validation messages.
+The staged registration result template marks its title, guidance and links
+with ``{% trans %}``, while email-delivery failure feedback is marked for
+translation when the response is created. The current English-only interface
+is unchanged; future Aether translation catalogues must include all
+project-defined account validation and registration messages.
 
 Adding languages later
 ----------------------
@@ -83,7 +86,7 @@ When the application supports more than one language, separately design:
 * a persisted user preference or other language selection policy;
 * the interaction of ``LocaleMiddleware`` with authentication and the
   standard Django Admin;
-* locale catalogs for Aether's own messages, and their compilation.
+* locale catalogues for Aether's own messages, and their compilation.
 
 First create a project ``locale/`` directory and configure
 ``LOCALE_PATHS = [BASE_DIR / "locale"]`` in ``config/settings.py``.

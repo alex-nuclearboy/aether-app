@@ -84,15 +84,21 @@ Staged registration setting
 ---------------------------
 
 ``REGISTRATION_ENABLED`` is loaded from ``AETHER_REGISTRATION_ENABLED``
-(default ``False``). Development and test environments may set it to
-``True`` for a future registration workflow. Production rejects an enabled
-flag with ``ImproperlyConfigured`` until public recovery and anti-abuse
-controls have been implemented.
+(default ``False``). When the setting is ``False``, ``/register/`` remains
+available on GET, but its submit button is disabled and POST returns HTTP 405.
 
-The setting is implemented, but the GET-only ``/register/`` preview does not
-yet use it. The submit button remains disabled and registration POST still
-returns HTTP 405, even if the setting is ``True`` in development. The setting
-does not create accounts or send verification emails at this stage.
+Development and test environments may explicitly set the flag to ``True``
+to enable POST registration. A successful submission creates an unverified
+account, invokes the existing verification-email service and redirects to
+the token-free ``/register/check-email/`` result page. The new user is not
+signed in automatically. Invalid submissions display form errors, including
+recognised database uniqueness conflicts, without creating another account.
+
+The setting cannot be enabled in production: settings loading raises
+``ImproperlyConfigured`` until public email resend/recovery and anti-abuse
+controls are implemented and reviewed. An SMTP delivery failure does not
+roll back an account already created. The current result page reports the
+failure, but public resend is not yet available.
 
 Django security configuration
 -----------------------------

@@ -28,8 +28,9 @@ The implemented foundation consists of:
   case-insensitive username and email uniqueness;
 * a validated public-registration form and transactional account-creation
   service, with case-insensitive identifier checks, standard Django password
-  rules, and PostgreSQL uniqueness-race handling (public GET preview only;
-  POST account creation remains disabled, independently of the new setting);
+  rules, and PostgreSQL uniqueness-race handling; registration POST and
+  verification-email delivery are available only when the default-off
+  development/test flag is enabled, not in production;
 * persistent per-account email verification state, initially unverified and
   matched against the current email independently from account activation;
 * a per-account sign-in policy that requires current email verification only

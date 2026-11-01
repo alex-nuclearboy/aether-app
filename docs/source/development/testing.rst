@@ -71,8 +71,8 @@ The current modules have separate responsibilities:
 
 ``test_settings_registration.py``
    Tests the default-off registration setting, explicit development opt-in,
-   and rejection of an enabled flag in production. It does not test
-   registration POST, which has not yet been implemented.
+   and rejection of an enabled flag in production. HTTP registration tests
+   are separate from configuration tests.
 
 ``test_database.py``
    Contains integration tests that verify the configured PostgreSQL backend
@@ -179,9 +179,11 @@ case-insensitive identifier uniqueness, username syntax, email
 normalisation, Django's standard password validation and confirmation,
 error codes, and the email-verification-required policy on form saves.
 
-``accounts/tests/test_registration_page.py`` verifies the GET-only registration
-preview, four form fields, CSRF markup, localised HTML language, disabled
-POST creation, and signed-in redirect behaviour.
+``accounts/tests/test_registration_page.py`` verifies the registration GET
+form, enabled and disabled POST behaviour, form field errors, uniqueness
+conflict feedback, account creation, multipart verification-email delivery,
+SMTP failure handling, CSRF checks, the token-free result page, localised
+HTML language metadata, and authenticated-user redirects.
 
 ``accounts/tests/test_registration_service.py`` checks transactional account
 creation, uniqueness conflicts occurring after successful form validation,
@@ -271,6 +273,10 @@ Run one test module::
 Run the staged registration configuration tests::
 
    uv run pytest tests/test_settings_registration.py
+
+Run the registration page integration tests::
+
+   uv run pytest accounts/tests/test_registration_page.py
 
 Run one individual test::
 

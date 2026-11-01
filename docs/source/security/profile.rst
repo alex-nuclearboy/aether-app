@@ -8,8 +8,9 @@ The authenticated account profile is available at ``/profile/``. The page
 shows the current username and email address and the computed
 ``is_email_verified`` status. It is deliberately read-only: changing email,
 username, password, and other account details will be introduced separately.
-A GET-only registration preview is available, but no public account creation
-or recovery flow is enabled yet.
+Staged registration POST and verification-email delivery are available
+only when the development/test flag is enabled. Public registration and
+recovery remain disabled in production.
 
 The shared header links to the profile only for authenticated users.
 Django Admin retains its standard appearance and account management UI.
@@ -60,8 +61,8 @@ Link confirmation
 -----------------
 
 The link targets ``/email/verify/<uidb64>/<token>/``. An unauthenticated
-recipient may open the confirmation page, so the same endpoint can later be
-used by public registration. GET only validates the link and displays a form.
+recipient may open the confirmation page. The staged registration workflow
+reuses this endpoint. GET only validates the link and displays a form.
 A CSRF-protected POST calls the existing ``verify_email()`` service, which
 re-reads the user with a PostgreSQL row lock and records the current address
 in ``verified_email``. Previously consumed, expired, malformed, or stale
@@ -94,9 +95,10 @@ implicitly. Editing forms will be separate POST views with appropriate
 validation and reauthentication checks; the present read-only profile does
 not anticipate or expose any such form.
 
-The shared email-sending service and the public confirmation endpoint can be
-reused by the future registration workflow. Public registration will create
-users with ``email_verification_required=True``; no additional activation
-state or change to ``is_active`` is required. The GET-only registration
-preview is implemented; account creation on POST, public resend recovery, and
-public-request rate limits remain future work.
+Staged registration POST already reuses the email-sending service and public
+confirmation endpoint. It creates users with
+``email_verification_required=True`` without changing ``is_active``.
+A failed outbound message leaves the unverified account in place; the
+result page reports delivery failure, but does not provide public resend.
+Public resend/recovery and registration-specific rate limits remain future
+work, so registration cannot be enabled in production yet.

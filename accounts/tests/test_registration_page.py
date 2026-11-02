@@ -1,4 +1,4 @@
-"""Registration preview and gated submission integration tests."""
+"""Gated registration views and submission integration tests."""
 
 import re
 from html import unescape
@@ -180,7 +180,9 @@ def test_email_failure_does_not_roll_back_created_account(client):
     assert User.objects.filter(username="test-member").exists()
     assert len(mail.outbox) == 0
     result_page = client.get(reverse("registration_check_email"))
-    assert "couldn't send" in unescape(result_page.content.decode())
+    result_text = unescape(result_page.content.decode())
+    assert "couldn't send" in result_text
+    assert "You cannot sign in until your email is verified." in result_text
 
 
 @pytest.mark.django_db

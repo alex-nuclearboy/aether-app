@@ -95,7 +95,8 @@ class AetherRegistrationView(TemplateView):
                 request,
                 _(
                     "Your account was created, but we couldn't send "
-                    "the verification email. Please try again later."
+                    "the verification email. You cannot sign in until "
+                    "your email is verified."
                 ),
             )
 

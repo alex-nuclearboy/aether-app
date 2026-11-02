@@ -24,7 +24,7 @@ def test_form_inherits_django_password_validation():
 
 
 def test_valid_registration_normalises_email_domain():
-    """Match the existing email manager normalization policy."""
+    """Match the existing email manager normalisation policy."""
     form = AetherRegistrationForm(
         registration_data(email="Member@EXAMPLE.COM")
     )

@@ -1,4 +1,4 @@
-"""Transactional account creation for future public registration views."""
+"""Transactional account creation for staged public registration."""
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction

@@ -27,7 +27,7 @@ class AetherAuthenticationForm(AuthenticationForm):
 
 # pylint: disable-next=too-many-ancestors
 class AetherRegistrationForm(UserCreationForm):
-    """Validate credentials for a future public registration page."""
+    """Validate credentials for staged public account registration."""
 
     class Meta(UserCreationForm.Meta):
         model = User

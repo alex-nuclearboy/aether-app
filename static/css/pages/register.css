@@ -1,4 +1,4 @@
-/* Registration preview: mirror the sign-in page without shared CSS changes. */
+/* Staged registration layout, aligned with the sign-in page. */
 
 .register {
     width: min(100%, 460px);

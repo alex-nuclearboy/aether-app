@@ -42,10 +42,10 @@ def test_creation_rejects_invalid_email(
     "method_name",
     ["create_user", "create_superuser"],
 )
-def test_creation_normalizes_email(
+def test_creation_normalises_email(
     method_name: str,
 ) -> None:
-    """Strip whitespace and normalize the email domain."""
+    """Strip whitespace and normalise the email domain."""
     create = getattr(User.objects, method_name)
 
     user = create(
@@ -101,10 +101,10 @@ def test_async_creation_rejects_invalid_email(
     "method_name",
     ["acreate_user", "acreate_superuser"],
 )
-def test_async_creation_normalizes_email(
+def test_async_creation_normalises_email(
     method_name: str,
 ) -> None:
-    """Normalize email addresses in asynchronous creation."""
+    """Normalise email addresses in asynchronous creation."""
     create = getattr(User.objects, method_name)
 
     user = async_to_sync(create)(

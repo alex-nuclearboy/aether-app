@@ -20,8 +20,8 @@ def test_login_uses_a_dedicated_centred_layout(client):
     assert 'type="submit"' in content
 
 
-def test_login_links_to_registration_preview(client):
-    """Offer an accessible route to the registration form preview."""
+def test_login_links_to_registration_page(client):
+    """Offer an accessible route to the staged registration form."""
     response = client.get(reverse("login"))
     content = response.content.decode()
 

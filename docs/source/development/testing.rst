@@ -52,7 +52,7 @@ The current modules have separate responsibilities:
 
 ``settings_helpers.py``
    Provides synthetic environments, isolated settings-module execution,
-   and reusable PostgreSQL configuration helpers.
+   explicit registration-flag defaults, and reusable PostgreSQL helpers.
 
 ``test_settings.py``
    Tests environment-file loading, core settings validation, and logging
@@ -70,9 +70,10 @@ The current modules have separate responsibilities:
    Tests development and production email backends and SMTP configuration.
 
 ``test_settings_registration.py``
-   Tests the default-off registration setting, explicit development opt-in,
-   and rejection of an enabled flag in production. HTTP registration tests
-   are separate from configuration tests.
+   Tests the registration flag's actual default without a local ``.env``,
+   explicit disabled and enabled states, and rejection of production opt-in.
+   Other settings tests force the registration flag off to avoid dependence
+   on the developer's local ``.env`` file.
 
 ``test_database.py``
    Contains integration tests that verify the configured PostgreSQL backend
@@ -119,6 +120,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_managers.py
        ├── test_models.py
        ├── test_profile_verification.py
+       ├── test_registration_flow.py
        ├── test_registration_form.py
        ├── test_registration_page.py
        ├── test_registration_service.py
@@ -184,6 +186,10 @@ form, enabled and disabled POST behaviour, form field errors, uniqueness
 conflict feedback, account creation, multipart verification-email delivery,
 SMTP failure handling, CSRF checks, the token-free result page, localised
 HTML language metadata, and authenticated-user redirects.
+
+``accounts/tests/test_registration_flow.py`` uses a delivered email link to
+exercise registration, refusal of sign-in before confirmation, the read-only
+confirmation GET, confirmation POST, and sign-in by username or email.
 
 ``accounts/tests/test_registration_service.py`` checks transactional account
 creation, uniqueness conflicts occurring after successful form validation,
@@ -274,9 +280,9 @@ Run the staged registration configuration tests::
 
    uv run pytest tests/test_settings_registration.py
 
-Run the registration page integration tests::
+Run the registration page and full email-confirmation flow tests::
 
-   uv run pytest accounts/tests/test_registration_page.py
+   uv run pytest accounts/tests/test_registration_page.py accounts/tests/test_registration_flow.py
 
 Run one individual test::
 

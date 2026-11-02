@@ -48,6 +48,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_managers.py
    │   │   ├── test_models.py
    │   │   ├── test_profile_verification.py
+   │   │   ├── test_registration_flow.py
    │   │   ├── test_registration_form.py
    │   │   ├── test_registration_page.py
    │   │   ├── test_registration_service.py
@@ -500,6 +501,7 @@ Contains automated tests specific to the accounts application, including:
 * registration GET, disabled-by-default and gated POST, form errors,
   CSRF validation, email delivery and failure feedback, token-free result,
   and authenticated redirect;
+* end-to-end registration, email confirmation and subsequent sign-in;
 * profile access, read-only account details, and email verification status;
 * verification email delivery, recipient selection, resend cooldown, and
   delivery failure recovery;
@@ -1011,7 +1013,8 @@ The current package contains:
 
 ``tests/settings_helpers.py``
    Provides synthetic environment settings, isolated settings-module execution,
-   and shared helpers for PostgreSQL configuration tests.
+   an explicit disabled registration flag for ordinary settings tests, and
+   shared helpers for PostgreSQL configuration tests.
 
 ``tests/test_settings.py``
    Tests environment-file loading, core settings validation, and logging
@@ -1030,9 +1033,9 @@ The current package contains:
    settings validation.
 
 ``tests/test_settings_registration.py``
-   Tests the default-off registration setting, explicit development opt-in,
-   and rejection of an enabled flag in production. Registration HTTP
-   behaviour is tested separately in ``accounts/tests/test_registration_page.py``.
+   Tests the real default without local ``.env`` interference, explicit
+   registration-flag values, and rejection of production opt-in. Registration
+   HTTP behaviour is tested separately in ``accounts/tests/``.
 
 ``tests/test_database.py``
    Contains integration tests that verify PostgreSQL as the configured database

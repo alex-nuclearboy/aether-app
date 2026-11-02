@@ -79,8 +79,9 @@ POST validates the form, creates an unverified account and invokes the
 existing ``send_verification_email()`` service. No automatic sign-in occurs.
 Success redirects to the token-free ``/register/check-email/`` page.
 A recognised SMTP or operating-system delivery failure leaves the account
-created and shows a one-time error message on the result page. The account
-cannot sign in until the current email has been verified.
+created and shows a one-time error message on the result page. The message
+explains that sign-in requires email confirmation; no public resend action
+is available yet.
 
 There is no public resend/recovery flow or registration-specific rate
 limiting yet. Production settings reject enabling the flag until these

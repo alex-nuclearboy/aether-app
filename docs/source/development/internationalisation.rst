@@ -7,7 +7,7 @@ Current scope
 Aether's application-facing strings are marked for translation, but the
 application currently operates in one configured language. The default is
 ``en-gb`` (``DJANGO_LANGUAGE_CODE``). ``USE_I18N`` is enabled. There is no
-language switch, ``LocaleMiddleware``, project translation catalog, or
+language switch, ``LocaleMiddleware``, project translation catalogue, or
 stored user language preference yet. The standard Django Admin remains
 unchanged and uses the configured Django language.
 
@@ -98,7 +98,7 @@ Then, from the project root, use Django's extraction tools::
 
 These commands require GNU gettext utilities (``xgettext``, ``msgfmt``).
 They are **not** required for the present English-only interface. A
-translation catalog and actual translated content should be reviewed before
+translation catalogue and actual translated content should be reviewed before
 a language is made available to users.
 
 Verification
@@ -111,4 +111,4 @@ HTML language and translation markers in shared interface templates.
 
 Language override tests use ``translation.override(...)`` to exercise the
 mechanism without enabling language switching or requiring a complete
-application translation catalog.
+application translation catalogue.

@@ -33,6 +33,7 @@ VALID_ENVIRONMENT = {
     "DATABASE_CONN_HEALTH_CHECKS": "False",
     "DATABASE_CONNECT_TIMEOUT": "5",
     "DJANGO_DEFAULT_FROM_EMAIL": "test@example.com",
+    "AETHER_REGISTRATION_ENABLED": "False",
 }
 
 VALID_PRODUCTION_OVERRIDES = {
@@ -50,6 +51,8 @@ VALID_PRODUCTION_OVERRIDES = {
 
 def run_settings(
     monkeypatch: pytest.MonkeyPatch,
+    *,
+    unset: tuple[str, ...] = (),
     **overrides: str,
 ) -> dict[str, object]:
     """Execute the settings module with a controlled environment."""
@@ -57,6 +60,10 @@ def run_settings(
         **VALID_ENVIRONMENT,
         **overrides,
     }
+
+    for name in unset:
+        environment.pop(name, None)
+        monkeypatch.delenv(name, raising=False)
 
     for name, value in environment.items():
         monkeypatch.setenv(name, value)

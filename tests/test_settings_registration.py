@@ -1,5 +1,8 @@
 """Registration feature-gate settings and production restrictions."""
 
+from unittest.mock import Mock
+
+import environ
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 
@@ -10,7 +13,16 @@ from tests.settings_helpers import (
 
 
 def test_public_registration_is_disabled_by_default(monkeypatch):
-    """Do not allow account creation unless explicitly enabled."""
+    """Use the actual default when no flag or local env file is loaded."""
+    monkeypatch.setattr(environ.Env, "read_env", Mock())
+    settings_dict = run_settings(
+        monkeypatch, unset=("AETHER_REGISTRATION_ENABLED",)
+    )
+    assert settings_dict["REGISTRATION_ENABLED"] is False
+
+
+def test_public_registration_is_disabled_when_explicitly_false(monkeypatch):
+    """Ignore a local opt-in when the test environment disables signup."""
     settings_dict = run_settings(monkeypatch)
     assert settings_dict["REGISTRATION_ENABLED"] is False
 

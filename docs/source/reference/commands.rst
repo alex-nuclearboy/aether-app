@@ -72,6 +72,23 @@ Delete expired counters in batches::
 
    uv run python manage.py prune_public_request_counters --batch-size 1000
 
+Verification email worker
+-------------------------
+
+Process at most one queued email using the local HTTP site origin::
+
+   uv run python manage.py process_verification_email_queue --once --public-origin=http://127.0.0.1:8000
+
+Run the independent worker until stopped (separate terminal or process)::
+
+   uv run python manage.py process_verification_email_queue --public-origin=http://127.0.0.1:8000
+
+In production, use the verified public ``https://`` origin and run the
+worker as a separately supervised process. The command refuses plain HTTP
+origins in production. It does not enqueue messages by itself: until the
+next integration stage, registration and profile views still send messages
+synchronously. Tokens and recipient addresses must not be logged.
+
 Application
 -----------
 

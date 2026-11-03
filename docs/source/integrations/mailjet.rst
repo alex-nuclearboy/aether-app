@@ -10,9 +10,10 @@ Aether.
 The application email verification service uses the default Django mailer.
 It delivers both plain-text and HTML messages. Staged registration already
 reuses the same service when its development/test flag is enabled. A separate
-PostgreSQL outbox model and enqueue service have been added, but no request
-path uses them and no delivery worker is running yet. SMTP is still performed
-in the HTTP request. Production public registration remains disabled pending
+PostgreSQL outbox, enqueue service and worker have been added. The worker can
+send messages independently, but no request path yet uses the queue and no
+worker is deployed automatically. Existing request paths still perform SMTP
+synchronously. Production public registration remains disabled pending
 resend/recovery, worker integration and deployment safeguards.
 
 Aether connects to Mailjet through Django's standard SMTP backend rather than

@@ -112,6 +112,8 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_backends.py
        ├── test_commands.py
        ├── test_email_outbox.py
+       ├── test_email_worker.py
+       ├── test_email_worker_command.py
        ├── test_email_verification.py
        ├── test_forms.py
        ├── test_interface_translations.py
@@ -162,6 +164,13 @@ and continued rejection of inactive users.
 recipient snapshots, status and cooldown handling, duplicate active jobs,
 changed email addresses and rollback of both job and request timestamp.
 It does not exercise a worker or SMTP delivery.
+
+``accounts/tests/test_email_worker.py`` checks independent SMTP
+delivery, public-origin validation, stale-recipient cancellation, bounded
+retry delays, expired leases and compare-and-swap completion.
+
+``accounts/tests/test_email_worker_command.py`` covers one-shot command
+execution, idle queues, invalid polling intervals and missing origins.
 
 ``accounts/tests/test_email_verification.py`` covers token validity,
 expiration, account binding, email and password changes, invalidation

@@ -101,25 +101,38 @@ The command deletes only records whose expiry has passed; it leaves current
 allowances intact. It must be scheduled as part of the future production
 maintenance configuration. It does not run automatically during HTTP requests.
 
-Verification email outbox (foundation)
---------------------------------------
+Verification email outbox and worker
+------------------------------------
 
 ``accounts.VerificationEmailJob`` stores a snapshot of the intended recipient
-and scheduling information for a future delivery worker. Active jobs have a
+and scheduling information for the independent delivery worker. Active jobs have a
 conditional PostgreSQL uniqueness constraint on user and recipient. Jobs do
 not contain verification tokens or rendered messages.
 
 ``accounts.email_outbox.queue_verification_email()`` reserves a job and the
 existing account-level request timestamp in one atomic transaction. Repeated
 requests for an active job are idempotent, and a verified address is not
-queued. An address change can produce a separate job; the future worker must
-validate the job against the current address before delivery.
+queued. An address change can produce a separate job; the worker checks the
+recipient snapshot against the current address before delivery.
 
-This is a **foundation only**. The current registration and profile views
-still send verification messages synchronously. Worker claiming, retries,
-expiry, public-origin configuration and HTTP integration are separate next
-steps. The eventual worker must be designed for at-least-once delivery, not
-exactly-once delivery.
+The worker in ``accounts.email_worker`` now claims due rows using
+PostgreSQL ``SELECT FOR UPDATE SKIP LOCKED``. A lease expires after five
+minutes; abandoned work can then be reclaimed. SMTP I/O occurs outside the
+transaction. Success, cancellation and failure updates match the original
+lease to prevent a previous worker from overwriting a newer claim.
+
+Transient failures are retried with increasing delays, at most five delivery
+attempts. Expired leases at the retry limit become terminal failures.
+Before sending, the worker cancels jobs whose recipient address has changed
+or has already been verified. Verification tokens are created at delivery
+time and are never persisted in the queue.
+
+The worker is operated separately using ``process_verification_email_queue``
+and a required trusted public origin. It is **not automatically started** by
+the Django HTTP server. Existing registration and profile views continue to
+send email synchronously until a later integration step. SMTP delivery is
+at least once, not exactly once: a crash after SMTP acceptance can result in
+a duplicate message on lease recovery.
 
 Useful commands
 ---------------

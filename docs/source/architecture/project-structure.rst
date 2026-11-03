@@ -32,7 +32,8 @@ The repository currently has the following top-level structure:
    │   │   ├── __init__.py
    │   │   └── commands/
    │   │       ├── __init__.py
-   │   │       └── prune_public_request_counters.py
+   │   │       ├── prune_public_request_counters.py
+   │   │       └── process_verification_email_queue.py
    │   ├── migrations/
    │   │   ├── __init__.py
    │   │   ├── 0001_initial.py
@@ -45,6 +46,8 @@ The repository currently has the following top-level structure:
    │   │   ├── test_backends.py
    │   │   ├── test_commands.py
    │   │   ├── test_email_outbox.py
+   │   │   ├── test_email_worker.py
+   │   │   ├── test_email_worker_command.py
    │   │   ├── test_email_verification.py
    │   │   ├── test_forms.py
    │   │   ├── test_interface_translations.py
@@ -80,6 +83,7 @@ The repository currently has the following top-level structure:
    │   ├── audit.py
    │   ├── backends.py
    │   ├── email_outbox.py
+   │   ├── email_worker.py
    │   ├── email_verification.py
    │   ├── emails.py
    │   ├── forms.py
@@ -264,8 +268,27 @@ messages nor verification tokens and is not registered in Django Admin.
 
 Provides an atomic queue-reservation service for verification messages.
 It checks current verification state, active jobs and the existing per-account
-one-minute request interval. Enqueuing does not perform SMTP I/O. HTTP views
-and a background worker do not use this service yet.
+one-minute request interval. Enqueuing does not perform SMTP I/O. A separate
+worker can now process queued jobs, but HTTP views do not use this service yet.
+
+``accounts/email_worker.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Claims eligible outbox rows with PostgreSQL ``SKIP LOCKED`` and a five-minute
+lease. Delivery runs outside the claim transaction, uses a trusted explicit
+public origin and the existing plain-text/HTML templates, and checks the
+recipient snapshot and verification state before sending. Failed transport
+attempts have bounded backoff and terminal states. A previous worker cannot
+update a job that has been reclaimed under a newer lease. As with other SMTP
+workers, delivery is at least once, not exactly once.
+
+``accounts/management/commands/process_verification_email_queue.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Runs the independent verification email worker. ``--once`` processes at most
+one job; the normal mode polls continuously. ``--public-origin`` is mandatory,
+and a production worker refuses HTTP origins. It does not run automatically
+alongside Django's development server.
 
 ``accounts/public_rate_limits.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -310,17 +333,13 @@ Provides the transaction-safe server-side email verification service.
 It validates tokens and persists the verified address without changing
 account activation or permissions.
 
-It also provides ``locked_unverified_email_user()``, which is shared by
-direct SMTP delivery and the verification email outbox service. The helper
-locks the user row within the caller's database transaction and returns
-``None`` if the current email address is already verified.
-
 ``accounts/emails.py``
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Generates a confirmation link with the existing token generator and sends
-plain-text and HTML email through Django's configured mailer. The service
-reserves a send slot using a PostgreSQL row lock, applies a 60-second resend
+plain-text and HTML email through Django's configured mailer. The
+``build_verification_message()`` and ``verification_path_for_user()``
+helpers are shared with the outbox worker. The synchronous service reserves a send slot using a PostgreSQL row lock, applies a 60-second resend
 cooldown, and restores the reservation after failed delivery when appropriate.
 
 ``accounts/backends.py``
@@ -551,6 +570,8 @@ Contains automated tests specific to the accounts application, including:
 * HTTP 429 response headers and recalculated lockout wait times;
 * application login form, CSRF, safe redirects, and POST-only logout;
 * verification email outbox reservations and transactional rollback;
+* worker lease recovery, bounded retries, stale-recipient cancellation,
+  public-origin validation and the independent delivery command;
 * persistent public rate-limit counters and concurrent request accounting;
 * staged registration POST throttling, response headers and failure-closed
   handling of unresolved client IP addresses;

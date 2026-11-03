@@ -101,6 +101,26 @@ The command deletes only records whose expiry has passed; it leaves current
 allowances intact. It must be scheduled as part of the future production
 maintenance configuration. It does not run automatically during HTTP requests.
 
+Verification email outbox (foundation)
+--------------------------------------
+
+``accounts.VerificationEmailJob`` stores a snapshot of the intended recipient
+and scheduling information for a future delivery worker. Active jobs have a
+conditional PostgreSQL uniqueness constraint on user and recipient. Jobs do
+not contain verification tokens or rendered messages.
+
+``accounts.email_outbox.queue_verification_email()`` reserves a job and the
+existing account-level request timestamp in one atomic transaction. Repeated
+requests for an active job are idempotent, and a verified address is not
+queued. An address change can produce a separate job; the future worker must
+validate the job against the current address before delivery.
+
+This is a **foundation only**. The current registration and profile views
+still send verification messages synchronously. Worker claiming, retries,
+expiry, public-origin configuration and HTTP integration are separate next
+steps. The eventual worker must be designed for at-least-once delivery, not
+exactly-once delivery.
+
 Useful commands
 ---------------
 

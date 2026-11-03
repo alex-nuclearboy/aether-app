@@ -111,6 +111,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_audit.py
        ├── test_backends.py
        ├── test_commands.py
+       ├── test_email_outbox.py
        ├── test_email_verification.py
        ├── test_forms.py
        ├── test_interface_translations.py
@@ -156,6 +157,11 @@ and default access for accounts created by the manager and superuser tools.
 accounts are rejected before email verification and permitted afterwards,
 including both login identifiers, asynchronous authentication, email changes,
 and continued rejection of inactive users.
+
+``accounts/tests/test_email_outbox.py`` checks outbox reservations,
+recipient snapshots, status and cooldown handling, duplicate active jobs,
+changed email addresses and rollback of both job and request timestamp.
+It does not exercise a worker or SMTP delivery.
 
 ``accounts/tests/test_email_verification.py`` covers token validity,
 expiration, account binding, email and password changes, invalidation

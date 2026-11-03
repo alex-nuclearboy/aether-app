@@ -37,6 +37,8 @@ The implemented foundation consists of:
   endpoints remain future work;
 * a manual Django management command for pruning expired public request
   counters in batches; scheduling it in production remains pending;
+* a PostgreSQL verification email outbox model and atomic reservation service;
+  no HTTP endpoint or worker uses the queue yet, and SMTP remains synchronous;
 * persistent per-account email verification state, initially unverified and
   matched against the current email independently from account activation;
 * a per-account sign-in policy that requires current email verification only

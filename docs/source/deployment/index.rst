@@ -25,6 +25,11 @@ durable delivery, trusted production client-IP configuration and scheduled
 counter expiry cleanup are not yet complete. Registration must not be enabled
 in production.
 
+The verification email outbox schema and reservation service do not yet
+replace synchronous HTTP-based SMTP. Production will require a separately
+managed worker, retry and lease recovery, worker monitoring and a verified
+public HTTPS origin before queued emails can be enabled.
+
 The production runtime also requires email delivery configuration: a default
 sender address together with a configured SMTP host and authentication
 credentials. Aether keeps this application-level SMTP configuration

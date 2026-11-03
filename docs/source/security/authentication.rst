@@ -94,7 +94,7 @@ GET requests, authenticated redirects, and disabled registration do not
 consume an allowance. The management command
 ``prune_public_request_counters`` can remove expired records, but production
 scheduling is not yet configured. Resend and email-correction limits are not
-yet connected to public endpoints. Public recovery, a durable email queue
+yet connected to public endpoints. Public recovery, worker-based email delivery
 and final proxy/IP verification remain prerequisites before deployment.
 Production still rejects enabling registration; Admin and CLI behaviour is
 unchanged.

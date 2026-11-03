@@ -44,6 +44,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_audit.py
    │   │   ├── test_backends.py
    │   │   ├── test_commands.py
+   │   │   ├── test_email_outbox.py
    │   │   ├── test_email_verification.py
    │   │   ├── test_forms.py
    │   │   ├── test_interface_translations.py
@@ -78,6 +79,7 @@ The repository currently has the following top-level structure:
    │   ├── apps.py
    │   ├── audit.py
    │   ├── backends.py
+   │   ├── email_outbox.py
    │   ├── email_verification.py
    │   ├── emails.py
    │   ├── forms.py
@@ -252,6 +254,19 @@ The separate ``PublicRequestCounter`` model stores keyed rate-limit counters
 and expiry timestamps. It does not store plaintext IP addresses, usernames or
 email addresses and is not registered in Django Admin.
 
+The ``VerificationEmailJob`` model stores pending verification delivery jobs,
+a snapshot of the intended recipient, retry and lease metadata, and a partial
+PostgreSQL uniqueness constraint for active jobs. It stores neither rendered
+messages nor verification tokens and is not registered in Django Admin.
+
+``accounts/email_outbox.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides an atomic queue-reservation service for verification messages.
+It checks current verification state, active jobs and the existing per-account
+one-minute request interval. Enqueuing does not perform SMTP I/O. HTTP views
+and a background worker do not use this service yet.
+
 ``accounts/public_rate_limits.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -294,6 +309,11 @@ its current email address, and verification state.
 Provides the transaction-safe server-side email verification service.
 It validates tokens and persists the verified address without changing
 account activation or permissions.
+
+It also provides ``locked_unverified_email_user()``, which is shared by
+direct SMTP delivery and the verification email outbox service. The helper
+locks the user row within the caller's database transaction and returns
+``None`` if the current email address is already verified.
 
 ``accounts/emails.py``
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -502,7 +522,8 @@ Displays the result after confirmation at a URL that contains no token.
 Contains database migrations for the accounts application. The custom user
 model is introduced in ``0001_initial.py``, while later migrations evolve the
 account identifier rules, database constraints, email verification state, and
-verification-message cooldown. Migration files are generated with Django's
+verification-message cooldown. Later migrations add request counters and
+the verification email outbox. Migration files are generated with Django's
 ``makemigrations`` command.
 
 ``accounts/tests/``
@@ -529,6 +550,7 @@ Contains automated tests specific to the accounts application, including:
   sensitive-data handling and separate repeat-denial events;
 * HTTP 429 response headers and recalculated lockout wait times;
 * application login form, CSRF, safe redirects, and POST-only logout;
+* verification email outbox reservations and transactional rollback;
 * persistent public rate-limit counters and concurrent request accounting;
 * staged registration POST throttling, response headers and failure-closed
   handling of unresolved client IP addresses;

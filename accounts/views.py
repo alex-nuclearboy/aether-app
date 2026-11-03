@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.exceptions import ValidationError
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
@@ -24,8 +24,14 @@ from accounts.emails import (
 )
 from accounts.forms import AetherAuthenticationForm, AetherRegistrationForm
 from accounts.models import User
+from accounts.public_rate_limits import (
+    PublicRequestAction,
+    consume_public_request,
+    public_request_retry_after,
+)
 from accounts.registration import create_registration_user
 from accounts.tokens import email_verification_token
+from infrastructure.request import get_client_ip
 
 
 class AetherLoginView(LoginView):
@@ -70,6 +76,32 @@ class AetherRegistrationView(TemplateView):
         context["registration_enabled"] = settings.REGISTRATION_ENABLED
         return context
 
+    @staticmethod
+    def _registration_limit_response(request):
+        """Return a response if the public registration limit blocks a POST."""
+        client_ip = get_client_ip(request)
+        if client_ip is None:
+            response = HttpResponse(
+                _("Registration is temporarily unavailable."),
+                status=503,
+                content_type="text/plain; charset=utf-8",
+            )
+            response["Cache-Control"] = "no-store"
+            return response
+
+        action = PublicRequestAction.REGISTER_IP
+        if not consume_public_request(action, client_ip):
+            response = HttpResponse(
+                _("Too many registration attempts. Please try again later."),
+                status=429,
+                content_type="text/plain; charset=utf-8",
+            )
+            response["Retry-After"] = str(public_request_retry_after(action))
+            response["Cache-Control"] = "no-store"
+            return response
+
+        return None
+
     def post(self, request, *args, **kwargs):
         """Validate, create, and email a pending registration account."""
         if request.user.is_authenticated:
@@ -77,6 +109,10 @@ class AetherRegistrationView(TemplateView):
 
         if not settings.REGISTRATION_ENABLED:
             return HttpResponseNotAllowed(["GET", "HEAD", "OPTIONS"])
+
+        limit_response = self._registration_limit_response(request)
+        if limit_response is not None:
+            return limit_response
 
         form = AetherRegistrationForm(request.POST)
         if not form.is_valid():

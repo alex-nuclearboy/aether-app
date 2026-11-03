@@ -29,6 +29,35 @@ class VerificationEmailStatus(StrEnum):
     TOO_SOON = "too_soon"
 
 
+def verification_path_for_user(user: User) -> str:
+    """Build a fresh confirmation path for the user's current state."""
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+    token = email_verification_token.make_token(user)
+    return reverse(
+        "email_verification_confirm",
+        kwargs={"uidb64": uidb64, "token": token},
+    )
+
+
+def build_verification_message(
+    *, recipient: str, verification_url: str
+) -> EmailMultiAlternatives:
+    """Render the existing plain-text and HTML verification templates."""
+    context = {"verification_url": verification_url}
+    message = EmailMultiAlternatives(
+        subject=_("Verify your Aether email address"),
+        body=render_to_string(
+            "accounts/email/verification.txt", context
+        ),
+        to=[recipient],
+    )
+    message.attach_alternative(
+        render_to_string("accounts/email/verification.html", context),
+        "text/html",
+    )
+    return message
+
+
 def send_verification_email(
     request: HttpRequest,
     user_id: int,
@@ -51,27 +80,13 @@ def send_verification_email(
         user.email_verification_sent_at = now
         user.save(update_fields=["email_verification_sent_at"])
 
-        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-        token = email_verification_token.make_token(user)
+        verification_path = verification_path_for_user(user)
         recipient = user.email
 
-    verification_path = reverse(
-        "email_verification_confirm",
-        kwargs={"uidb64": uidb64, "token": token},
-    )
     verification_url = request.build_absolute_uri(verification_path)
-    context = {"verification_url": verification_url}
-
-    message = EmailMultiAlternatives(
-        subject=_("Verify your Aether email address"),
-        body=render_to_string(
-            "accounts/email/verification.txt", context
-        ),
-        to=[recipient],
-    )
-    message.attach_alternative(
-        render_to_string("accounts/email/verification.html", context),
-        "text/html",
+    message = build_verification_message(
+        recipient=recipient,
+        verification_url=verification_url,
     )
 
     try:

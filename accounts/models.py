@@ -102,3 +102,19 @@ class User(AbstractUser):
                 ),
             ),
         ]
+
+
+class PublicRequestCounter(models.Model):
+    """Store a privacy-preserving public request count in PostgreSQL."""
+
+    key = models.CharField(
+        max_length=64,
+        primary_key=True,
+        editable=False,
+    )
+    attempts = models.PositiveIntegerField(default=0, editable=False)
+    expires_at = models.DateTimeField(db_index=True, editable=False)
+
+    class Meta:
+        verbose_name = _("public request counter")
+        verbose_name_plural = _("public request counters")

@@ -86,3 +86,9 @@ def consume_public_request(
         counter.attempts += 1
         counter.save(update_fields=["attempts"])
         return True
+
+
+def public_request_retry_after(action: PublicRequestAction) -> int:
+    """Return seconds until the next fixed UTC allowance window."""
+    window_seconds = int(PUBLIC_REQUEST_LIMITS[action].window.total_seconds())
+    return window_seconds - int(timezone.now().timestamp()) % window_seconds

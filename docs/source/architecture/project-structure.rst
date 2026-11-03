@@ -48,6 +48,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_managers.py
    │   │   ├── test_models.py
    │   │   ├── test_profile_verification.py
+   │   │   ├── test_public_rate_limits.py
    │   │   ├── test_registration_flow.py
    │   │   ├── test_registration_form.py
    │   │   ├── test_registration_page.py
@@ -77,6 +78,7 @@ The repository currently has the following top-level structure:
    │   ├── lockouts.py
    │   ├── managers.py
    │   ├── models.py
+   │   ├── public_rate_limits.py
    │   ├── registration.py
    │   ├── tokens.py
    │   ├── urls.py
@@ -238,6 +240,20 @@ It is separate from ownership verification and Django's ``is_active`` flag.
 The non-editable ``email_verification_sent_at`` field records the last
 verification email request for a PostgreSQL-backed delivery cooldown. It does
 not represent ownership verification and is not an account-activation flag.
+
+The separate ``PublicRequestCounter`` model stores keyed rate-limit counters
+and expiry timestamps. It does not store plaintext IP addresses, usernames or
+email addresses and is not registered in Django Admin.
+
+``accounts/public_rate_limits.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides atomic, fixed-window PostgreSQL request accounting for registration,
+verification-email resend and correction of an unverified email address.
+Independent action and identity keys are protected using Django's keyed HMAC.
+The service is implemented but is not yet connected to public HTTP routes.
+A scheduled cleanup process for expired counters is still required before
+production activation.
 
 ``accounts/managers.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -498,6 +514,7 @@ Contains automated tests specific to the accounts application, including:
   sensitive-data handling and separate repeat-denial events;
 * HTTP 429 response headers and recalculated lockout wait times;
 * application login form, CSRF, safe redirects, and POST-only logout;
+* persistent public rate-limit counters and concurrent request accounting;
 * registration GET, disabled-by-default and gated POST, form errors,
   CSRF validation, email delivery and failure feedback, token-free result,
   and authenticated redirect;

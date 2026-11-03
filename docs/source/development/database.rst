@@ -79,6 +79,19 @@ when user-model constraints change.
 See :doc:`../security/authentication` for account-creation rules and
 :doc:`testing` for PostgreSQL constraint tests.
 
+Public request counters
+-----------------------
+
+``accounts.PublicRequestCounter`` holds pseudonymous request counters in
+PostgreSQL. Fixed-window keys are derived using a separate keyed HMAC context;
+identifiers are not stored in plaintext. The records have an indexed expiry
+time for later removal by a worker or maintenance command.
+
+The atomic request-limit service is not yet wired into registration or
+recovery views. It must not be described as active protection until the
+public endpoints invoke it. Expired counter cleanup is a prerequisite for
+public deployment.
+
 Useful commands
 ---------------
 

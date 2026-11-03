@@ -83,10 +83,12 @@ created and shows a one-time error message on the result page. The message
 explains that sign-in requires email confirmation; no public resend action
 is available yet.
 
-There is no public resend/recovery flow or registration-specific rate
-limiting yet. Production settings reject enabling the flag until these
-controls are implemented and reviewed. Django Admin and CLI account creation
-behaviour is unchanged.
+The PostgreSQL-backed public request counter and its atomic accounting
+service are available for future registration, resend and email-correction
+endpoints. They are not yet enforced by ``/register/``. A cleanup process,
+recovery endpoints, a durable email queue and final proxy/IP verification
+remain to be implemented before public deployment. Production still rejects
+enabling registration. Django Admin and CLI behaviour is unchanged.
 
 Email verification state
 ------------------------

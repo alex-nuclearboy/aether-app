@@ -120,6 +120,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_managers.py
        ├── test_models.py
        ├── test_profile_verification.py
+       ├── test_public_rate_limits.py
        ├── test_registration_flow.py
        ├── test_registration_form.py
        ├── test_registration_page.py
@@ -190,6 +191,12 @@ HTML language metadata, and authenticated-user redirects.
 ``accounts/tests/test_registration_flow.py`` uses a delivered email link to
 exercise registration, refusal of sign-in before confirmation, the read-only
 confirmation GET, confirmation POST, and sign-in by username or email.
+
+``accounts/tests/test_public_rate_limits.py`` checks PostgreSQL-backed
+fixed-window allowances, counter expiry metadata, separation of actions and
+identities, keyed storage, invalid inputs and simultaneous requests from
+independent database connections. The concurrency test uses a transactional
+database test rather than mocked query execution.
 
 ``accounts/tests/test_registration_service.py`` checks transactional account
 creation, uniqueness conflicts occurring after successful form validation,

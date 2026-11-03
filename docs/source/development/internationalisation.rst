@@ -31,9 +31,10 @@ messages, HTTP response bodies, and email subjects::
 
    from django.utils.translation import gettext as _
 
-The login/logout success messages and the Axes HTTP 429 response are
-translated at response creation time. Django's ``AuthenticationForm`` and
-password validators retain their native lazy translation behaviour.
+The login/logout messages, Axes HTTP 429 response, and registration
+rate-limit responses are translated at response creation time. Django's
+``AuthenticationForm`` and password validators retain their native lazy
+translation behaviour.
 
 Do **not** translate internal logging formats, audit event names, database
 settings validation, or technical exception messages: these are operational

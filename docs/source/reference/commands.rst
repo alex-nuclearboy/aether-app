@@ -64,6 +64,14 @@ A username, valid email address, and password are required. This command
 does not send an email verification message. See
 :doc:`../security/authentication` for the account creation policy.
 
+Inspect expired public request counters without deleting them::
+
+   uv run python manage.py prune_public_request_counters --dry-run
+
+Delete expired counters in batches::
+
+   uv run python manage.py prune_public_request_counters --batch-size 1000
+
 Application
 -----------
 

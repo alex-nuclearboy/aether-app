@@ -31,9 +31,12 @@ The implemented foundation consists of:
   rules, and PostgreSQL uniqueness-race handling; registration POST and
   verification-email delivery are available only when the default-off
   development/test flag is enabled, not in production;
-* PostgreSQL-backed atomic request counters for future registration, email
-  resend and email-correction limits; the counters are not yet enforced by
-  public routes and their expiry cleanup remains pending;
+* PostgreSQL-backed request limits now enforced on staged registration POST,
+  with HTTP 429 responses, a ``Retry-After`` header and fail-closed handling
+  when the client IP address cannot be determined; resend and email-correction
+  endpoints remain future work;
+* a manual Django management command for pruning expired public request
+  counters in batches; scheduling it in production remains pending;
 * persistent per-account email verification state, initially unverified and
   matched against the current email independently from account activation;
 * a per-account sign-in policy that requires current email verification only

@@ -87,10 +87,19 @@ PostgreSQL. Fixed-window keys are derived using a separate keyed HMAC context;
 identifiers are not stored in plaintext. The records have an indexed expiry
 time for later removal by a worker or maintenance command.
 
-The atomic request-limit service is not yet wired into registration or
-recovery views. It must not be described as active protection until the
-public endpoints invoke it. Expired counter cleanup is a prerequisite for
-public deployment.
+Staged registration POST uses this service to limit requests per client IP
+address, including invalid form submissions. Public resend and email-correction
+routes are not yet connected. Fixed UTC time windows can permit bursts at the
+window boundary; further abuse protection is required before production.
+
+A management command removes expired counters in configurable batches::
+
+   uv run python manage.py prune_public_request_counters --dry-run
+   uv run python manage.py prune_public_request_counters --batch-size 1000
+
+The command deletes only records whose expiry has passed; it leaves current
+allowances intact. It must be scheduled as part of the future production
+maintenance configuration. It does not run automatically during HTTP requests.
 
 Useful commands
 ---------------

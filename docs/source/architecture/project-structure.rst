@@ -28,6 +28,11 @@ The repository currently has the following top-level structure:
    │   └── workflows/
    │       └── code-quality.yml
    ├── accounts/
+   │   ├── management/
+   │   │   ├── __init__.py
+   │   │   └── commands/
+   │   │       ├── __init__.py
+   │   │       └── prune_public_request_counters.py
    │   ├── migrations/
    │   │   ├── __init__.py
    │   │   ├── 0001_initial.py
@@ -49,10 +54,12 @@ The repository currently has the following top-level structure:
    │   │   ├── test_models.py
    │   │   ├── test_profile_verification.py
    │   │   ├── test_public_rate_limits.py
+   │   │   ├── test_public_request_counter_cleanup.py
    │   │   ├── test_registration_flow.py
    │   │   ├── test_registration_form.py
    │   │   ├── test_registration_page.py
    │   │   ├── test_registration_service.py
+   │   │   ├── test_registration_throttle.py
    │   │   ├── test_validators.py
    │   │   └── test_views.py
    │   ├── templates/
@@ -251,9 +258,15 @@ email addresses and is not registered in Django Admin.
 Provides atomic, fixed-window PostgreSQL request accounting for registration,
 verification-email resend and correction of an unverified email address.
 Independent action and identity keys are protected using Django's keyed HMAC.
-The service is implemented but is not yet connected to public HTTP routes.
-A scheduled cleanup process for expired counters is still required before
-production activation.
+The registration POST route now consumes an IP-based allowance; other public
+routes are not yet connected. The module also calculates the remaining time
+until the next fixed UTC allowance window for HTTP ``Retry-After`` responses.
+
+``accounts/management/commands/prune_public_request_counters.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines a Django management command that deletes expired request counters in
+batches, with a dry-run option. It is not yet scheduled in production.
 
 ``accounts/managers.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -417,7 +430,9 @@ account via ``create_registration_user()``, and invokes the existing email
 service. Recognised uniqueness conflicts appear beside the relevant form
 field; delivery failures create a one-time error message without deleting
 the account. ``RegistrationCheckEmailView`` shows a token-free result page.
-Production rejects an enabled registration flag.
+Registration POST is rate-limited before form validation using the shared
+client IP resolver; denied requests return HTTP 429, or 503 if the address
+cannot be determined. Production rejects an enabled registration flag.
 
 ``ProfileView`` displays the read-only profile to authenticated users.
 ``RequestEmailVerificationView`` processes CSRF-protected POST requests for
@@ -515,6 +530,9 @@ Contains automated tests specific to the accounts application, including:
 * HTTP 429 response headers and recalculated lockout wait times;
 * application login form, CSRF, safe redirects, and POST-only logout;
 * persistent public rate-limit counters and concurrent request accounting;
+* staged registration POST throttling, response headers and failure-closed
+  handling of unresolved client IP addresses;
+* expired public counter maintenance through a Django management command;
 * registration GET, disabled-by-default and gated POST, form errors,
   CSRF validation, email delivery and failure feedback, token-free result,
   and authenticated redirect;

@@ -83,12 +83,21 @@ created and shows a one-time error message on the result page. The message
 explains that sign-in requires email confirmation; no public resend action
 is available yet.
 
-The PostgreSQL-backed public request counter and its atomic accounting
-service are available for future registration, resend and email-correction
-endpoints. They are not yet enforced by ``/register/``. A cleanup process,
-recovery endpoints, a durable email queue and final proxy/IP verification
-remain to be implemented before public deployment. Production still rejects
-enabling registration. Django Admin and CLI behaviour is unchanged.
+The PostgreSQL-backed counter service enforces a limit of ten registration
+POST attempts per client IP address per fixed UTC hour. The allowance is
+consumed before form validation, so invalid submissions count as attempts.
+Exhausted allowances return HTTP 429 with ``Retry-After`` and
+``Cache-Control: no-store``; an unresolved client IP address fails closed with
+HTTP 503. The existing ``infrastructure.request.get_client_ip`` resolver is
+used; the public endpoint does not parse forwarded headers independently.
+GET requests, authenticated redirects, and disabled registration do not
+consume an allowance. The management command
+``prune_public_request_counters`` can remove expired records, but production
+scheduling is not yet configured. Resend and email-correction limits are not
+yet connected to public endpoints. Public recovery, a durable email queue
+and final proxy/IP verification remain prerequisites before deployment.
+Production still rejects enabling registration; Admin and CLI behaviour is
+unchanged.
 
 Email verification state
 ------------------------

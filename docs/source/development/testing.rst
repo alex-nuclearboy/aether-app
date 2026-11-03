@@ -121,10 +121,12 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_models.py
        ├── test_profile_verification.py
        ├── test_public_rate_limits.py
+       ├── test_public_request_counter_cleanup.py
        ├── test_registration_flow.py
        ├── test_registration_form.py
        ├── test_registration_page.py
        ├── test_registration_service.py
+       ├── test_registration_throttle.py
        ├── test_validators.py
        └── test_views.py
 
@@ -197,6 +199,15 @@ fixed-window allowances, counter expiry metadata, separation of actions and
 identities, keyed storage, invalid inputs and simultaneous requests from
 independent database connections. The concurrency test uses a transactional
 database test rather than mocked query execution.
+
+``accounts/tests/test_registration_throttle.py`` checks HTTP throttling of
+staged registration POST requests, invalid-form counting, independent IP
+allowances, client-IP resolution, disabled registration, fail-closed handling,
+and ``Retry-After`` responses.
+
+``accounts/tests/test_public_request_counter_cleanup.py`` checks expiry-based
+removal, bounded batches, dry-run output, empty results and invalid options
+for the counter maintenance command.
 
 ``accounts/tests/test_registration_service.py`` checks transactional account
 creation, uniqueness conflicts occurring after successful form validation,
@@ -287,9 +298,13 @@ Run the staged registration configuration tests::
 
    uv run pytest tests/test_settings_registration.py
 
-Run the registration page and full email-confirmation flow tests::
+Run the registration page, confirmation flow and throttling tests::
 
-   uv run pytest accounts/tests/test_registration_page.py accounts/tests/test_registration_flow.py
+   uv run pytest accounts/tests/test_registration_page.py accounts/tests/test_registration_flow.py accounts/tests/test_registration_throttle.py
+
+Run the counter cleanup command tests::
+
+   uv run pytest accounts/tests/test_public_request_counter_cleanup.py
 
 Run one individual test::
 

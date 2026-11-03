@@ -19,8 +19,11 @@ cookies. The current configuration also rejects
 ``AETHER_REGISTRATION_ENABLED=True`` in production, pending public email
 recovery and anti-abuse controls. The setting defaults to ``False``.
 The registration POST and verification-email trigger can currently be
-exercised only under an explicit development/test flag; this staged flow
-must not be treated as production-ready.
+exercised only under an explicit development/test flag. The staged endpoint
+now enforces PostgreSQL-backed per-IP limits, but public email recovery,
+durable delivery, trusted production client-IP configuration and scheduled
+counter expiry cleanup are not yet complete. Registration must not be enabled
+in production.
 
 The production runtime also requires email delivery configuration: a default
 sender address together with a configured SMTP host and authentication

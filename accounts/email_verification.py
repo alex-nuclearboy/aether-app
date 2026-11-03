@@ -6,6 +6,15 @@ from accounts.models import User
 from accounts.tokens import email_verification_token
 
 
+def locked_unverified_email_user(user_id: int) -> User | None:
+    """Return an unverified user locked by the caller's transaction.
+
+    Call this helper only within ``transaction.atomic()``.
+    """
+    user = User.objects.select_for_update().get(pk=user_id)
+    return None if user.is_email_verified else user
+
+
 def verify_email(user_id: int, token: str) -> bool:
     """Verify a valid token once, without changing account activation."""
     with transaction.atomic():

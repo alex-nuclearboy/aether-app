@@ -13,6 +13,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext as _
 
+from accounts.email_verification import locked_unverified_email_user
 from accounts.models import User
 from accounts.tokens import email_verification_token
 
@@ -38,9 +39,8 @@ def send_verification_email(
     runs outside the transaction. A failed delivery releases that slot.
     """
     with transaction.atomic():
-        user = User.objects.select_for_update().get(pk=user_id)
-
-        if user.is_email_verified:
+        user = locked_unverified_email_user(user_id)
+        if user is None:
             return VerificationEmailStatus.VERIFIED
 
         sent_at = user.email_verification_sent_at

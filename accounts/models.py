@@ -3,6 +3,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from accounts.managers import AetherUserManager
@@ -118,3 +119,87 @@ class PublicRequestCounter(models.Model):
     class Meta:
         verbose_name = _("public request counter")
         verbose_name_plural = _("public request counters")
+
+
+class VerificationEmailJob(models.Model):
+    """Track pending verification delivery without storing email tokens."""
+
+    class Status(models.TextChoices):
+        """Distinguish active, delivered and terminal delivery states."""
+
+        PENDING = "pending", _("pending")
+        PROCESSING = "processing", _("processing")
+        SENT = "sent", _("sent")
+        CANCELLED = "cancelled", _("cancelled")
+        FAILED = "failed", _("failed")
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="verification_email_jobs",
+        editable=False,
+    )
+    recipient_email = models.EmailField(
+        _("recipient email at request time"),
+        editable=False,
+    )
+    status = models.CharField(
+        _("delivery status"),
+        max_length=12,
+        choices=Status.choices,
+        default=Status.PENDING,
+        editable=False,
+    )
+    attempts = models.PositiveSmallIntegerField(
+        _("delivery attempts"),
+        default=0,
+        editable=False,
+    )
+    available_at = models.DateTimeField(
+        _("next delivery attempt"),
+        default=timezone.now,
+        editable=False,
+    )
+    lease_expires_at = models.DateTimeField(
+        _("worker lease expiry"),
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    created_at = models.DateTimeField(
+        _("created at"),
+        auto_now_add=True,
+        editable=False,
+    )
+    sent_at = models.DateTimeField(
+        _("sent at"),
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    last_error_code = models.CharField(
+        _("last delivery error category"),
+        max_length=32,
+        blank=True,
+        default="",
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = _("verification email delivery")
+        verbose_name_plural = _("verification email deliveries")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipient_email"],
+                condition=models.Q(
+                    status__in=["pending", "processing"],
+                ),
+                name="accounts_verification_email_active_unique",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["status", "available_at"],
+                name="accounts_verify_email_due_idx",
+            ),
+        ]

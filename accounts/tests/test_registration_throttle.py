@@ -9,7 +9,7 @@ from django.core import mail
 from django.test import override_settings
 from django.urls import reverse
 
-from accounts.models import PublicRequestCounter
+from accounts.models import PublicRequestCounter, VerificationEmailJob
 from accounts.public_rate_limits import (
     PublicRequestAction,
     public_request_retry_after,
@@ -79,7 +79,8 @@ def test_allowed_request_still_creates_an_account(client):
     assert response.url == reverse("registration_check_email")
     assert get_user_model().objects.filter(username="test-member").exists()
     assert PublicRequestCounter.objects.get().attempts == 1
-    assert len(mail.outbox) == 1
+    assert not mail.outbox
+    assert VerificationEmailJob.objects.count() == 1
 
 
 def test_other_client_address_has_independent_allowance(client):

@@ -1,8 +1,6 @@
 """Gated registration views and submission integration tests."""
 
 import re
-from html import unescape
-from smtplib import SMTPException
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +12,7 @@ from django.urls import reverse
 from django.utils import translation
 
 from accounts.forms import AetherRegistrationForm
-from accounts.models import User
+from accounts.models import User, VerificationEmailJob
 from accounts.tests.registration_helpers import registration_data
 
 
@@ -92,8 +90,8 @@ def test_enabled_registration_page_shows_submit_button(client):
 
 @pytest.mark.django_db
 @override_settings(REGISTRATION_ENABLED=True)
-def test_registration_creates_pending_account_and_sends_email(client):
-    """Create an unverified account and send a multipart email once."""
+def test_registration_creates_pending_account_and_queues_email(client):
+    """Create one unverified account and outbox job without SMTP I/O."""
     response = client.post(reverse("register"), registration_data())
 
     assert response.status_code == 302
@@ -103,10 +101,10 @@ def test_registration_creates_pending_account_and_sends_email(client):
     assert user.is_email_verified is False
     assert user.is_active is True
     assert user.check_password("Safer-Test-Passphrase-729!")
-    assert len(mail.outbox) == 1
-    assert mail.outbox[0].to == ["member@example.com"]
-    assert mail.outbox[0].alternatives[0].mimetype == "text/html"
-    assert "email/verify/" in mail.outbox[0].body
+    job = VerificationEmailJob.objects.get(user=user)
+    assert job.status == VerificationEmailJob.Status.PENDING
+    assert job.recipient_email == user.email
+    assert not mail.outbox
     assert "_auth_user_id" not in client.session
 
 
@@ -168,21 +166,17 @@ def test_registration_race_attaches_conflict_to_username(client):
 
 @pytest.mark.django_db
 @override_settings(REGISTRATION_ENABLED=True)
-def test_email_failure_does_not_roll_back_created_account(client):
-    """Keep pending registration when outbound email delivery fails."""
-    with patch(
-        "accounts.views.send_verification_email",
-        side_effect=SMTPException("test transport failure"),
-    ):
+def test_registration_does_not_call_synchronous_smtp(client):
+    """Do not perform any email transport during registration POST."""
+    with patch("accounts.emails.EmailMultiAlternatives.send") as smtp:
         response = client.post(reverse("register"), registration_data())
+
     assert response.status_code == 302
     assert response.url == reverse("registration_check_email")
     assert User.objects.filter(username="test-member").exists()
-    assert len(mail.outbox) == 0
-    result_page = client.get(reverse("registration_check_email"))
-    result_text = unescape(result_page.content.decode())
-    assert "couldn't send" in result_text
-    assert "You cannot sign in until your email is verified." in result_text
+    assert VerificationEmailJob.objects.count() == 1
+    smtp.assert_not_called()
+    assert not mail.outbox
 
 
 @pytest.mark.django_db
@@ -245,4 +239,5 @@ def test_registration_accepts_a_valid_csrf_origin():
     assert response.status_code == 302
     assert response.url == reverse("registration_check_email")
     assert User.objects.filter(username="test-member").exists()
-    assert len(mail.outbox) == 1
+    assert not mail.outbox
+    assert VerificationEmailJob.objects.count() == 1

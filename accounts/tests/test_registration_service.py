@@ -6,8 +6,9 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
+from accounts.email_outbox import VerificationQueueStatus
 from accounts.forms import AetherRegistrationForm
-from accounts.models import User
+from accounts.models import User, VerificationEmailJob
 from accounts.registration import create_registration_user
 from accounts.tests.registration_helpers import registration_data
 
@@ -22,7 +23,7 @@ def registration_form(**overrides):
 
 
 def test_create_registration_user_persists_pending_account():
-    """Persist secure password hash, verified state, and login policy."""
+    """Create the account and its delivery job before returning."""
     form = registration_form()
 
     user = create_registration_user(form)
@@ -35,6 +36,10 @@ def test_create_registration_user_persists_pending_account():
     assert user.verified_email == ""
     assert user.is_email_verified is False
     assert user.is_active is True
+    job = VerificationEmailJob.objects.get(user=user)
+    assert job.status == VerificationEmailJob.Status.PENDING
+    assert job.recipient_email == user.email
+    assert User.objects.get(pk=user.pk).email_verification_sent_at
 
 
 @pytest.mark.parametrize(
@@ -62,6 +67,7 @@ def test_duplicate_created_after_form_validation_is_field_error(
     assert conflict_field in error.value.error_dict
     assert error.value.error_dict[conflict_field][0].code == "unique"
     assert User.objects.count() == 1
+    assert not VerificationEmailJob.objects.exists()
 
     # Future registration views can render the error beside its input.
     form.add_error(None, error.value)
@@ -82,6 +88,7 @@ def test_ordinary_email_uniqueness_violation_is_caught():
         create_registration_user(form)
 
     assert error.value.error_dict["email"][0].code == "unique"
+    assert not VerificationEmailJob.objects.exists()
 
 
 def test_service_rejects_invalid_form_without_writing():
@@ -94,6 +101,7 @@ def test_service_rejects_invalid_form_without_writing():
         create_registration_user(form)
 
     assert not User.objects.exists()
+    assert not VerificationEmailJob.objects.exists()
 
 
 def test_unrelated_database_error_is_not_misreported_as_duplicate():
@@ -105,3 +113,33 @@ def test_unrelated_database_error_is_not_misreported_as_duplicate():
             create_registration_user(form)
 
     assert not User.objects.exists()
+
+
+def test_outbox_failure_rolls_back_registration():
+    """Never commit an account without its verification delivery job."""
+    form = registration_form()
+
+    with patch(
+        "accounts.registration.queue_verification_email",
+        side_effect=RuntimeError("outbox unavailable"),
+    ):
+        with pytest.raises(RuntimeError, match="outbox unavailable"):
+            create_registration_user(form)
+
+    assert not User.objects.exists()
+    assert not VerificationEmailJob.objects.exists()
+
+
+def test_unexpected_queue_status_rolls_back_registration():
+    """Reject a successful account insert without a queued email."""
+    form = registration_form()
+
+    with patch(
+        "accounts.registration.queue_verification_email",
+        return_value=VerificationQueueStatus.TOO_SOON,
+    ):
+        with pytest.raises(RuntimeError, match="not queued"):
+            create_registration_user(form)
+
+    assert not User.objects.exists()
+    assert not VerificationEmailJob.objects.exists()

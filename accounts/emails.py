@@ -1,32 +1,20 @@
-"""Delivery of account email verification links."""
+
+"""Render account verification emails for the outbox worker."""
 
 from datetime import timedelta
-from enum import StrEnum
 
 from django.core.mail import EmailMultiAlternatives
-from django.db import transaction
-from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext as _
 
-from accounts.email_verification import locked_unverified_email_user
 from accounts.models import User
 from accounts.tokens import email_verification_token
 
 
 VERIFICATION_EMAIL_COOLDOWN = timedelta(minutes=1)
-
-
-class VerificationEmailStatus(StrEnum):
-    """Outcomes of a verification-email request."""
-
-    SENT = "sent"
-    VERIFIED = "verified"
-    TOO_SOON = "too_soon"
 
 
 def verification_path_for_user(user: User) -> str:
@@ -56,49 +44,3 @@ def build_verification_message(
         "text/html",
     )
     return message
-
-
-def send_verification_email(
-    request: HttpRequest,
-    user_id: int,
-) -> VerificationEmailStatus:
-    """Send one link to the current email, with a database-backed cooldown.
-
-    The row lock reserves a send slot before contacting SMTP; external I/O
-    runs outside the transaction. A failed delivery releases that slot.
-    """
-    with transaction.atomic():
-        user = locked_unverified_email_user(user_id)
-        if user is None:
-            return VerificationEmailStatus.VERIFIED
-
-        sent_at = user.email_verification_sent_at
-        now = timezone.now()
-        if sent_at and now - sent_at < VERIFICATION_EMAIL_COOLDOWN:
-            return VerificationEmailStatus.TOO_SOON
-
-        user.email_verification_sent_at = now
-        user.save(update_fields=["email_verification_sent_at"])
-
-        verification_path = verification_path_for_user(user)
-        recipient = user.email
-
-    verification_url = request.build_absolute_uri(verification_path)
-    message = build_verification_message(
-        recipient=recipient,
-        verification_url=verification_url,
-    )
-
-    try:
-        delivered = message.send()
-        if delivered != 1:
-            raise OSError("Email backend did not accept the message.")
-    except Exception:  # pylint: disable=broad-exception-caught
-        # Compare-and-swap: never clear a reservation made by a later send.
-        User.objects.filter(
-            pk=user_id,
-            email_verification_sent_at=now,
-        ).update(email_verification_sent_at=sent_at)
-        raise
-
-    return VerificationEmailStatus.SENT

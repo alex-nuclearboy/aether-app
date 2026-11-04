@@ -16,7 +16,11 @@ from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from accounts.models import User
+from accounts.email_worker import (
+    DeliveryOutcome,
+    deliver_next_verification_email,
+)
+from accounts.models import User, VerificationEmailJob
 from accounts.tokens import email_verification_token
 
 pytestmark = pytest.mark.django_db
@@ -89,15 +93,24 @@ def test_send_is_post_only(client, member):
     assert not mail.outbox
 
 
-def test_request_sends_multipart_email_and_absolute_link(client, member):
-    """Send both bodies to the current email using the configured mailer."""
+def test_request_queues_and_worker_sends_multipart_email(client, member):
+    """Keep SMTP out of HTTP and generate the link in the worker."""
     client.force_login(member)
-    response = client.post(
-        reverse("email_verification_request"),
-        secure=True,
-    )
+    with patch("accounts.emails.EmailMultiAlternatives.send") as smtp:
+        response = client.post(
+            reverse("email_verification_request"),
+            secure=True,
+        )
     assert response.status_code == 302
     assert response["Location"] == reverse("profile")
+    smtp.assert_not_called()
+    assert not mail.outbox
+    assert VerificationEmailJob.objects.get(user=member).status == (
+        VerificationEmailJob.Status.PENDING
+    )
+    assert deliver_next_verification_email("https://testserver") == (
+        DeliveryOutcome.SENT
+    )
     assert len(mail.outbox) == 1
     message = mail.outbox[0]
     assert message.to == [member.email]
@@ -122,31 +135,52 @@ def test_recipient_cannot_be_overridden_by_post_data(client, member):
         {"email": "attacker@example.com"},
     )
     assert response.status_code == 302
-    assert len(mail.outbox) == 1
-    assert mail.outbox[0].to == [member.email]
+    assert not mail.outbox
+    assert VerificationEmailJob.objects.get(user=member).recipient_email == (
+        member.email
+    )
 
 
-def test_repeat_request_is_throttled(client, member):
-    """Keep at most one email per account in the cooldown interval."""
+def test_repeat_request_reuses_pending_job(client, member):
+    """Do not duplicate a pending job, even during its cooldown."""
     client.force_login(member)
     url = reverse("email_verification_request")
     assert client.post(url).status_code == 302
     assert client.post(url).status_code == 302
-    assert len(mail.outbox) == 1
+    assert VerificationEmailJob.objects.filter(user=member).count() == 1
+    assert not mail.outbox
+    response = client.get(reverse("profile"))
+    assert b"already queued for your address" in response.content
+
+
+def test_request_during_cooldown_after_delivery_is_throttled(client, member):
+    """Give cooldown feedback once the preceding job is delivered."""
+    client.force_login(member)
+    url = reverse("email_verification_request")
+    assert client.post(url).status_code == 302
+    assert deliver_next_verification_email("http://testserver") == (
+        DeliveryOutcome.SENT
+    )
+    assert client.post(url).status_code == 302
+    assert VerificationEmailJob.objects.count() == 1
     response = client.get(reverse("profile"))
     assert b"Please wait before requesting another email." in response.content
 
 
 def test_request_succeeds_after_cooldown(client, member):
-    """Allow another delivery after the persisted cooldown expires."""
+    """Allow a new job after delivery and the persisted cooldown."""
     client.force_login(member)
     url = reverse("email_verification_request")
     assert client.post(url).status_code == 302
+    assert deliver_next_verification_email("http://testserver") == (
+        DeliveryOutcome.SENT
+    )
     User.objects.filter(pk=member.pk).update(
         email_verification_sent_at=timezone.now() - timedelta(minutes=2),
     )
     assert client.post(url).status_code == 302
-    assert len(mail.outbox) == 2
+    assert VerificationEmailJob.objects.filter(user=member).count() == 2
+    assert len(mail.outbox) == 1
 
 
 def test_send_for_verified_email_is_noop(client, member):
@@ -157,24 +191,31 @@ def test_send_for_verified_email_is_noop(client, member):
     response = client.post(reverse("email_verification_request"))
     assert response.status_code == 302
     assert not mail.outbox
+    assert not VerificationEmailJob.objects.exists()
     member.refresh_from_db()
     assert member.email_verification_sent_at is None
 
 
-def test_delivery_failure_allows_retry(client, member):
-    """Do not hold a send reservation after SMTP rejects a message."""
+def test_delivery_failure_remains_queued_for_retry(client, member):
+    """Keep transport errors in the worker rather than in HTTP."""
     client.force_login(member)
     url = reverse("email_verification_request")
+    assert client.post(url).status_code == 302
+
     with patch(
         "accounts.emails.EmailMultiAlternatives.send",
         side_effect=SMTPException("temporary failure"),
     ):
-        response = client.post(url)
-    assert response.status_code == 302
-    member.refresh_from_db()
-    assert member.email_verification_sent_at is None
+        assert deliver_next_verification_email("http://testserver") == (
+            DeliveryOutcome.RETRY
+        )
+
+    job = VerificationEmailJob.objects.get(user=member)
+    assert job.status == VerificationEmailJob.Status.PENDING
+    assert job.attempts == 1
     assert client.post(url).status_code == 302
-    assert len(mail.outbox) == 1
+    assert VerificationEmailJob.objects.count() == 1
+    assert not mail.outbox
 
 
 def test_send_requires_csrf(member):
@@ -184,6 +225,7 @@ def test_send_requires_csrf(member):
     response = browser.post(reverse("email_verification_request"))
     assert response.status_code == 403
     assert not mail.outbox
+    assert not VerificationEmailJob.objects.exists()
 
 
 def test_verification_get_does_not_update_database(client, member):
@@ -293,16 +335,23 @@ def test_http_logs_redact_verification_tokens(client, member):
     assert url not in str(arguments)
 
 
-def test_email_backend_returns_zero_and_can_be_retried(client, member):
-    """Treat a backend response of zero messages as delivery failure."""
+def test_backend_zero_result_is_retried_by_worker(client, member):
+    """Retry an unaccepted message without a second HTTP request."""
     client.force_login(member)
     url = reverse("email_verification_request")
+    assert client.post(url).status_code == 302
     with patch(
         "accounts.emails.EmailMultiAlternatives.send",
         return_value=0,
     ):
-        assert client.post(url).status_code == 302
-    member.refresh_from_db()
-    assert member.email_verification_sent_at is None
-    assert client.post(url).status_code == 302
+        assert deliver_next_verification_email("http://testserver") == (
+            DeliveryOutcome.RETRY
+        )
+    VerificationEmailJob.objects.update(
+        available_at=timezone.now() - timedelta(seconds=1),
+    )
+    assert deliver_next_verification_email("http://testserver") == (
+        DeliveryOutcome.SENT
+    )
+    assert VerificationEmailJob.objects.get(user=member).attempts == 2
     assert len(mail.outbox) == 1

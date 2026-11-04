@@ -8,7 +8,11 @@ from django.core import mail
 from django.test import override_settings
 from django.urls import reverse
 
-from accounts.models import User
+from accounts.email_worker import (
+    DeliveryOutcome,
+    deliver_next_verification_email,
+)
+from accounts.models import User, VerificationEmailJob
 from accounts.tests.registration_helpers import registration_data
 
 
@@ -27,7 +31,10 @@ def test_registration_requires_email_confirmation_before_sign_in(
     user = User.objects.get(username=credentials["username"])
     assert user.email_verification_required is True
     assert user.is_email_verified is False
-    assert len(mail.outbox) == 1
+    assert not mail.outbox
+    assert VerificationEmailJob.objects.get(user=user).status == (
+        VerificationEmailJob.Status.PENDING
+    )
 
     login_credentials = {
         "username": identifier,
@@ -37,6 +44,10 @@ def test_registration_requires_email_confirmation_before_sign_in(
     assert before.status_code == 200
     assert "_auth_user_id" not in client.session
 
+    assert deliver_next_verification_email("http://testserver") == (
+        DeliveryOutcome.SENT
+    )
+    assert len(mail.outbox) == 1
     match = re.search(
         r"http://testserver/email/verify/[^/\s]+/[^/\s]+/",
         mail.outbox[0].body,

@@ -3,6 +3,10 @@
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 
+from accounts.email_outbox import (
+    VerificationQueueStatus,
+    queue_verification_email,
+)
 from accounts.forms import AetherRegistrationForm
 from accounts.models import User
 
@@ -17,10 +21,10 @@ _UNIQUE_FIELDS = {
 
 
 def create_registration_user(form: AetherRegistrationForm) -> User:
-    """Create a pending account, translating known unique-key races.
+    """Persist a pending account and its email job in one transaction.
 
-    The caller must attach a field-specific ValidationError to the form
-    if a conflict occurs. Other database errors remain visible to the caller.
+    Map known PostgreSQL uniqueness races to field errors. Other database
+    failures, including outbox failures, roll back the account creation.
     """
     if not form.is_valid():
         raise ValueError("Registration form must be valid before saving.")
@@ -30,6 +34,9 @@ def create_registration_user(form: AetherRegistrationForm) -> User:
     try:
         with transaction.atomic():
             user.save()
+            status = queue_verification_email(user.pk)
+            if status != VerificationQueueStatus.QUEUED:
+                raise RuntimeError("Registration email was not queued.")
     except IntegrityError as exc:
         diagnostic = getattr(exc.__cause__, "diag", None)
         constraint = getattr(diagnostic, "constraint_name", None)

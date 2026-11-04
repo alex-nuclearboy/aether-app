@@ -1,7 +1,5 @@
 """Views for the Aether accounts application."""
 
-from smtplib import SMTPException
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -17,11 +15,11 @@ from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import TemplateView
 
-from accounts.email_verification import verify_email
-from accounts.emails import (
-    VerificationEmailStatus,
-    send_verification_email,
+from accounts.email_outbox import (
+    VerificationQueueStatus,
+    queue_verification_email,
 )
+from accounts.email_verification import verify_email
 from accounts.forms import AetherAuthenticationForm, AetherRegistrationForm
 from accounts.models import User
 from accounts.public_rate_limits import (
@@ -103,7 +101,7 @@ class AetherRegistrationView(TemplateView):
         return None
 
     def post(self, request, *args, **kwargs):
-        """Validate, create, and email a pending registration account."""
+        """Validate and atomically queue a pending registration account."""
         if request.user.is_authenticated:
             return redirect("profile")
 
@@ -115,28 +113,15 @@ class AetherRegistrationView(TemplateView):
             return limit_response
 
         form = AetherRegistrationForm(request.POST)
-        if not form.is_valid():
-            return self.render_to_response(self.get_context_data(form=form))
+        if form.is_valid():
+            try:
+                create_registration_user(form)
+            except ValidationError as error:
+                form.add_error(None, error)
+            else:
+                return redirect("registration_check_email")
 
-        try:
-            user = create_registration_user(form)
-        except ValidationError as error:
-            form.add_error(None, error)
-            return self.render_to_response(self.get_context_data(form=form))
-
-        try:
-            send_verification_email(request, user.pk)
-        except (OSError, SMTPException):
-            messages.error(
-                request,
-                _(
-                    "Your account was created, but we couldn't send "
-                    "the verification email. You cannot sign in until "
-                    "your email is verified."
-                ),
-            )
-
-        return redirect("registration_check_email")
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class RegistrationCheckEmailView(TemplateView):
@@ -155,27 +140,25 @@ class RequestEmailVerificationView(LoginRequiredMixin, View):
     """Accept a CSRF-protected request for the signed-in user's email."""
 
     def post(self, request, *args, **kwargs):
-        """Send a verification link unless already verified or throttled."""
-        try:
-            status = send_verification_email(request, request.user.pk)
-        except (OSError, SMTPException):
-            messages.error(
+        """Queue a verification link without contacting SMTP in HTTP."""
+        status = queue_verification_email(request.user.pk)
+        if status == VerificationQueueStatus.QUEUED:
+            messages.success(
                 request,
-                _("We couldn't send the email. Please try again later."),
+                _("A verification email has been queued for delivery."),
+            )
+        elif status == VerificationQueueStatus.ALREADY_QUEUED:
+            messages.info(
+                request,
+                _("A verification email is already queued for your address."),
+            )
+        elif status == VerificationQueueStatus.TOO_SOON:
+            messages.warning(
+                request,
+                _("Please wait before requesting another email."),
             )
         else:
-            if status == VerificationEmailStatus.SENT:
-                messages.success(
-                    request,
-                    _("A verification link has been sent to your email."),
-                )
-            elif status == VerificationEmailStatus.TOO_SOON:
-                messages.warning(
-                    request,
-                    _("Please wait before requesting another email."),
-                )
-            else:
-                messages.info(request, _("Your email is already verified."))
+            messages.info(request, _("Your email is already verified."))
 
         return redirect("profile")
 

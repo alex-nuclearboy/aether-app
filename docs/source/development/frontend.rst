@@ -112,12 +112,13 @@ uses ``{% trans %}``. The action button is disabled and POST returns HTTP 405
 unless ``REGISTRATION_ENABLED`` is enabled in development or tests.
 
 When enabled, invalid submissions display field errors in the same form and
-successful submissions redirect to the token-free ``Check your email`` page
-(``accounts/templates/accounts/registration_check_email.html``). A failed
-email send is reported through Django messages. The result page does not
-provide public resend or expose the recipient address. Signed-in visitors
-are redirected to the profile. Production rejects enabling registration
-until recovery and anti-abuse controls are available.
+successful submissions atomically queue a verification email and redirect
+to the token-free ``Check your email`` page
+(``accounts/templates/accounts/registration_check_email.html``). The result
+page confirms queuing rather than delivery; it does not provide public resend
+or expose the recipient address. Signed-in visitors are redirected to the
+profile. Production rejects enabling registration until recovery and
+anti-abuse controls are available.
 
 Profile and email verification pages
 ------------------------------------

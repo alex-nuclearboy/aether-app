@@ -268,8 +268,9 @@ messages nor verification tokens and is not registered in Django Admin.
 
 Provides an atomic queue-reservation service for verification messages.
 It checks current verification state, active jobs and the existing per-account
-one-minute request interval. Enqueuing does not perform SMTP I/O. A separate
-worker can now process queued jobs, but HTTP views do not use this service yet.
+one-minute request interval. Enqueuing does not perform SMTP I/O. Registration
+and authenticated profile views use this service; the separate worker sends
+the queued messages.
 
 ``accounts/email_worker.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -331,16 +332,18 @@ its current email address, and verification state.
 
 Provides the transaction-safe server-side email verification service.
 It validates tokens and persists the verified address without changing
-account activation or permissions.
+account activation or permissions. Its
+``locked_unverified_email_user()`` helper locks the user row inside the
+caller's transaction and is used by the outbox reservation service.
 
 ``accounts/emails.py``
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Generates a confirmation link with the existing token generator and sends
-plain-text and HTML email through Django's configured mailer. The
-``build_verification_message()`` and ``verification_path_for_user()``
-helpers are shared with the outbox worker. The synchronous service reserves a send slot using a PostgreSQL row lock, applies a 60-second resend
-cooldown, and restores the reservation after failed delivery when appropriate.
+Provides ``verification_path_for_user()`` for generating a fresh token and
+confirmation path, and ``build_verification_message()`` for rendering
+plain-text and HTML messages. The outbox worker uses these helpers and sends
+the message through Django's configured mailer. This module no longer has a
+synchronous HTTP delivery service.
 
 ``accounts/backends.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -446,10 +449,11 @@ and sets the email-verification-required policy before saving.
 ``accounts/registration.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Creates public-registration accounts transactionally using the validated
-form. On PostgreSQL uniqueness races, maps known constraint names to
-field-specific ``ValidationError`` results without hiding unrelated
-integrity errors. It does not send email or expose a registration endpoint.
+Creates public-registration accounts and their verification-email jobs in
+one transaction using the validated form and outbox service. On PostgreSQL
+uniqueness races, maps known constraint names to field-specific
+``ValidationError`` results without hiding unrelated integrity errors.
+A failed job reservation rolls back account creation. No SMTP runs here.
 
 ``accounts/views.py``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -464,20 +468,21 @@ sign-in or sign-out.
 ``AetherRegistrationView`` displays the registration form on GET and
 redirects authenticated visitors to the profile. With
 ``REGISTRATION_ENABLED=False``, POST returns HTTP 405. With the flag enabled
-in development or tests, POST validates the form, creates an unverified
-account via ``create_registration_user()``, and invokes the existing email
-service. Recognised uniqueness conflicts appear beside the relevant form
-field; delivery failures create a one-time error message without deleting
-the account. ``RegistrationCheckEmailView`` shows a token-free result page.
+in development or tests, POST validates the form and calls
+``create_registration_user()`` to save an unverified account together with its
+outbox job. Recognised uniqueness conflicts appear beside the relevant form
+field; job creation failures roll back the account. The token-free
+``RegistrationCheckEmailView`` reports queuing, not confirmed delivery.
 Registration POST is rate-limited before form validation using the shared
 client IP resolver; denied requests return HTTP 429, or 503 if the address
 cannot be determined. Production rejects an enabled registration flag.
 
 ``ProfileView`` displays the read-only profile to authenticated users.
-``RequestEmailVerificationView`` processes CSRF-protected POST requests for
-verification emails. ``EmailVerificationConfirmView`` provides a public
-confirmation page on GET and invokes the existing verification service only
-on POST. ``EmailVerificationResultView`` displays a token-free result page.
+``RequestEmailVerificationView`` enqueues CSRF-protected profile verification
+requests and reports queued, already queued, cooldown or verified states.
+``EmailVerificationConfirmView`` provides a public confirmation page on GET
+and invokes the verification service only on POST.
+``EmailVerificationResultView`` displays a token-free result page.
 
 ``accounts/urls.py``
 ~~~~~~~~~~~~~~~~~~~~
@@ -577,12 +582,12 @@ Contains automated tests specific to the accounts application, including:
   handling of unresolved client IP addresses;
 * expired public counter maintenance through a Django management command;
 * registration GET, disabled-by-default and gated POST, form errors,
-  CSRF validation, email delivery and failure feedback, token-free result,
+  CSRF validation, atomic job creation and rollback, token-free result,
   and authenticated redirect;
 * end-to-end registration, email confirmation and subsequent sign-in;
 * profile access, read-only account details, and email verification status;
-* verification email delivery, recipient selection, resend cooldown, and
-  delivery failure recovery;
+* profile email queue requests, recipient selection, resend cooldown, and
+  worker-driven delivery failure retries;
 * public token confirmation, CSRF-protected POST, token invalidation, and
   token redaction from application HTTP logs;
 * shared session, Axes, and audit behaviour across Admin and application;

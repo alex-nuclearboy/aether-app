@@ -28,9 +28,9 @@ The implemented foundation consists of:
   case-insensitive username and email uniqueness;
 * a validated public-registration form and transactional account-creation
   service, with case-insensitive identifier checks, standard Django password
-  rules, and PostgreSQL uniqueness-race handling; registration POST and
-  verification-email delivery are available only when the default-off
-  development/test flag is enabled, not in production;
+  rules, PostgreSQL uniqueness-race handling and atomic creation of the
+  account and its verification job; registration POST is available only when
+  the default-off development/test flag is enabled, not in production;
 * PostgreSQL-backed request limits now enforced on staged registration POST,
   with HTTP 429 responses, a ``Retry-After`` header and fail-closed handling
   when the client IP address cannot be determined; resend and email-correction
@@ -38,8 +38,8 @@ The implemented foundation consists of:
 * a manual Django management command for pruning expired public request
   counters in batches; scheduling it in production remains pending;
 * a PostgreSQL verification email outbox and an independent worker with
-  leases, bounded retries and explicit public origins; HTTP views still send
-  synchronously and do not enqueue delivery jobs yet;
+  leases, bounded retries and explicit public origins; registration and
+  authenticated profile views enqueue jobs without performing SMTP;
 * persistent per-account email verification state, initially unverified and
   matched against the current email independently from account activation;
 * a per-account sign-in policy that requires current email verification only
@@ -59,8 +59,8 @@ The implemented foundation consists of:
 * database-backed lockout deadline and remaining-time calculations,
   with UTC deadlines available for future authentication interfaces;
 * a read-only authenticated account profile, CSRF-protected email
-  verification requests, multipart confirmation messages, a PostgreSQL-backed
-  send cooldown, and a public POST-only email confirmation action;
+  verification queue requests, worker-rendered multipart messages, a
+  PostgreSQL-backed request cooldown, and a public POST-only confirmation;
 * a ``core`` Django application providing a public home page with the
   full Aether logo;
 * a shared base template with a fixed header, clickable brand link,

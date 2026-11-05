@@ -85,9 +85,9 @@ Run the independent worker until stopped (separate terminal or process)::
 
 In production, use the verified public ``https://`` origin and run the
 worker as a separately supervised process. The command refuses plain HTTP
-origins in production. It does not enqueue messages by itself: until the
-next integration stage, registration and profile views still send messages
-synchronously. Tokens and recipient addresses must not be logged.
+origins in production. Registration and authenticated profile views enqueue
+jobs themselves; the worker performs SMTP delivery. Tokens and recipient
+addresses must not be logged.
 
 Application
 -----------

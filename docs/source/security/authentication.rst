@@ -75,13 +75,13 @@ misreported as duplicate identifiers.
 The public ``/register/`` route displays the form on GET. With
 ``AETHER_REGISTRATION_ENABLED=False`` (the default), submission remains
 disabled and POST returns HTTP 405. When enabled in development or tests,
-POST validates the form, creates an unverified account and invokes the
-existing ``send_verification_email()`` service. No automatic sign-in occurs.
-Success redirects to the token-free ``/register/check-email/`` page.
-A recognised SMTP or operating-system delivery failure leaves the account
-created and shows a one-time error message on the result page. The message
-explains that sign-in requires email confirmation; no public resend action
-is available yet.
+POST validates the form and creates an unverified account together with an
+outbox delivery job in one PostgreSQL transaction. SMTP does not run during
+HTTP registration. If job creation fails, the account transaction rolls back.
+No automatic sign-in occurs; success redirects to the token-free
+``/register/check-email/`` page, which confirms queuing rather than delivery.
+The separate worker performs SMTP and handles retries. Public resend is not
+yet available.
 
 The PostgreSQL-backed counter service enforces a limit of ten registration
 POST attempts per client IP address per fixed UTC hour. The allowance is
@@ -94,9 +94,10 @@ GET requests, authenticated redirects, and disabled registration do not
 consume an allowance. The management command
 ``prune_public_request_counters`` can remove expired records, but production
 scheduling is not yet configured. Resend and email-correction limits are not
-yet connected to public endpoints. The outbox worker is implemented but not
-yet connected to HTTP routes or deployed; public recovery, queued delivery
-integration and final proxy/IP verification remain deployment prerequisites.
+yet connected to public endpoints. Registration and authenticated profile
+requests now enqueue delivery jobs, but the worker has not been deployed.
+Public recovery, worker deployment and final proxy/IP verification remain
+production prerequisites.
 Production still rejects enabling registration; Admin and CLI behaviour is
 unchanged.
 

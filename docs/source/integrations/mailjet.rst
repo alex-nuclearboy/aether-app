@@ -7,14 +7,13 @@ Role in Aether
 Mailjet is the currently selected production email delivery provider for
 Aether.
 
-The application email verification service uses the default Django mailer.
-It delivers both plain-text and HTML messages. Staged registration already
-reuses the same service when its development/test flag is enabled. A separate
-PostgreSQL outbox, enqueue service and worker have been added. The worker can
-send messages independently, but no request path yet uses the queue and no
-worker is deployed automatically. Existing request paths still perform SMTP
-synchronously. Production public registration remains disabled pending
-resend/recovery, worker integration and deployment safeguards.
+Registration (when enabled in development or tests) and authenticated
+profile requests enqueue verification jobs in PostgreSQL without SMTP.
+The independent worker generates current verification links, renders
+plain-text and HTML messages, and sends them using Django's default mailer.
+No worker is deployed automatically: a running worker is required for
+delivery. Production public registration remains disabled pending public
+resend/recovery and deployment safeguards.
 
 Aether connects to Mailjet through Django's standard SMTP backend rather than
 through a Mailjet-specific SDK or API integration. The application therefore

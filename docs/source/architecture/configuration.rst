@@ -88,17 +88,17 @@ Staged registration setting
 available on GET, but its submit button is disabled and POST returns HTTP 405.
 
 Development and test environments may explicitly set the flag to ``True``
-to enable POST registration. A successful submission creates an unverified
-account, invokes the existing verification-email service and redirects to
-the token-free ``/register/check-email/`` result page. The new user is not
-signed in automatically. Invalid submissions display form errors, including
-recognised database uniqueness conflicts, without creating another account.
+to enable POST registration. A successful submission atomically creates an
+unverified account and a PostgreSQL verification-email job, then redirects
+to the token-free ``/register/check-email/`` page. No SMTP occurs during
+registration and the new user is not signed in automatically. Invalid forms
+and recognised identifier uniqueness conflicts display field errors. A job
+creation failure rolls back account creation.
 
 The setting cannot be enabled in production: settings loading raises
 ``ImproperlyConfigured`` until public email resend/recovery and anti-abuse
-controls are implemented and reviewed. An SMTP delivery failure does not
-roll back an account already created. The current result page reports the
-failure, but public resend is not yet available.
+controls are implemented and reviewed. The independent worker performs
+outbound delivery and retries; public resend is not yet available.
 
 Django security configuration
 -----------------------------

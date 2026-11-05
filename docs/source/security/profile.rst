@@ -8,9 +8,9 @@ The authenticated account profile is available at ``/profile/``. The page
 shows the current username and email address and the computed
 ``is_email_verified`` status. It is deliberately read-only: changing email,
 username, password, and other account details will be introduced separately.
-Staged registration POST and verification-email delivery are available
-only when the development/test flag is enabled. Public registration and
-recovery remain disabled in production.
+Registration POST is available only when the development/test flag is
+enabled. Authenticated users can request verification from their profiles;
+public registration and unauthenticated recovery remain disabled in production.
 
 The shared header links to the profile only for authenticated users.
 Django Admin retains its standard appearance and account management UI.
@@ -24,38 +24,31 @@ never accepts a recipient address from the browser: it reloads the account
 from PostgreSQL and uses its current ``email`` field. It does not send
 verification messages to addresses that are already confirmed.
 
-``accounts.emails.send_verification_email`` creates a token using the existing
-``accounts.tokens.email_verification_token`` generator and constructs an
-absolute confirmation URL. Text and HTML message bodies are rendered from
-Django templates, and ``EmailMultiAlternatives`` sends both alternatives
-through the existing default ``MAILERS`` backend. Local development uses the
-console backend; production uses the configured SMTP provider (Mailjet).
+``accounts.email_outbox.queue_verification_email()`` stores a pending
+``VerificationEmailJob`` in PostgreSQL without contacting SMTP. The job stores
+the intended recipient, not a verification token or rendered message.
+``accounts.email_worker`` generates the token and renders plain-text and HTML
+bodies immediately before delivery. It uses Django's configured ``MAILERS``
+backend: the console backend locally and SMTP (Mailjet) in production.
 
-One delivery reservation per account is permitted in any 60-second window.
-The ``User.email_verification_sent_at`` timestamp is stored in PostgreSQL and
-checked under ``select_for_update()`` within an atomic transaction. The row
-lock is released before SMTP delivery, avoiding network I/O inside the
-transaction. A failed send clears only its own reservation, allowing a retry.
-The timestamp is account-level; it does not represent a verified email.
+The user row is locked while the job and account-level
+``email_verification_sent_at`` timestamp are saved in one transaction.
+An already active job for the same account and recipient is not duplicated.
+After a job has completed, the timestamp enforces a 60-second cooldown between
+requests. A delivery failure is retried by the worker; it does not clear the
+original reservation. This timestamp does not represent verified ownership.
 
 Verification link origin
 ------------------------
 
-Verification URLs are built using ``request.build_absolute_uri()``.
-The generated scheme and host therefore depend on Django's view of the
-incoming HTTP request.
+The worker builds verification URLs from the explicit trusted
+``--public-origin`` argument and the generated confirmation path, not from
+incoming ``Host`` headers or ``request.build_absolute_uri()``. Development
+may use ``http://127.0.0.1:8000``; production requires a verified public HTTPS
+origin. Check the link in both the plain-text and HTML message bodies.
 
-Local development uses HTTP and does not require a public domain.
-Production verification emails must contain the public HTTPS origin
-of the deployed application.
-
-Before enabling production email verification, confirm that the
-deployment proxy preserves the correct public host and that Django
-recognises the original HTTPS request. Verify the resulting URL in
-both the plain-text and HTML email versions.
-
-Production proxy settings must be validated against the actual hosting
-configuration. They must not be inferred from local development.
+Production proxy and client-IP settings require a separate deployment review.
+The worker origin setting does not establish trust in forwarded HTTP headers.
 
 Link confirmation
 -----------------
@@ -95,10 +88,10 @@ implicitly. Editing forms will be separate POST views with appropriate
 validation and reauthentication checks; the present read-only profile does
 not anticipate or expose any such form.
 
-Staged registration POST already reuses the email-sending service and public
-confirmation endpoint. It creates users with
-``email_verification_required=True`` without changing ``is_active``.
-A failed outbound message leaves the unverified account in place; the
-result page reports delivery failure, but does not provide public resend.
-Public resend/recovery and registration-specific rate limits remain future
-work, so registration cannot be enabled in production yet.
+Staged registration POST creates the unverified account and its outbox job
+in the same transaction, without changing ``is_active``. If enqueuing fails,
+the account creation is rolled back. The result page confirms queuing, not
+SMTP acceptance or final delivery. The worker handles delivery failures and
+retries separately. Registration POST already has a per-IP request limit;
+public resend and email correction are not implemented. Production
+registration therefore remains disabled.

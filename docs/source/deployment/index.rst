@@ -18,18 +18,18 @@ non-wildcard allowed-host configuration, and require secure session and CSRF
 cookies. The current configuration also rejects
 ``AETHER_REGISTRATION_ENABLED=True`` in production, pending public email
 recovery and anti-abuse controls. The setting defaults to ``False``.
-The registration POST and verification-email trigger can currently be
-exercised only under an explicit development/test flag. The staged endpoint
-now enforces PostgreSQL-backed per-IP limits, but public email recovery,
-durable delivery, trusted production client-IP configuration and scheduled
-counter expiry cleanup are not yet complete. Registration must not be enabled
-in production.
+Registration POST is available only under an explicit development/test
+flag and enforces PostgreSQL-backed per-IP limits. The account and outbox job
+are created atomically; authenticated profile requests also enqueue jobs.
+Public email recovery, trusted production client-IP configuration and
+scheduled counter expiry cleanup are not yet complete. Registration must
+remain disabled in production.
 
-The independent verification email worker now supports PostgreSQL leases,
-retry and lease recovery, and an explicit public origin. It is not started by
-the web process, and existing HTTP views still use synchronous SMTP. Before
-queued delivery can be enabled in production, deploy and monitor a separate
-worker process, configure a verified HTTPS public origin, and test SMTP
+The independent verification email worker supports PostgreSQL leases,
+retries, lease recovery and an explicit public origin. SMTP no longer runs
+in registration or profile HTTP requests. The worker is **not** started by
+the web process: delivery requires a separately deployed and monitored worker.
+Before production use, configure a verified HTTPS public origin and test SMTP
 failures, worker restarts and retention of failed jobs.
 
 The production runtime also requires email delivery configuration: a default

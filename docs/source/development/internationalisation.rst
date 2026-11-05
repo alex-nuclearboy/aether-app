@@ -72,11 +72,11 @@ email check and transactional uniqueness-race handler reuse the lazy
 ``unique``. These errors remain attached to the corresponding form fields.
 
 Test error codes and field placement rather than hard-coded English wording.
-The staged registration result template marks its title, guidance and links
-with ``{% trans %}``, while email-delivery failure feedback is marked for
-translation when the response is created. The current English-only interface
-is unchanged; future Aether translation catalogues must include all
-project-defined account validation and registration messages.
+The staged registration result template marks its title, queue-status guidance
+and links with ``{% trans %}``. Profile feedback for queued, already queued,
+cooldown and verified states uses ``gettext`` in the request view. The current
+English-only interface is unchanged; future Aether translation catalogues
+must include project-defined validation and queue feedback messages.
 
 Adding languages later
 ----------------------

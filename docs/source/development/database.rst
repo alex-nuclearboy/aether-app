@@ -129,10 +129,10 @@ time and are never persisted in the queue.
 
 The worker is operated separately using ``process_verification_email_queue``
 and a required trusted public origin. It is **not automatically started** by
-the Django HTTP server. Existing registration and profile views continue to
-send email synchronously until a later integration step. SMTP delivery is
-at least once, not exactly once: a crash after SMTP acceptance can result in
-a duplicate message on lease recovery.
+the Django HTTP server. Registration and authenticated profile views already
+enqueue jobs without SMTP I/O; delivery requires a running worker. SMTP
+delivery is at least once, not exactly once: a crash after SMTP acceptance
+can result in a duplicate message on lease recovery.
 
 Useful commands
 ---------------

@@ -172,6 +172,11 @@ retry delays, expired leases and compare-and-swap completion.
 ``accounts/tests/test_email_worker_command.py`` covers one-shot command
 execution, idle queues, invalid polling intervals and missing origins.
 
+``accounts/tests/test_profile_verification.py`` checks that authenticated
+profile POSTs enqueue instead of sending synchronously, do not accept a
+recipient override, handle active jobs and cooldown, and leave SMTP retries
+to the worker. It also covers confirmation and CSRF behaviour.
+
 ``accounts/tests/test_email_verification.py`` covers token validity,
 expiration, account binding, email and password changes, invalidation
 after verification, malformed tokens, transaction-safe state updates,
@@ -201,13 +206,14 @@ error codes, and the email-verification-required policy on form saves.
 
 ``accounts/tests/test_registration_page.py`` verifies the registration GET
 form, enabled and disabled POST behaviour, form field errors, uniqueness
-conflict feedback, account creation, multipart verification-email delivery,
-SMTP failure handling, CSRF checks, the token-free result page, localised
-HTML language metadata, and authenticated-user redirects.
+conflict feedback, account and job creation without HTTP SMTP, CSRF checks,
+the token-free result page, localised HTML language metadata, and
+authenticated-user redirects.
 
-``accounts/tests/test_registration_flow.py`` uses a delivered email link to
-exercise registration, refusal of sign-in before confirmation, the read-only
-confirmation GET, confirmation POST, and sign-in by username or email.
+``accounts/tests/test_registration_flow.py`` uses a worker-delivered link
+to exercise registration, refusal of sign-in before confirmation, the
+read-only confirmation GET, confirmation POST, and sign-in by username or
+email.
 
 ``accounts/tests/test_public_rate_limits.py`` checks PostgreSQL-backed
 fixed-window allowances, counter expiry metadata, separation of actions and
@@ -224,12 +230,11 @@ and ``Retry-After`` responses.
 removal, bounded batches, dry-run output, empty results and invalid options
 for the counter maintenance command.
 
-``accounts/tests/test_registration_service.py`` checks transactional account
-creation, uniqueness conflicts occurring after successful form validation,
-field-specific errors, rejection of invalid forms, and propagation of
-unrelated database failures. The race tests simulate the interval between
-validation and insertion using PostgreSQL constraints, not concurrency
-scheduling or arbitrary error-string parsing.
+``accounts/tests/test_registration_service.py`` checks atomic account and
+outbox job creation, rollback on failed job reservation, uniqueness conflicts
+after successful form validation, field-specific errors, rejection of invalid
+forms, and propagation of unrelated database failures. The race tests use
+PostgreSQL constraints, not arbitrary error-string parsing.
 
 ``accounts/tests/test_interface_translations.py`` verifies lazy account
 validation labels and runtime translation of login/logout feedback and

@@ -104,6 +104,65 @@ def test_http_response_logging_levels(
     )
 
 
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        (
+            "/email/verify/private-uid/private-token/",
+            "/email/verify/<redacted>/",
+        ),
+        (
+            "/email/verify/private-uid/private-token/extra/",
+            "/email/verify/<redacted>/",
+        ),
+        (
+            "/prefix/email/verify/private-uid/private-token/",
+            "/prefix/email/verify/<redacted>/",
+        ),
+        ("/profile/", "/profile/"),
+        ("/email/verification-result/", "/email/verification-result/"),
+    ],
+)
+def test_http_path_masking_does_not_require_url_resolution(
+    rf, path, expected,
+):
+    """Mask token-shaped paths before routing, including malformed URLs."""
+    request = rf.get(path)
+    assert request.resolver_match is None
+    with patch("infrastructure.request_id.http_logger.log") as mock_log:
+        request_id_middleware(
+            lambda _request: HttpResponse(status=404)
+        )(request)
+    assert mock_log.call_args.args[3] == expected
+    assert "private-uid" not in str(mock_log.call_args)
+    assert "private-token" not in str(mock_log.call_args)
+
+
+def test_unresolved_verification_path_is_masked_in_http_log(client):
+    """Mask token-shaped 404 paths in a real Django request."""
+    path = "/email/verify/private-uid/private-token/extra/"
+    with patch("infrastructure.request_id.http_logger.log") as mock_log:
+        response = client.get(path)
+    assert response.status_code == 404
+    assert mock_log.call_args.args[3] == "/email/verify/<redacted>/"
+    assert "private-uid" not in str(mock_log.call_args)
+    assert "private-token" not in str(mock_log.call_args)
+
+
+def test_https_redirect_does_not_log_verification_token(
+    client, monkeypatch,
+):
+    """Mask a path when SecurityMiddleware redirects before routing."""
+    monkeypatch.setattr(settings, "SECURE_SSL_REDIRECT", True)
+    path = "/email/verify/private-uid/private-token/"
+    with patch("infrastructure.request_id.http_logger.log") as mock_log:
+        response = client.get(path)
+    assert response.status_code == 301
+    assert mock_log.call_args.args[3] == "/email/verify/<redacted>/"
+    assert "private-uid" not in str(mock_log.call_args)
+    assert "private-token" not in str(mock_log.call_args)
+
+
 def test_context_is_reset_when_processing_raises(rf):
     """Avoid leaking an ID into later requests after errors."""
     def failing(_request):

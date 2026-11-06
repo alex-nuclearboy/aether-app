@@ -22,11 +22,12 @@ class RequestIdFilter(logging.Filter):
 
 
 def _logged_request_path(request):
-    """Never write an email verification token to HTTP access logs."""
-    match = getattr(request, "resolver_match", None)
-    if match is not None and match.url_name == "email_verification_confirm":
-        return "/email/verify/<redacted>/"
-    return request.path
+    """Mask verification links even when URL resolution has not run."""
+    path = request.path
+    prefix, separator, _remainder = path.partition("/email/verify/")
+    if separator:
+        return f"{prefix}{separator}<redacted>/"
+    return path
 
 
 def _finalise_response(request, response):

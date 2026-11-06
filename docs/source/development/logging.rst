@@ -93,6 +93,16 @@ The logger is configured independently at ``INFO`` level in all
 environments. Ordinary responses are logged at ``INFO``, HTTP 429
 responses at ``WARNING``, and HTTP 5xx responses at ``ERROR``.
 
+Verification confirmation paths are masked before they reach ``aether.http``
+regardless of URL resolution. The logger replaces the entire suffix after
+``/email/verify/`` with ``<redacted>/``, including both the user identifier
+and token. This also covers security redirects issued before route resolution
+and malformed confirmation URLs that produce HTTP 404. Other paths retain
+their original path. Query strings are not included in these HTTP records.
+This protection is scoped to Aether's ``aether.http`` records; Django
+framework diagnostics, web-server and hosting-platform access logs require
+separate sanitisation or configuration before production deployment.
+
 Routine ``django.server`` access messages are suppressed to avoid
 duplicate HTTP records. Django may still emit diagnostic messages
 through ``django.request`` after the middleware context has been

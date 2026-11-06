@@ -91,6 +91,7 @@ The current modules have separate responsibilities:
 ``test_request_id.py``
    Tests request ID generation, scope isolation, synchronous and asynchronous
    middleware execution, logging enrichment, HTTP response logging levels,
+   verification-path masking before routing (including redirects and 404s),
    and end-to-end authentication event correlation.
 
 ``test_request.py``

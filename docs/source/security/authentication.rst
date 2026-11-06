@@ -351,7 +351,9 @@ GET requests without consuming the token. A CSRF-protected POST invokes the
 existing verification service and redirects to the token-free
 ``/email/verification-result/`` page. Confirmation responses prevent caching
 and use ``Referrer-Policy: origin`` to avoid exposing the token in referrer
-paths. Application HTTP logs redact confirmation URL components.
+paths. The ``aether.http`` logger masks confirmation URL components even
+when URL resolution has not completed. Framework, proxy and hosting logs
+require independent protection.
 
 The profile currently has no editing controls. Changing account data or
 email, and production-ready public registration, remain separate work.

@@ -942,8 +942,9 @@ and returns it through the ``X-Request-ID`` response header. A logging filter
 adds the request ID to console and file log records. The middleware also
 records HTTP responses through ``aether.http`` before the request context is
 cleared, using ``INFO`` for ordinary responses, ``WARNING`` for HTTP 429, and
-``ERROR`` for HTTP 5xx. Confirmation URLs containing verification tokens are
-redacted in the application HTTP log.
+``ERROR`` for HTTP 5xx. The application HTTP logger masks the entire suffix
+after ``/email/verify/`` without relying on URL resolution, including for
+security redirects and unresolved confirmation paths.
 
 ``infrastructure/request.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1170,7 +1171,8 @@ The current package contains:
 ``tests/test_request_id.py``
    Verifies request ID generation, uniqueness, context isolation and cleanup,
    synchronous and asynchronous middleware, HTTP response logging levels,
-   and authentication audit correlation.
+   verification-path masking before URL resolution (including redirects and
+   malformed paths), and authentication audit correlation.
 
 ``tests/test_request.py``
    Tests shared IP address normalisation, client IP resolution in development

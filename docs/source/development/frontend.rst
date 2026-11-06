@@ -115,10 +115,11 @@ When enabled, invalid submissions display field errors in the same form and
 successful submissions atomically queue a verification email and redirect
 to the token-free ``Check your email`` page
 (``accounts/templates/accounts/registration_check_email.html``). The result
-page confirms queuing rather than delivery; it does not provide public resend
-or expose the recipient address. Signed-in visitors are redirected to the
-profile. Production rejects enabling registration until recovery and
-anti-abuse controls are available.
+page confirms queuing rather than delivery and links to the public resend
+form. The separate ``/register/resend/`` page collects an email address and
+redirects to a neutral result for unknown and eligible accounts alike.
+Neither page exposes recipient details. Email correction remains pending,
+and production registration remains disabled.
 
 Profile and email verification pages
 ------------------------------------

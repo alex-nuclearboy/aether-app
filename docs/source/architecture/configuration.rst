@@ -96,9 +96,9 @@ and recognised identifier uniqueness conflicts display field errors. A job
 creation failure rolls back account creation.
 
 The setting cannot be enabled in production: settings loading raises
-``ImproperlyConfigured`` until public email resend/recovery and anti-abuse
-controls are implemented and reviewed. The independent worker performs
-outbound delivery and retries; public resend is not yet available.
+``ImproperlyConfigured`` until email correction and remaining production
+safeguards are implemented and reviewed. Public resend is available for
+existing unverified public accounts; the worker handles delivery and retries.
 
 Django security configuration
 -----------------------------

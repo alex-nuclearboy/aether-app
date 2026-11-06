@@ -12,8 +12,8 @@ profile requests enqueue verification jobs in PostgreSQL without SMTP.
 The independent worker generates current verification links, renders
 plain-text and HTML messages, and sends them using Django's default mailer.
 No worker is deployed automatically: a running worker is required for
-delivery. Production public registration remains disabled pending public
-resend/recovery and deployment safeguards.
+delivery. Public resend uses the same queue and worker. Production
+registration remains disabled pending email correction and safeguards.
 
 Aether connects to Mailjet through Django's standard SMTP backend rather than
 through a Mailjet-specific SDK or API integration. The application therefore

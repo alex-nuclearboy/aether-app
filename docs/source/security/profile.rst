@@ -10,7 +10,8 @@ shows the current username and email address and the computed
 username, password, and other account details will be introduced separately.
 Registration POST is available only when the development/test flag is
 enabled. Authenticated users can request verification from their profiles;
-public registration and unauthenticated recovery remain disabled in production.
+public registration remains disabled in production. Public email resend
+is available to existing unverified public accounts; email correction is pending.
 
 The shared header links to the profile only for authenticated users.
 Django Admin retains its standard appearance and account management UI.
@@ -93,5 +94,6 @@ in the same transaction, without changing ``is_active``. If enqueuing fails,
 the account creation is rolled back. The result page confirms queuing, not
 SMTP acceptance or final delivery. The worker handles delivery failures and
 retries separately. Registration POST already has a per-IP request limit;
-public resend and email correction are not implemented. Production
-registration therefore remains disabled.
+public resend is implemented with neutral responses and rate limits;
+unauthenticated email correction remains pending. Production registration
+therefore remains disabled.

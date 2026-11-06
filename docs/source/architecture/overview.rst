@@ -33,8 +33,8 @@ The implemented foundation consists of:
   the default-off development/test flag is enabled, not in production;
 * PostgreSQL-backed request limits now enforced on staged registration POST,
   with HTTP 429 responses, a ``Retry-After`` header and fail-closed handling
-  when the client IP address cannot be determined; resend and email-correction
-  endpoints remain future work;
+  when the client IP address cannot be determined; public resend is also
+  IP- and email-throttled, while email correction remains future work;
 * a manual Django management command for pruning expired public request
   counters in batches; scheduling it in production remains pending;
 * a PostgreSQL verification email outbox and an independent worker with

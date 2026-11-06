@@ -88,9 +88,10 @@ identifiers are not stored in plaintext. The records have an indexed expiry
 time for later removal by a worker or maintenance command.
 
 Staged registration POST uses this service to limit requests per client IP
-address, including invalid form submissions. Public resend and email-correction
-routes are not yet connected. Fixed UTC time windows can permit bursts at the
-window boundary; further abuse protection is required before production.
+address, including invalid form submissions. Public resend also enforces
+separate IP and email allowances, without storing either identifier in
+plaintext. Email correction is not yet connected. Fixed UTC windows can
+permit boundary bursts; further protection is required before production.
 
 A management command removes expired counters in configurable batches::
 

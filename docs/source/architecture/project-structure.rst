@@ -58,6 +58,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_models.py
    │   │   ├── test_profile_verification.py
    │   │   ├── test_public_rate_limits.py
+   │   │   ├── test_public_resend.py
    │   │   ├── test_public_request_counter_cleanup.py
    │   │   ├── test_registration_flow.py
    │   │   ├── test_registration_form.py
@@ -76,6 +77,8 @@ The repository currently has the following top-level structure:
    │   │       ├── login.html
    │   │       ├── register.html
    │   │       ├── registration_check_email.html
+   │   │       ├── registration_resend_email.html
+   │   │       ├── registration_resend_done.html
    │   │       └── profile.html
    │   ├── __init__.py
    │   ├── admin.py
@@ -85,6 +88,7 @@ The repository currently has the following top-level structure:
    │   ├── email_outbox.py
    │   ├── email_worker.py
    │   ├── email_verification.py
+   │   ├── public_recovery.py
    │   ├── emails.py
    │   ├── forms.py
    │   ├── lockout_responses.py
@@ -291,15 +295,23 @@ one job; the normal mode polls continuously. ``--public-origin`` is mandatory,
 and a production worker refuses HTTP origins. It does not run automatically
 alongside Django's development server.
 
+``accounts/public_recovery.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Implements public resend for unverified registration accounts. It locks the
+account before checking the submitted email and calling the outbox service.
+Unknown, verified and ineligible accounts do not produce a delivery job.
+
 ``accounts/public_rate_limits.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides atomic, fixed-window PostgreSQL request accounting for registration,
 verification-email resend and correction of an unverified email address.
 Independent action and identity keys are protected using Django's keyed HMAC.
-The registration POST route now consumes an IP-based allowance; other public
-routes are not yet connected. The module also calculates the remaining time
-until the next fixed UTC allowance window for HTTP ``Retry-After`` responses.
+Registration POST consumes an IP allowance. Public resend consumes IP and
+email allowances; email correction is not yet connected. The module also
+calculates the remaining time until the next fixed UTC allowance window for
+HTTP ``Retry-After`` responses.
 
 ``accounts/management/commands/prune_public_request_counters.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -488,9 +500,10 @@ and invokes the verification service only on POST.
 ~~~~~~~~~~~~~~~~~~~~
 
 Registers application login at ``/login/``, staged registration at
-``/register/``, the token-free ``/register/check-email/`` result page, and
-POST-only logout at ``/logout/``. It also exposes the authenticated profile
-at ``/profile/``,
+``/register/``, the token-free ``/register/check-email/`` result page,
+public resend at ``/register/resend/`` and its neutral result page at
+``/register/resend/done/``, and POST-only logout at ``/logout/``. It also
+exposes the authenticated profile at ``/profile/``,
 the POST-only email request at ``/profile/verify-email/``, the public
 confirmation page at ``/email/verify/<uidb64>/<token>/``, and the token-free
 result page at ``/email/verification-result/``. Django Admin authentication
@@ -500,7 +513,8 @@ remains independent.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides the sign-in form, Django CSRF token, neutral validation messages,
-and a safe ``next`` field. It extends the shared Aether base template.
+and a safe ``next`` field. It extends the shared Aether base template and
+links to the public resend form.
 
 ``accounts/templates/accounts/register.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -514,8 +528,20 @@ password values.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Displays a token-free registration result with guidance on email confirmation
-and the current absence of public resend. It never includes the recipient
+and a link to the public resend form. It never includes the recipient
 address in the page URL.
+
+``accounts/templates/accounts/registration_resend_email.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the public email-only resend form and its CSRF token without
+revealing whether the submitted address belongs to an account.
+
+``accounts/templates/accounts/registration_resend_done.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Displays the same token-free outcome for unknown, verified, rate-limited
+and eligible addresses. It never repeats the submitted email.
 
 ``accounts/templates/accounts/profile.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

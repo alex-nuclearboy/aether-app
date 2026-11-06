@@ -80,8 +80,8 @@ outbox delivery job in one PostgreSQL transaction. SMTP does not run during
 HTTP registration. If job creation fails, the account transaction rolls back.
 No automatic sign-in occurs; success redirects to the token-free
 ``/register/check-email/`` page, which confirms queuing rather than delivery.
-The separate worker performs SMTP and handles retries. Public resend is not
-yet available.
+The separate worker performs SMTP and handles retries. Anonymous users can
+request a new link through ``/register/resend/``.
 
 The PostgreSQL-backed counter service enforces a limit of ten registration
 POST attempts per client IP address per fixed UTC hour. The allowance is
@@ -93,10 +93,12 @@ used; the public endpoint does not parse forwarded headers independently.
 GET requests, authenticated redirects, and disabled registration do not
 consume an allowance. The management command
 ``prune_public_request_counters`` can remove expired records, but production
-scheduling is not yet configured. Resend and email-correction limits are not
-yet connected to public endpoints. Registration and authenticated profile
-requests now enqueue delivery jobs, but the worker has not been deployed.
-Public recovery, worker deployment and final proxy/IP verification remain
+scheduling is not yet configured. Public resend uses separate limits of ten
+POST attempts per client IP and three per email per fixed UTC hour. Requests
+for unknown, verified or ineligible accounts have the same public result.
+IP exhaustion returns HTTP 429; email allowance exhaustion remains neutral.
+Registration, profile and public resend enqueue jobs without HTTP SMTP.
+Email correction, worker deployment and final proxy/IP verification remain
 production prerequisites.
 Production still rejects enabling registration; Admin and CLI behaviour is
 unchanged.
@@ -127,7 +129,8 @@ The authenticated profile displays the current email and its verification
 status. Unverified users can request a verification message, and the public
 confirmation endpoint allows verification without signing in. Staged POST
 registration creates unverified accounts when enabled in development or
-tests. Public registration recovery and profile editing are not implemented.
+tests. Public email resend is available without sign-in; email correction
+and profile editing remain future work.
 
 Email verification tokens
 -------------------------
@@ -176,8 +179,9 @@ unverified, login is blocked again until it is confirmed. The future
 email-change service must clear ``verified_email`` when the address changes.
 
 The registration form, transactional creation service and gated POST/email
-workflow are implemented. Public resend/recovery and registration-specific
-anti-abuse limits remain pending; production activation is prohibited.
+workflow and public resend are implemented. Username/password-based email
+correction and final production safeguards remain pending; production
+registration activation is prohibited.
 
 Password verification
 ---------------------
@@ -324,8 +328,8 @@ Django Admin and the application login share the Axes failure counters,
 15-minute lockouts, HTTP 429 responses, request IDs, and audit signals.
 Authentication forms do not duplicate those mechanisms. Registration POST
 is available only under the development/test flag. Public resend and
-registration-specific anti-abuse controls, password reset and dedicated
-lockout-status pages have not been implemented.
+registration-specific IP throttling are implemented; email correction,
+password reset and dedicated lockout-status pages remain pending.
 
 
 Profile and email confirmation
@@ -436,5 +440,5 @@ read-only profiles, and user-requested email verification, together with
 brute-force protection through django-axes. Django Admin and the application
 use the same protected authentication flow. Registration POST and email
 delivery are currently gated to development and tests. Production registration,
-public recovery and rate limiting, profile editing, password reset, and
-dedicated lockout-status pages remain outside the current scope.
+public email correction and production hardening, profile editing, password
+reset, and dedicated lockout-status pages remain outside the current scope.

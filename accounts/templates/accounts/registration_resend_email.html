@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Request verification email" %} | Aether{% endblock title %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/pages/register.css' %}">
+{% endblock page_styles %}
+
+{% block content %}
+<section class="register" aria-labelledby="resend-title">
+    <h1 id="resend-title" class="register__title">
+        {% trans "Request another verification link" %}
+    </h1>
+    <p class="register__intro">
+        {% trans "Enter the email address used to register your account." %}
+    </p>
+    <div class="register__panel">
+        <form method="post" action="{% url 'registration_resend_email' %}"
+              class="register__form" novalidate>
+            {% csrf_token %}
+            {% include "components/form_field.html" with field=form.email only %}
+            <button class="button button--primary register__submit"
+                    type="submit">
+                {% trans "Request verification link" %}
+            </button>
+        </form>
+    </div>
+    <p class="register__login">
+        <a href="{% url 'login' %}">{% trans "Sign in" %}</a>
+    </p>
+</section>
+{% endblock content %}

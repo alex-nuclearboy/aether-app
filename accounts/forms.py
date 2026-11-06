@@ -1,5 +1,6 @@
 """Forms for Aether application authentication."""
 
+from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -53,3 +54,10 @@ class AetherRegistrationForm(UserCreationForm):
             self.save_m2m()
 
         return user
+
+
+# pylint: disable=too-few-public-methods
+class AetherResendVerificationForm(forms.Form):
+    """Validate an address without revealing account membership."""
+
+    email = forms.EmailField(label=_("Email address"), max_length=254)

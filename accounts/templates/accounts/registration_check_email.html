@@ -17,7 +17,10 @@
             {% trans "If you have just registered, your verification email has been queued. When it arrives, open the link to confirm your address before signing in." %}
         </p>
         <p>
-            {% trans "Email resend is not available yet. Public registration remains disabled in production." %}
+            {% trans "No verification email?" %}
+            <a href="{% url 'registration_resend_email' %}">
+                {% trans "Request another link" %}
+            </a>
         </p>
         <a class="button button--primary" href="{% url 'login' %}">
             {% trans "Sign in" %}

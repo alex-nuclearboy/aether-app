@@ -20,8 +20,13 @@ from accounts.email_outbox import (
     queue_verification_email,
 )
 from accounts.email_verification import verify_email
-from accounts.forms import AetherAuthenticationForm, AetherRegistrationForm
+from accounts.forms import (
+    AetherAuthenticationForm,
+    AetherRegistrationForm,
+    AetherResendVerificationForm,
+)
 from accounts.models import User
+from accounts.public_recovery import request_public_verification_resend
 from accounts.public_rate_limits import (
     PublicRequestAction,
     consume_public_request,
@@ -128,6 +133,69 @@ class RegistrationCheckEmailView(TemplateView):
     """Explain the next step without exposing an email address in a URL."""
 
     template_name = "accounts/registration_check_email.html"
+
+
+@method_decorator(never_cache, name="dispatch")
+class AetherResendVerificationView(TemplateView):
+    """Resend registration links without exposing account membership."""
+
+    template_name = "accounts/registration_resend_email.html"
+
+    def get_context_data(self, **kwargs):
+        """Provide a blank or bound form for the public resend page."""
+        context = super().get_context_data(**kwargs)
+        if "form" not in context:
+            context["form"] = AetherResendVerificationForm()
+        return context
+
+    @staticmethod
+    def _limit_response(request):
+        """Enforce the IP allowance before any address lookup."""
+        client_ip = get_client_ip(request)
+        if client_ip is None:
+            response = HttpResponse(
+                _("Email recovery is temporarily unavailable."),
+                status=503,
+                content_type="text/plain; charset=utf-8",
+            )
+        elif not consume_public_request(
+            PublicRequestAction.RESEND_IP, client_ip
+        ):
+            response = HttpResponse(
+                _("Too many requests. Please try again later."),
+                status=429,
+                content_type="text/plain; charset=utf-8",
+            )
+            response["Retry-After"] = str(
+                public_request_retry_after(PublicRequestAction.RESEND_IP)
+            )
+        else:
+            return None
+
+        response["Cache-Control"] = "no-store"
+        return response
+
+    def post(self, request, *args, **kwargs):
+        """Queue eligible email while returning a neutral response."""
+        limit_response = self._limit_response(request)
+        if limit_response is not None:
+            return limit_response
+
+        form = AetherResendVerificationForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        email = form.cleaned_data["email"]
+        if consume_public_request(PublicRequestAction.RESEND_EMAIL, email):
+            request_public_verification_resend(email)
+        return redirect("registration_resend_done")
+
+
+@method_decorator(never_cache, name="dispatch")
+class AetherResendDoneView(TemplateView):
+    """Show the same result regardless of account existence or state."""
+
+    template_name = "accounts/registration_resend_done.html"
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

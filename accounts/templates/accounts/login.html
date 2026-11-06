@@ -55,5 +55,11 @@
         {% trans "Don't have an account?" %}
         <a href="{% url 'register' %}">{% trans "Create an account" %}</a>
     </p>
+    <p class="login__register">
+        {% trans "Email not verified?" %}
+        <a href="{% url 'registration_resend_email' %}">
+            {% trans "Request another verification link" %}
+        </a>
+    </p>
 </section>
 {% endblock content %}

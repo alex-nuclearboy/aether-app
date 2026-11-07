@@ -96,7 +96,8 @@ The current modules have separate responsibilities:
 
 ``test_request.py``
    Tests shared IP address normalisation, environment-specific client IP
-   resolution, untrusted forwarded headers, and proxy-policy integration.
+   resolution, untrusted forwarded prefixes, failure-closed handling of
+   missing and invalid production headers, and proxy-policy integration.
 
 The root ``tests/`` package is reserved for project-wide configuration and
 infrastructure tests.
@@ -226,6 +227,10 @@ database test rather than mocked query execution.
 staged registration POST requests, invalid-form counting, independent IP
 allowances, client-IP resolution, disabled registration, fail-closed handling,
 and ``Retry-After`` responses.
+
+``accounts/tests/test_public_resend.py`` also verifies that public resend
+requires a valid rightmost forwarded IP under the production header policy
+and returns HTTP 503 without a counter when that header is absent.
 
 ``accounts/tests/test_public_request_counter_cleanup.py`` checks expiry-based
 removal, bounded batches, dry-run output, empty results and invalid options

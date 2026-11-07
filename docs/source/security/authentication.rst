@@ -250,7 +250,11 @@ The Axes client IP callable uses the shared
 ``infrastructure.request.get_client_ip`` function.
 
 Authentication protection therefore follows the project's existing
-client IP resolution policy.
+client IP resolution policy. In production the rightmost Koyeb-added
+``X-Forwarded-For`` address is required; an absent or invalid header returns
+``None`` instead of using the proxy's ``REMOTE_ADDR``. Public registration
+and resend reject such requests with HTTP 503. The same shared policy affects
+authentication lockout and client-IP audit information.
 
 The reverse-proxy trust assumptions are documented in :doc:`django`.
 

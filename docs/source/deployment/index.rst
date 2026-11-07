@@ -22,8 +22,10 @@ Registration POST is available only under an explicit development/test
 flag and enforces PostgreSQL-backed per-IP limits. The account and outbox job
 are created atomically; authenticated profile requests also enqueue jobs.
 Public resend is implemented with IP and address limits. Email correction,
-trusted production client-IP configuration and scheduled counter cleanup
-remain incomplete. Registration must remain disabled in production.
+verification of the Koyeb-only ingress trust boundary and scheduled
+counter cleanup remain incomplete. Production client-IP resolution now
+requires the final Koyeb-added ``X-Forwarded-For`` value and does not fall
+back to ``REMOTE_ADDR``. Registration must remain disabled in production.
 
 The independent verification email worker supports PostgreSQL leases,
 retries, lease recovery and an explicit public origin. SMTP no longer runs

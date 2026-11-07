@@ -90,21 +90,30 @@ Aether uses a shared client IP resolver in ``infrastructure.request``.
 Development and test environments use ``REMOTE_ADDR`` through
 ``django-ipware`` and ignore forwarded headers.
 
-Production prioritises ``X-Forwarded-For`` over ``REMOTE_ADDR``.
-The resolver explicitly selects the last forwarded address, following
-the documented behaviour of the Koyeb ingress. If the header is absent,
-it falls back to ``REMOTE_ADDR``.
+Production requires ``X-Forwarded-For`` and explicitly selects its
+rightmost address. Koyeb's edge network appends the connecting IP to this
+header and identifies that final value as the only one it can certify.
+Untrusted prefixes are ignored. Missing, blank or malformed headers return
+``None``; production never falls back to the proxy's ``REMOTE_ADDR``.
+See `Koyeb's edge-network header documentation
+<https://www.koyeb.com/docs/reference/edge-network>`_.
 
 The production selection is implemented directly in
 ``infrastructure.request``, independently of the django-ipware
 ``CLIENT_IP_PROXY_ORDER`` setting.
 
-This policy assumes that requests reach the application through the
-trusted Koyeb ingress. The proxy trust boundary must be verified before
-production deployment and reviewed if additional proxies are introduced.
+This policy is valid only when all public application requests enter through
+Koyeb's edge network and direct access to the application is prevented.
+An application cannot authenticate the origin of an HTTP header by inspecting
+the header alone. Verify this ingress restriction before deployment. If any
+other proxy or CDN is introduced, re-evaluate the trusted hop and header
+selection before enabling authentication or public request limits.
 
 The resolved address is validated and normalised using Python's
-``ipaddress`` module. Invalid addresses return ``None``.
+``ipaddress`` module. Invalid or unavailable addresses return ``None``. Public
+registration and resend POST requests then return HTTP 503 without consuming
+an IP allowance. Authentication lockout and audit logging also use this shared
+resolver, so malformed proxy headers can affect their client-IP information.
 
 If another proxy or CDN is introduced, the address resolution policy must
 be reviewed. The selected address may otherwise identify an upstream proxy

@@ -959,8 +959,9 @@ including IPv4-mapped IPv6 addresses. Invalid addresses return ``None``.
 
 Development and test environments use ``django-ipware`` with
 ``REMOTE_ADDR`` as the only permitted address source. Production explicitly
-selects the last ``X-Forwarded-For`` address, falling back to
-``REMOTE_ADDR`` when the header is absent.
+selects the last ``X-Forwarded-For`` address added by Koyeb and returns
+``None`` when that header is missing or invalid; it does not fall back to
+``REMOTE_ADDR``.
 
 The production selection does not use the django-ipware
 ``CLIENT_IP_PROXY_ORDER`` setting. See :doc:`../security/django`
@@ -1176,7 +1177,8 @@ The current package contains:
 
 ``tests/test_request.py``
    Tests shared IP address normalisation, client IP resolution in development
-   and production, forwarding-header handling, and proxy-policy integration.
+   and production, untrusted forwarded prefixes, missing and invalid headers,
+   and proxy-policy integration.
 
 ``tests/__init__.py``
    Marks the root test directory as a Python package.

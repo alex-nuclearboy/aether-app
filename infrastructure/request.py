@@ -27,11 +27,9 @@ def get_client_ip(request: HttpRequest) -> str | None:
     """Resolve and normalise the client IP using the proxy policy."""
     if "HTTP_X_FORWARDED_FOR" in settings.CLIENT_IP_META_PRECEDENCE_ORDER:
         forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-
-        if isinstance(forwarded_for, str) and forwarded_for:
-            return _normalise_ip(forwarded_for.rsplit(",", 1)[-1])
-
-        return _normalise_ip(request.META.get("REMOTE_ADDR"))
+        if not isinstance(forwarded_for, str) or not forwarded_for.strip():
+            return None
+        return _normalise_ip(forwarded_for.rsplit(",", 1)[-1])
 
     client_ip, _ = resolve_client_ip(
         request,

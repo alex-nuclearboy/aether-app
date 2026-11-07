@@ -179,6 +179,40 @@ def test_missing_ip_fails_closed_without_creating_counter(client):
     assert not PublicRequestCounter.objects.exists()
 
 
+@override_settings(
+    CLIENT_IP_META_PRECEDENCE_ORDER=("HTTP_X_FORWARDED_FOR",),
+)
+def test_production_resend_requires_forwarded_client_ip(client):
+    """Reject a missing proxy header without consuming an IP allowance."""
+    response = client.post(
+        reverse(RESEND_URL),
+        {"email": "missing@example.com"},
+        REMOTE_ADDR="10.0.0.5",
+    )
+    assert response.status_code == 503
+    assert "no-store" in {
+        directive.strip()
+        for directive in response["Cache-Control"].split(",")
+    }
+    assert not PublicRequestCounter.objects.exists()
+
+
+@override_settings(
+    CLIENT_IP_META_PRECEDENCE_ORDER=("HTTP_X_FORWARDED_FOR",),
+)
+def test_production_resend_accepts_koyeb_appended_ip(client):
+    """Meter an anonymous request using the rightmost forwarded IP."""
+    response = client.post(
+        reverse(RESEND_URL),
+        {"email": "missing@example.com"},
+        REMOTE_ADDR="10.0.0.5",
+        HTTP_X_FORWARDED_FOR="192.0.2.10, 203.0.113.25",
+    )
+    assert response.status_code == 302
+    assert response.url == reverse(DONE_URL)
+    assert PublicRequestCounter.objects.count() == 2
+
+
 def test_csrf_is_required_for_public_resend():
     """Refuse unauthenticated cross-site POSTs."""
     browser = Client(enforce_csrf_checks=True)

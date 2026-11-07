@@ -265,7 +265,7 @@ SECURE_HSTS_PRELOAD = env.bool(
 # ---------------------------------------------------------------------------
 
 CLIENT_IP_META_PRECEDENCE_ORDER = (
-    ("HTTP_X_FORWARDED_FOR", "REMOTE_ADDR")
+    ("HTTP_X_FORWARDED_FOR",)
     if ENVIRONMENT == "production"
     else ("REMOTE_ADDR",)
 )

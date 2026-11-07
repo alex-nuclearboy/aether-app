@@ -78,10 +78,7 @@ def test_get_client_ip_handles_missing_remote_address():
 
 
 @override_settings(
-    CLIENT_IP_META_PRECEDENCE_ORDER=(
-        "HTTP_X_FORWARDED_FOR",
-        "REMOTE_ADDR",
-    ),
+    CLIENT_IP_META_PRECEDENCE_ORDER=("HTTP_X_FORWARDED_FOR",),
 )
 def test_production_uses_last_forwarded_ip():
     """Use the address appended by the trusted Koyeb ingress."""
@@ -95,10 +92,7 @@ def test_production_uses_last_forwarded_ip():
 
 
 @override_settings(
-    CLIENT_IP_META_PRECEDENCE_ORDER=(
-        "HTTP_X_FORWARDED_FOR",
-        "REMOTE_ADDR",
-    ),
+    CLIENT_IP_META_PRECEDENCE_ORDER=("HTTP_X_FORWARDED_FOR",),
 )
 def test_production_ignores_spoofed_forwarded_prefix():
     """Changing an untrusted prefix must not change the resolved IP."""
@@ -121,10 +115,7 @@ def test_production_ignores_spoofed_forwarded_prefix():
 
 
 @override_settings(
-    CLIENT_IP_META_PRECEDENCE_ORDER=(
-        "HTTP_X_FORWARDED_FOR",
-        "REMOTE_ADDR",
-    ),
+    CLIENT_IP_META_PRECEDENCE_ORDER=("HTTP_X_FORWARDED_FOR",),
 )
 def test_production_normalises_forwarded_ipv6():
     """Normalise the last IPv6 address in the forwarded chain."""
@@ -140,10 +131,7 @@ def test_production_normalises_forwarded_ipv6():
 
 
 @override_settings(
-    CLIENT_IP_META_PRECEDENCE_ORDER=(
-        "HTTP_X_FORWARDED_FOR",
-        "REMOTE_ADDR",
-    ),
+    CLIENT_IP_META_PRECEDENCE_ORDER=("HTTP_X_FORWARDED_FOR",),
 )
 def test_production_rejects_invalid_last_forwarded_ip():
     """Never fall back to an earlier untrusted forwarded address."""
@@ -157,19 +145,30 @@ def test_production_rejects_invalid_last_forwarded_ip():
 
 
 @override_settings(
-    CLIENT_IP_META_PRECEDENCE_ORDER=(
-        "HTTP_X_FORWARDED_FOR",
-        "REMOTE_ADDR",
-    ),
+    CLIENT_IP_META_PRECEDENCE_ORDER=("HTTP_X_FORWARDED_FOR",),
 )
-def test_production_falls_back_to_remote_addr():
-    """Use the direct peer address when X-Forwarded-For is absent."""
-    request = RequestFactory().get(
-        "/",
-        REMOTE_ADDR="192.0.2.10",
-    )
+@pytest.mark.parametrize(
+    "forwarded_for",
+    [None, "", "  ", "192.0.2.10, ", "192.0.2.10, invalid"],
+)
+def test_production_rejects_missing_or_invalid_forwarded_ip(forwarded_for):
+    """Fail closed rather than trusting a proxy's REMOTE_ADDR."""
+    request = RequestFactory().get("/", REMOTE_ADDR="10.0.0.5")
+    if forwarded_for is not None:
+        request.META["HTTP_X_FORWARDED_FOR"] = forwarded_for
 
-    assert get_client_ip(request) == "192.0.2.10"
+    assert get_client_ip(request) is None
+
+
+@override_settings(
+    CLIENT_IP_META_PRECEDENCE_ORDER=("HTTP_X_FORWARDED_FOR",),
+)
+def test_production_rejects_non_string_forwarded_header():
+    """Reject unexpected header types instead of using REMOTE_ADDR."""
+    request = RequestFactory().get("/", REMOTE_ADDR="10.0.0.5")
+    request.META["HTTP_X_FORWARDED_FOR"] = ["203.0.113.25"]
+
+    assert get_client_ip(request) is None
 
 
 @override_settings(

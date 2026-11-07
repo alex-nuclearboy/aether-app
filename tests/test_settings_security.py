@@ -218,7 +218,7 @@ def test_settings_reject_negative_hsts_seconds(
     [
         ("development", ("REMOTE_ADDR",), "right-most"),
         ("test", ("REMOTE_ADDR",), "right-most"),
-        ("production", ("HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"), "right-most"),
+        ("production", ("HTTP_X_FORWARDED_FOR",), "right-most"),
     ],
 )
 def test_client_ip_configuration_by_environment(

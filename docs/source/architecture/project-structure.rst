@@ -281,9 +281,9 @@ the queued messages.
 
 Claims eligible outbox rows with PostgreSQL ``SKIP LOCKED`` and a five-minute
 lease. Delivery runs outside the claim transaction, uses a trusted explicit
-public origin and the existing plain-text/HTML templates, and checks the
-recipient snapshot and verification state before sending. Failed transport
-attempts have bounded backoff and terminal states. A previous worker cannot
+public origin and the existing plain-text/HTML templates, and checks
+account activation, the recipient snapshot and verification state before
+sending. Failed transport attempts have bounded backoff and terminal states. A previous worker cannot
 update a job that has been reclaimed under a newer lease. As with other SMTP
 workers, delivery is at least once, not exactly once.
 

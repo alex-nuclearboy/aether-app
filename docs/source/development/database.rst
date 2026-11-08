@@ -124,9 +124,12 @@ lease to prevent a previous worker from overwriting a newer claim.
 
 Transient failures are retried with increasing delays, at most five delivery
 attempts. Expired leases at the retry limit become terminal failures.
-Before sending, the worker cancels jobs whose recipient address has changed
-or has already been verified. Verification tokens are created at delivery
-time and are never persisted in the queue.
+Before sending, the worker cancels jobs for inactive accounts, changed
+recipient addresses or already verified addresses. A job cancelled because
+its account is inactive records ``inactive_user`` as its error category.
+The check is not atomic with SMTP delivery: deactivation after the check
+may still race with an in-progress send. Verification tokens are created
+at delivery time and are never persisted in the queue.
 
 The worker is operated separately using ``process_verification_email_queue``
 and a required trusted public origin. It is **not automatically started** by

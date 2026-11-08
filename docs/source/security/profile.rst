@@ -31,6 +31,10 @@ the intended recipient, not a verification token or rendered message.
 ``accounts.email_worker`` generates the token and renders plain-text and HTML
 bodies immediately before delivery. It uses Django's configured ``MAILERS``
 backend: the console backend locally and SMTP (Mailjet) in production.
+Before constructing a message, the worker cancels a queued job if the
+account is inactive. This does not change account activation or email
+verification state. Deactivation after this check may still overlap with
+SMTP delivery already in progress.
 
 The user row is locked while the job and account-level
 ``email_verification_sent_at`` timestamp are saved in one transaction.

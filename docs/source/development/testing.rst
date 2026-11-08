@@ -168,8 +168,9 @@ changed email addresses and rollback of both job and request timestamp.
 It does not exercise a worker or SMTP delivery.
 
 ``accounts/tests/test_email_worker.py`` checks independent SMTP
-delivery, public-origin validation, stale-recipient cancellation, bounded
-retry delays, expired leases and compare-and-swap completion.
+delivery, public-origin validation, stale-recipient and inactive-account
+cancellation (including retries), bounded retry delays, expired leases and
+compare-and-swap completion.
 
 ``accounts/tests/test_email_worker_command.py`` covers one-shot command
 execution, idle queues, invalid polling intervals and missing origins.

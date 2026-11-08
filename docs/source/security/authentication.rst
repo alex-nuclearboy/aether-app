@@ -123,7 +123,10 @@ does not activate a disabled account or create a login session. The
 No email is verified automatically by account creation. Aether provides
 a dedicated token generator and a server-side verification service. The
 service validates the token and persists the current email address in
-``verified_email`` without modifying ``is_active``.
+``verified_email`` without modifying ``is_active``. Queued verification
+messages are cancelled by the worker if the account is inactive when the
+worker checks it; a previously issued token can still be confirmed without
+activating the account.
 
 The authenticated profile displays the current email and its verification
 status. Unverified users can request a verification message, and the public

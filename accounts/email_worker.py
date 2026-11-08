@@ -180,6 +180,15 @@ def deliver_next_verification_email(origin: str) -> DeliveryOutcome | None:
         )
         return DeliveryOutcome.CANCELLED
 
+    if not user.is_active:
+        _finish_claim(
+            claim,
+            status=VerificationEmailJob.Status.CANCELLED,
+            lease_expires_at=None,
+            last_error_code="inactive_user",
+        )
+        return DeliveryOutcome.CANCELLED
+
     if (
         user.is_email_verified
         or user.email.casefold() != claim.recipient_email.casefold()

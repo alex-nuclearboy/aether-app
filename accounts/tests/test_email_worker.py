@@ -90,6 +90,52 @@ def test_worker_cancels_verified_address(member):
     assert not mail.outbox
 
 
+def test_worker_cancels_job_for_inactive_account(member):
+    """Skip SMTP when the account was deactivated after enqueuing."""
+    queue_verification_email(member.pk)
+    member.is_active = False
+    member.save(update_fields=["is_active"])
+
+    assert deliver_next_verification_email(PUBLIC_ORIGIN) == (
+        DeliveryOutcome.CANCELLED
+    )
+
+    job = VerificationEmailJob.objects.get(user=member)
+    assert job.status == VerificationEmailJob.Status.CANCELLED
+    assert job.last_error_code == "inactive_user"
+    assert job.lease_expires_at is None
+    assert job.attempts == 1
+    assert not mail.outbox
+
+
+def test_worker_cancels_retry_after_account_deactivation(member):
+    """Do not deliver a retry if the account became inactive."""
+    queue_verification_email(member.pk)
+    with patch(
+        "accounts.emails.EmailMultiAlternatives.send",
+        side_effect=SMTPException("test transport interruption"),
+    ):
+        assert deliver_next_verification_email(PUBLIC_ORIGIN) == (
+            DeliveryOutcome.RETRY
+        )
+
+    member.is_active = False
+    member.save(update_fields=["is_active"])
+    VerificationEmailJob.objects.update(
+        available_at=timezone.now() - timedelta(seconds=1)
+    )
+
+    assert deliver_next_verification_email(PUBLIC_ORIGIN) == (
+        DeliveryOutcome.CANCELLED
+    )
+    job = VerificationEmailJob.objects.get(user=member)
+    assert job.status == VerificationEmailJob.Status.CANCELLED
+    assert job.last_error_code == "inactive_user"
+    assert job.lease_expires_at is None
+    assert job.attempts == 2
+    assert not mail.outbox
+
+
 def test_worker_is_idle_without_due_jobs():
     """A polling worker has nothing to do on an empty queue."""
     assert deliver_next_verification_email(PUBLIC_ORIGIN) is None

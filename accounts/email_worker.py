@@ -1,5 +1,6 @@
 """Lease and deliver verification email jobs using PostgreSQL."""
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -17,6 +18,8 @@ from accounts.emails import (
 )
 from accounts.models import User, VerificationEmailJob
 
+
+logger = logging.getLogger("aether.email_worker")
 
 MAX_DELIVERY_ATTEMPTS = 5
 DELIVERY_LEASE = timedelta(minutes=5)
@@ -140,14 +143,16 @@ def _finish_claim(claim: ClaimedVerificationJob, **updates) -> bool:
     return bool(updated)
 
 
-def _retry_or_fail(claim: ClaimedVerificationJob) -> DeliveryOutcome:
-    """Back off transient SMTP errors, then stop after five attempts."""
+def _retry_or_fail(
+    claim: ClaimedVerificationJob, *, error_code: str = "transport"
+) -> DeliveryOutcome:
+    """Apply bounded backoff to a failed delivery attempt."""
     if claim.attempts >= MAX_DELIVERY_ATTEMPTS:
         _finish_claim(
             claim,
             status=VerificationEmailJob.Status.FAILED,
             lease_expires_at=None,
-            last_error_code="transport",
+            last_error_code=error_code,
         )
         return DeliveryOutcome.FAILED
 
@@ -157,9 +162,54 @@ def _retry_or_fail(claim: ClaimedVerificationJob) -> DeliveryOutcome:
         status=VerificationEmailJob.Status.PENDING,
         lease_expires_at=None,
         available_at=timezone.now() + delay,
-        last_error_code="transport",
+        last_error_code=error_code,
     )
     return DeliveryOutcome.RETRY
+
+
+def _send_claimed_verification_email(
+    claim: ClaimedVerificationJob, user: User, public_origin: str
+) -> DeliveryOutcome:
+    """Prepare and deliver a claimed job, applying bounded retry rules."""
+    # Unexpected template or token failures must not stop the queue.
+    try:
+        path = verification_path_for_user(user)
+        message = build_verification_message(
+            recipient=claim.recipient_email,
+            verification_url=public_origin + path,
+        )
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logger.error(
+            "verification_email.preparation_failed "
+            "job_id=%s error_type=%s",
+            claim.pk,
+            type(exc).__name__,
+        )
+        return _retry_or_fail(claim, error_code="preparation")
+
+    try:
+        if message.send() != 1:
+            raise OSError("Email backend did not accept the message.")
+    except (OSError, SMTPException):
+        return _retry_or_fail(claim)
+    # An unexpected backend error is also a bounded job failure.
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logger.error(
+            "verification_email.delivery_failed "
+            "job_id=%s error_type=%s",
+            claim.pk,
+            type(exc).__name__,
+        )
+        return _retry_or_fail(claim, error_code="delivery")
+
+    _finish_claim(
+        claim,
+        status=VerificationEmailJob.Status.SENT,
+        sent_at=timezone.now(),
+        lease_expires_at=None,
+        last_error_code="",
+    )
+    return DeliveryOutcome.SENT
 
 
 def deliver_next_verification_email(origin: str) -> DeliveryOutcome | None:
@@ -201,23 +251,4 @@ def deliver_next_verification_email(origin: str) -> DeliveryOutcome | None:
         )
         return DeliveryOutcome.CANCELLED
 
-    path = verification_path_for_user(user)
-    message = build_verification_message(
-        recipient=claim.recipient_email,
-        verification_url=public_origin + path,
-    )
-
-    try:
-        if message.send() != 1:
-            raise OSError("Email backend did not accept the message.")
-    except (OSError, SMTPException):
-        return _retry_or_fail(claim)
-
-    _finish_claim(
-        claim,
-        status=VerificationEmailJob.Status.SENT,
-        sent_at=timezone.now(),
-        lease_expires_at=None,
-        last_error_code="",
-    )
-    return DeliveryOutcome.SENT
+    return _send_claimed_verification_email(claim, user, public_origin)

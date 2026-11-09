@@ -214,6 +214,136 @@ def test_retry_eventually_marks_job_failed(member):
     assert deliver_next_verification_email(PUBLIC_ORIGIN) is None
 
 
+@pytest.mark.parametrize(
+    "failed_helper",
+    ["verification_path_for_user", "build_verification_message"],
+)
+def test_unexpected_preparation_error_is_retried(member, failed_helper):
+    """Catch token and template errors without storing sensitive details."""
+    queue_verification_email(member.pk)
+    with (
+        patch(
+            f"accounts.email_worker.{failed_helper}",
+            side_effect=RuntimeError("sensitive verification URL"),
+        ),
+        patch("accounts.email_worker.logger.error") as log_error,
+    ):
+        assert deliver_next_verification_email(PUBLIC_ORIGIN) == (
+            DeliveryOutcome.RETRY
+        )
+
+    job = VerificationEmailJob.objects.get(user=member)
+    assert job.status == VerificationEmailJob.Status.PENDING
+    assert job.last_error_code == "preparation"
+    assert job.attempts == 1
+    assert job.lease_expires_at is None
+    assert job.available_at > timezone.now()
+    assert not mail.outbox
+    log_error.assert_called_once()
+    assert "sensitive verification URL" not in str(log_error.call_args)
+    assert "RuntimeError" in str(log_error.call_args)
+
+
+def test_unexpected_delivery_error_is_retried(member):
+    """Handle an unexpected mail backend error with bounded retry."""
+    queue_verification_email(member.pk)
+    with (
+        patch(
+            "accounts.emails.EmailMultiAlternatives.send",
+            side_effect=ValueError("sensitive verification URL"),
+        ),
+        patch("accounts.email_worker.logger.error") as log_error,
+    ):
+        assert deliver_next_verification_email(PUBLIC_ORIGIN) == (
+            DeliveryOutcome.RETRY
+        )
+
+    job = VerificationEmailJob.objects.get(user=member)
+    assert job.status == VerificationEmailJob.Status.PENDING
+    assert job.last_error_code == "delivery"
+    assert job.attempts == 1
+    assert job.lease_expires_at is None
+    assert job.available_at > timezone.now()
+    assert not mail.outbox
+    log_error.assert_called_once()
+    assert "sensitive verification URL" not in str(log_error.call_args)
+
+
+def test_unexpected_preparation_errors_stop_after_attempt_limit(member):
+    """Do not retry a persistent rendering fault indefinitely."""
+    queue_verification_email(member.pk)
+    with (
+        patch(
+            "accounts.email_worker.build_verification_message",
+            side_effect=RuntimeError("test template failure"),
+        ),
+        patch("accounts.email_worker.logger.error"),
+    ):
+        for attempt in range(1, MAX_DELIVERY_ATTEMPTS + 1):
+            VerificationEmailJob.objects.update(
+                available_at=timezone.now() - timedelta(seconds=1)
+            )
+            outcome = deliver_next_verification_email(PUBLIC_ORIGIN)
+            expected = (
+                DeliveryOutcome.FAILED
+                if attempt == MAX_DELIVERY_ATTEMPTS
+                else DeliveryOutcome.RETRY
+            )
+            assert outcome == expected
+
+    job = VerificationEmailJob.objects.get(user=member)
+    assert job.status == VerificationEmailJob.Status.FAILED
+    assert job.last_error_code == "preparation"
+    assert job.attempts == MAX_DELIVERY_ATTEMPTS
+    assert job.lease_expires_at is None
+    assert not mail.outbox
+
+
+def test_failed_preparation_does_not_block_other_jobs(member):
+    """Continue with other due jobs after a preparation failure."""
+    queue_verification_email(member.pk)
+    other = User.objects.create_user(
+        username="other-worker-member",
+        email="other-worker@example.com",
+        password="ExamplePassphrase728!",
+        email_verification_required=True,
+    )
+    queue_verification_email(other.pk)
+
+    with (
+        patch(
+            "accounts.email_worker.verification_path_for_user",
+            side_effect=RuntimeError("test token generation failure"),
+        ),
+        patch("accounts.email_worker.logger.error"),
+    ):
+        assert deliver_next_verification_email(PUBLIC_ORIGIN) == (
+            DeliveryOutcome.RETRY
+        )
+    assert deliver_next_verification_email(PUBLIC_ORIGIN) == (
+        DeliveryOutcome.SENT
+    )
+    assert VerificationEmailJob.objects.get(user=other).status == (
+        VerificationEmailJob.Status.SENT
+    )
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == [other.email]
+
+
+def test_worker_does_not_swallow_keyboard_interrupt(member):
+    """Allow process shutdown to interrupt message preparation."""
+    queue_verification_email(member.pk)
+    with patch(
+        "accounts.email_worker.verification_path_for_user",
+        side_effect=KeyboardInterrupt,
+    ):
+        with pytest.raises(KeyboardInterrupt):
+            deliver_next_verification_email(PUBLIC_ORIGIN)
+    assert VerificationEmailJob.objects.get().status == (
+        VerificationEmailJob.Status.PROCESSING
+    )
+
+
 def test_worker_recovers_expired_processing_lease(member):
     """Reclaim work abandoned by a crashed worker after lease expiry."""
     queue_verification_email(member.pk)

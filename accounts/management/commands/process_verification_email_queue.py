@@ -1,5 +1,6 @@
 """Process queued verification emails in an independent worker process."""
 
+import logging
 from time import sleep
 
 from django.core.management.base import BaseCommand, CommandError
@@ -9,6 +10,9 @@ from accounts.email_worker import (
     deliver_next_verification_email,
     validate_public_origin,
 )
+
+
+logger = logging.getLogger("aether.email_worker")
 
 
 class Command(BaseCommand):
@@ -48,11 +52,25 @@ class Command(BaseCommand):
 
         try:
             while True:
-                close_old_connections()
                 try:
-                    outcome = deliver_next_verification_email(origin)
-                finally:
                     close_old_connections()
+                    try:
+                        outcome = deliver_next_verification_email(origin)
+                    finally:
+                        close_old_connections()
+                # Infrastructure failures leave the leased job to recover.
+                except Exception as exc:  # pylint: disable=W0718
+                    if options["once"]:
+                        raise CommandError(
+                            "Verification email processing failed."
+                        ) from None
+                    logger.error(
+                        "verification_email.worker_iteration_failed "
+                        "error_type=%s",
+                        type(exc).__name__,
+                    )
+                    sleep(max(interval, 5.0))
+                    continue
 
                 if options["once"]:
                     self.stdout.write(f"Delivery outcome: {outcome or 'idle'}")

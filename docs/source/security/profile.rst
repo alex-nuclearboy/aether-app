@@ -40,7 +40,10 @@ The user row is locked while the job and account-level
 ``email_verification_sent_at`` timestamp are saved in one transaction.
 An already active job for the same account and recipient is not duplicated.
 After a job has completed, the timestamp enforces a 60-second cooldown between
-requests. A delivery failure is retried by the worker; it does not clear the
+requests. Transport failures and unexpected token, template or mail-backend
+errors are retried with bounded delays and at most five attempts. Only a
+non-sensitive error category is stored; exception messages and generated
+verification URLs are never saved in the job. These errors do not clear the
 original reservation. This timestamp does not represent verified ownership.
 
 Verification link origin

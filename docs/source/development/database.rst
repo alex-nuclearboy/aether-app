@@ -122,8 +122,13 @@ minutes; abandoned work can then be reclaimed. SMTP I/O occurs outside the
 transaction. Success, cancellation and failure updates match the original
 lease to prevent a previous worker from overwriting a newer claim.
 
-Transient failures are retried with increasing delays, at most five delivery
-attempts. Expired leases at the retry limit become terminal failures.
+Transport failures and unexpected errors during token generation, template
+rendering or mail-backend delivery use the same bounded backoff (at most
+five attempts). The database records only ``transport``, ``preparation`` or
+``delivery`` error categories, never exception messages or verification
+URLs. Unexpected failures are logged with the job ID and exception type only.
+After the final unsuccessful attempt, the job becomes ``failed``. Expired
+leases at the retry limit also become terminal failures.
 Before sending, the worker cancels jobs for inactive accounts, changed
 recipient addresses or already verified addresses. A job cancelled because
 its account is inactive records ``inactive_user`` as its error category.
@@ -136,7 +141,11 @@ and a required trusted public origin. It is **not automatically started** by
 the Django HTTP server. Registration and authenticated profile views already
 enqueue jobs without SMTP I/O; delivery requires a running worker. SMTP
 delivery is at least once, not exactly once: a crash after SMTP acceptance
-can result in a duplicate message on lease recovery.
+can result in a duplicate message on lease recovery. An unexpected database
+or claim-finalisation error leaves the current lease in place; the continuous
+management command logs the exception type, waits at least five seconds,
+and resumes polling. A leased job can be reclaimed after lease expiry. The
+``--once`` command instead exits with an error for such infrastructure faults.
 
 Useful commands
 ---------------

@@ -32,7 +32,11 @@ retries, lease recovery and an explicit public origin. SMTP no longer runs
 in registration or profile HTTP requests. The worker is **not** started by
 the web process: delivery requires a separately deployed and monitored worker.
 Before production use, configure a verified HTTPS public origin and test SMTP
-failures, worker restarts and retention of failed jobs.
+failures, template and backend exceptions, worker restarts, lease recovery and
+retention of failed jobs. The continuous command logs an exception type and
+pauses for at least five seconds after unexpected infrastructure failures;
+the ``--once`` mode fails visibly instead. Provision monitoring for repeated
+worker errors and terminally failed jobs before enabling production delivery.
 
 The production runtime also requires email delivery configuration: a default
 sender address together with a configured SMTP host and authentication

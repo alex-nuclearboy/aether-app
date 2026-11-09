@@ -329,6 +329,13 @@ Logs must never contain:
 Debug logging does not remove this requirement. Sensitive values must not be
 logged even during local development.
 
+Verification email delivery uses the ``aether.email_worker`` logger.
+Unexpected template, token and mail-backend errors are logged with a job ID
+and exception type; the error message and traceback are deliberately omitted
+because they might include a verification URL. Unexpected polling or database
+errors are logged with the exception type only. No rendered email bodies,
+recipient addresses or verification tokens are logged by this worker.
+
 See :doc:`../security/secrets` for the general secret-handling policy.
 
 

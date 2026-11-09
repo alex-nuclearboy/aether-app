@@ -80,8 +80,10 @@ outbox delivery job in one PostgreSQL transaction. SMTP does not run during
 HTTP registration. If job creation fails, the account transaction rolls back.
 No automatic sign-in occurs; success redirects to the token-free
 ``/register/check-email/`` page, which confirms queuing rather than delivery.
-The separate worker performs SMTP and handles retries. Anonymous users can
-request a new link through ``/register/resend/``.
+The separate worker performs SMTP and applies bounded retries to transport
+failures and unexpected message preparation or delivery errors without
+storing exception messages or token URLs. Anonymous users can request a new
+link through ``/register/resend/``.
 
 The PostgreSQL-backed counter service enforces a limit of ten registration
 POST attempts per client IP address per fixed UTC hour. The allowance is

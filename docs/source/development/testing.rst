@@ -295,6 +295,13 @@ stylesheets, logo files, and favicon assets.
 Profile and verification flow
 -----------------------------
 
+``accounts/tests/test_email_worker.py`` tests bounded transport and unexpected
+preparation/backend retries, terminal failures, safe error categories,
+continuation with other jobs, and interrupt propagation, as well as lease
+recovery and recipient validation. ``accounts/tests/test_email_worker_command.py``
+tests the one-shot command's explicit failure and continuous polling recovery
+with a minimum pause after unexpected infrastructure errors.
+
 ``accounts/tests/test_profile_verification.py`` verifies profile access,
 read-only rendering, CSRF and POST-only actions, multipart delivery,
 recipient selection, delivery cooldown and failure recovery, anonymous

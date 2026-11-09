@@ -283,16 +283,20 @@ Claims eligible outbox rows with PostgreSQL ``SKIP LOCKED`` and a five-minute
 lease. Delivery runs outside the claim transaction, uses a trusted explicit
 public origin and the existing plain-text/HTML templates, and checks
 account activation, the recipient snapshot and verification state before
-sending. Failed transport attempts have bounded backoff and terminal states. A previous worker cannot
-update a job that has been reclaimed under a newer lease. As with other SMTP
+sending. Transport errors and unexpected message preparation or delivery
+errors have bounded backoff and terminal states. Only stable error categories
+are persisted; logs exclude exception details and verification URLs. A
+previous worker cannot update a job reclaimed under a newer lease. As with other SMTP
 workers, delivery is at least once, not exactly once.
 
 ``accounts/management/commands/process_verification_email_queue.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Runs the independent verification email worker. ``--once`` processes at most
-one job; the normal mode polls continuously. ``--public-origin`` is mandatory,
-and a production worker refuses HTTP origins. It does not run automatically
+one job; the normal mode polls continuously. Unexpected infrastructure
+errors fail the one-shot mode, but the continuous mode logs only the exception
+type, pauses and retries polling. ``--public-origin`` is mandatory, and a
+production worker refuses HTTP origins. It does not run automatically
 alongside Django's development server.
 
 ``accounts/public_recovery.py``
@@ -601,8 +605,9 @@ Contains automated tests specific to the accounts application, including:
 * HTTP 429 response headers and recalculated lockout wait times;
 * application login form, CSRF, safe redirects, and POST-only logout;
 * verification email outbox reservations and transactional rollback;
-* worker lease recovery, bounded retries, stale-recipient cancellation,
-  public-origin validation and the independent delivery command;
+* worker lease recovery, bounded retries, unexpected preparation and backend
+  errors, safe exception logging, stale-recipient cancellation,
+  public-origin validation and continuous worker error recovery;
 * persistent public rate-limit counters and concurrent request accounting;
 * staged registration POST throttling, response headers and failure-closed
   handling of unresolved client IP addresses;

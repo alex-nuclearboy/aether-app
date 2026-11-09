@@ -140,6 +140,24 @@ The public application sign-in page is available at
 
 During local development, application logs are colourised in the console and are also written to the rotating `logs/aether.log` file. Logging levels can be controlled through the local environment configuration. See the [logging documentation](docs/source/development/logging.rst) for details.
 
+### Process queued verification emails
+
+Registration and profile verification requests queue email jobs in PostgreSQL;
+they do not contact SMTP from HTTP requests. To process those jobs locally,
+run the independent worker in a second terminal:
+
+```console
+uv run python manage.py process_verification_email_queue --public-origin=http://127.0.0.1:8000
+```
+
+The development mailer writes messages to the worker console. Stop the worker
+with `Ctrl+C`, or pass `--once` to process at most one job. Failed delivery
+uses bounded retries, including unexpected rendering and mail-backend errors.
+The continuous worker also resumes polling after unexpected infrastructure
+errors. Production requires an independently deployed and monitored worker,
+with a trusted HTTPS public origin and SMTP configuration. See the
+[deployment guide](docs/source/deployment/index.rst) for prerequisites.
+
 To stop the development server, press `Ctrl+C` in the terminal where `runserver` is running. Then stop PostgreSQL with:
 
 ```console

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Correct registration email" %} | Aether{% endblock title %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/pages/register.css' %}">
+{% endblock page_styles %}
+
+{% block content %}
+<section class="register" aria-labelledby="correction-title">
+    <h1 id="correction-title" class="register__title">
+        {% trans "Correct your registration email" %}
+    </h1>
+    <p class="register__intro">
+        {% trans "If you entered the wrong email before verifying your account, enter your username, registration password and correct address." %}
+    </p>
+    <div class="register__panel">
+        <form method="post" action="{% url 'registration_correct_email' %}"
+              class="register__form" novalidate>
+            {% csrf_token %}
+            {% include "components/form_field.html" with field=form.username only %}
+            {% include "components/form_field.html" with field=form.password only %}
+            {% include "components/form_field.html" with field=form.new_email only %}
+            <button class="button button--primary register__submit"
+                    type="submit">
+                {% trans "Correct email address" %}
+            </button>
+        </form>
+    </div>
+    <p class="register__login">
+        <a href="{% url 'registration_resend_email' %}">
+            {% trans "Request another verification link" %}
+        </a>
+    </p>
+</section>
+{% endblock content %}

@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from accounts.models import User
+from accounts.validators import username_validator
 
 
 class AetherAuthenticationForm(AuthenticationForm):
@@ -61,3 +62,22 @@ class AetherResendVerificationForm(forms.Form):
     """Validate an address without revealing account membership."""
 
     email = forms.EmailField(label=_("Email address"), max_length=254)
+
+# pylint: disable-next=too-few-public-methods
+class AetherEmailCorrectionForm(forms.Form):
+    """Accept credentials without checking account existence in the form."""
+
+    username = forms.CharField(
+        label=_("Username"), min_length=3, max_length=32,
+        validators=[username_validator],
+    )
+    password = forms.CharField(
+        label=_("Password"), widget=forms.PasswordInput,
+    )
+    new_email = forms.EmailField(
+        label=_("Correct email address"), max_length=254,
+    )
+
+    def clean_new_email(self):
+        """Apply the same address normalisation as account creation."""
+        return User.objects.normalize_email(self.cleaned_data["new_email"])

@@ -22,6 +22,12 @@
                 {% trans "Request another link" %}
             </a>
         </p>
+        <p>
+            {% trans "Entered the wrong email address?" %}
+            <a href="{% url 'registration_correct_email' %}">
+                {% trans "Correct it before verification" %}
+            </a>
+        </p>
         <a class="button button--primary" href="{% url 'login' %}">
             {% trans "Sign in" %}
         </a>

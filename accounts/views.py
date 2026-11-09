@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -22,11 +23,15 @@ from accounts.email_outbox import (
 from accounts.email_verification import verify_email
 from accounts.forms import (
     AetherAuthenticationForm,
+    AetherEmailCorrectionForm,
     AetherRegistrationForm,
     AetherResendVerificationForm,
 )
 from accounts.models import User
-from accounts.public_recovery import request_public_verification_resend
+from accounts.public_recovery import (
+    correct_unverified_registration_email,
+    request_public_verification_resend,
+)
 from accounts.public_rate_limits import (
     PublicRequestAction,
     consume_public_request,
@@ -196,6 +201,77 @@ class AetherResendDoneView(TemplateView):
     """Show the same result regardless of account existence or state."""
 
     template_name = "accounts/registration_resend_done.html"
+
+
+@method_decorator(never_cache, name="dispatch")
+@method_decorator(
+    sensitive_post_parameters("password"), name="dispatch"
+)
+class AetherEmailCorrectionView(TemplateView):
+    """Correct a never-verified registration address without signing in."""
+
+    template_name = "accounts/registration_correct_email.html"
+
+    def get_context_data(self, **kwargs):
+        """Supply a blank or bound non-enumerating correction form."""
+        context = super().get_context_data(**kwargs)
+        if "form" not in context:
+            context["form"] = AetherEmailCorrectionForm()
+        return context
+
+    @staticmethod
+    def _limit_response(request):
+        """Apply the IP allowance before inspecting any credentials."""
+        client_ip = get_client_ip(request)
+        if client_ip is None:
+            response = HttpResponse(
+                _("Email correction is temporarily unavailable."),
+                status=503,
+                content_type="text/plain; charset=utf-8",
+            )
+        elif not consume_public_request(
+            PublicRequestAction.CORRECT_EMAIL_IP, client_ip
+        ):
+            response = HttpResponse(
+                _("Too many requests. Please try again later."),
+                status=429,
+                content_type="text/plain; charset=utf-8",
+            )
+            action = PublicRequestAction.CORRECT_EMAIL_IP
+            response["Retry-After"] = str(
+                public_request_retry_after(action)
+            )
+        else:
+            return None
+        response["Cache-Control"] = "no-store"
+        return response
+
+    def post(self, request, *args, **kwargs):
+        """Queue a replacement link and return a neutral result."""
+        limit_response = self._limit_response(request)
+        if limit_response is not None:
+            return limit_response
+
+        form = AetherEmailCorrectionForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        values = form.cleaned_data
+        if consume_public_request(
+            PublicRequestAction.CORRECT_EMAIL_USERNAME, values["username"]
+        ):
+            correct_unverified_registration_email(
+                values["username"], values["password"],
+                values["new_email"],
+            )
+        return redirect("registration_correct_email_done")
+
+
+@method_decorator(never_cache, name="dispatch")
+class AetherEmailCorrectionDoneView(TemplateView):
+    """Show the same response for all valid correction submissions."""
+
+    template_name = "accounts/registration_correct_email_done.html"
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

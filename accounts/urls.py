@@ -4,6 +4,8 @@ from django.urls import path
 
 from accounts.views import (
     AetherLoginView,
+    AetherEmailCorrectionView,
+    AetherEmailCorrectionDoneView,
     AetherLogoutView,
     AetherRegistrationView,
     AetherResendVerificationView,
@@ -33,6 +35,16 @@ urlpatterns = [
         "register/resend/done/",
         AetherResendDoneView.as_view(),
         name="registration_resend_done",
+    ),
+    path(
+        "register/correct-email/",
+        AetherEmailCorrectionView.as_view(),
+        name="registration_correct_email",
+    ),
+    path(
+        "register/correct-email/done/",
+        AetherEmailCorrectionDoneView.as_view(),
+        name="registration_correct_email_done",
     ),
     path("logout/", AetherLogoutView.as_view(), name="logout"),
     path("profile/", ProfileView.as_view(), name="profile"),

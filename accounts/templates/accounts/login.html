@@ -61,5 +61,11 @@
             {% trans "Request another verification link" %}
         </a>
     </p>
+    <p class="login__register">
+        {% trans "Wrong email on your unverified account?" %}
+        <a href="{% url 'registration_correct_email' %}">
+            {% trans "Correct registration email" %}
+        </a>
+    </p>
 </section>
 {% endblock content %}

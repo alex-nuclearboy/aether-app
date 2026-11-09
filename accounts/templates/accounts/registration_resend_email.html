@@ -27,6 +27,11 @@
         </form>
     </div>
     <p class="register__login">
+        <a href="{% url 'registration_correct_email' %}">
+            {% trans "Entered the wrong email address?" %}
+        </a>
+    </p>
+    <p class="register__login">
         <a href="{% url 'login' %}">{% trans "Sign in" %}</a>
     </p>
 </section>

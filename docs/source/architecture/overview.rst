@@ -34,7 +34,8 @@ The implemented foundation consists of:
 * PostgreSQL-backed request limits now enforced on staged registration POST,
   with HTTP 429 responses, a ``Retry-After`` header and fail-closed handling
   when the client IP address cannot be determined; public resend is also
-  IP- and email-throttled, while email correction remains future work;
+  IP- and email-throttled, and never-verified registration email correction
+  requires the registration password with independent IP/username limits;
 * a manual Django management command for pruning expired public request
   counters in batches; scheduling it in production remains pending;
 * a PostgreSQL verification email outbox and an independent worker with

@@ -96,7 +96,7 @@ and recognised identifier uniqueness conflicts display field errors. A job
 creation failure rolls back account creation.
 
 The setting cannot be enabled in production: settings loading raises
-``ImproperlyConfigured`` until email correction and remaining production
+``ImproperlyConfigured`` until the remaining production
 safeguards are implemented and reviewed. Public resend is available for
 existing unverified public accounts; the worker handles delivery and retries.
 

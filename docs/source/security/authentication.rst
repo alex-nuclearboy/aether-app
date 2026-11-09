@@ -99,9 +99,9 @@ scheduling is not yet configured. Public resend uses separate limits of ten
 POST attempts per client IP and three per email per fixed UTC hour. Requests
 for unknown, verified or ineligible accounts have the same public result.
 IP exhaustion returns HTTP 429; email allowance exhaustion remains neutral.
-Registration, profile and public resend enqueue jobs without HTTP SMTP.
-Email correction, worker deployment and final proxy/IP verification remain
-production prerequisites.
+Registration, profile, public resend and pre-verification email correction
+enqueue jobs without HTTP SMTP. Worker deployment and final proxy/IP
+verification remain production prerequisites.
 Production still rejects enabling registration; Admin and CLI behaviour is
 unchanged.
 
@@ -134,8 +134,9 @@ The authenticated profile displays the current email and its verification
 status. Unverified users can request a verification message, and the public
 confirmation endpoint allows verification without signing in. Staged POST
 registration creates unverified accounts when enabled in development or
-tests. Public email resend is available without sign-in; email correction
-and profile editing remain future work.
+tests. Public resend and never-verified registration email correction are
+available without sign-in. Editing an authenticated profile remains future
+work.
 
 Email verification tokens
 -------------------------
@@ -184,9 +185,48 @@ unverified, login is blocked again until it is confirmed. The future
 email-change service must clear ``verified_email`` when the address changes.
 
 The registration form, transactional creation service and gated POST/email
-workflow and public resend are implemented. Username/password-based email
-correction and final production safeguards remain pending; production
+workflow, public resend and username/password-based email correction are
+implemented. Final production safeguards remain pending; production
 registration activation is prohibited.
+
+Public pre-verification email correction
+----------------------------------------
+
+``/register/correct-email/`` is a separate anonymous, CSRF-protected recovery
+form. It remains available when new registrations are disabled and accepts a
+username, the registration password and a replacement email address. It never
+performs an application sign-in. Valid submissions redirect to the same
+``/register/correct-email/done/`` page irrespective of account existence,
+password validity, eligibility, username allowance or recipient conflict.
+Form validation reports only syntax/required-field errors.
+
+The service uses Django's password checking with timing-attack mitigation
+for unknown usernames. Only active, non-staff, non-superuser accounts with
+``email_verification_required=True`` and an empty ``verified_email`` are
+eligible. This excludes accounts which have ever confirmed an address, even
+if their current address is subsequently unverified. The corrected address
+must differ from the existing address without regard to case. PostgreSQL
+uniqueness constraints protect recipient addresses and known email conflicts
+produce the same neutral result.
+
+After a valid password check, a row-locked transaction changes the address,
+clears any old verification state and cooldown reservation, cancels active
+outbox jobs (``last_error_code='email_changed'``), and creates a new pending
+verification job. On failure the entire transaction rolls back. The token
+hash includes the email address, so links created for the previous address
+become invalid. An already-running SMTP operation may overlap with an
+address correction; a cancelled job cannot be finalised later through its
+old lease, and any old link is unusable after the committed change.
+
+PostgreSQL counters allow ten correction POSTs per client IP and five per
+username per fixed UTC hour. The IP allowance is consumed before form
+validation; the username allowance is consumed for syntactically valid
+submissions, including unknown accounts and incorrect passwords. Username
+exhaustion is neutral; IP exhaustion returns HTTP 429 with ``Retry-After``.
+An unresolved client IP returns HTTP 503. Counters store only keyed HMAC
+fingerprints. Verification email delivery remains asynchronous through the
+existing outbox worker. Production registration is still disabled pending
+separate deployment safeguards.
 
 Password verification
 ---------------------
@@ -337,8 +377,9 @@ Django Admin and the application login share the Axes failure counters,
 15-minute lockouts, HTTP 429 responses, request IDs, and audit signals.
 Authentication forms do not duplicate those mechanisms. Registration POST
 is available only under the development/test flag. Public resend and
-registration-specific IP throttling are implemented; email correction,
-password reset and dedicated lockout-status pages remain pending.
+registration-specific IP throttling and pre-verification email correction
+are implemented; password reset and dedicated lockout-status pages remain
+pending.
 
 
 Profile and email confirmation
@@ -450,6 +491,6 @@ creation, username-or-email authentication, application login and logout,
 read-only profiles, and user-requested email verification, together with
 brute-force protection through django-axes. Django Admin and the application
 use the same protected authentication flow. Registration POST and email
-delivery are currently gated to development and tests. Production registration,
-public email correction and production hardening, profile editing, password
-reset, and dedicated lockout-status pages remain outside the current scope.
+delivery are currently gated to development and tests. Production registration and production hardening, authenticated profile
+editing, password reset and dedicated lockout-status pages remain outside
+the current scope.

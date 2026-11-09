@@ -118,8 +118,12 @@ to the token-free ``Check your email`` page
 page confirms queuing rather than delivery and links to the public resend
 form. The separate ``/register/resend/`` page collects an email address and
 redirects to a neutral result for unknown and eligible accounts alike.
-Neither page exposes recipient details. Email correction remains pending,
-and production registration remains disabled.
+Neither page exposes recipient details. The separate
+``/register/correct-email/`` page allows a never-verified public account
+holder to supply their registration username, password and corrected email.
+It uses the same shared form components and stylesheet, and redirects to a
+neutral result without disclosing account eligibility or sending HTTP SMTP.
+Production registration remains disabled.
 
 Profile and email verification pages
 ------------------------------------

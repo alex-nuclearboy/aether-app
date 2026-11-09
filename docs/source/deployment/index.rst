@@ -21,9 +21,9 @@ recovery and anti-abuse controls. The setting defaults to ``False``.
 Registration POST is available only under an explicit development/test
 flag and enforces PostgreSQL-backed per-IP limits. The account and outbox job
 are created atomically; authenticated profile requests also enqueue jobs.
-Public resend is implemented with IP and address limits. Email correction,
-verification of the Koyeb-only ingress trust boundary and scheduled
-counter cleanup remain incomplete. Production client-IP resolution now
+Public resend and pre-verification email correction are implemented with
+independent PostgreSQL-backed limits. Verification of the Koyeb-only ingress
+trust boundary and scheduled counter cleanup remain incomplete. Production client-IP resolution now
 requires the final Koyeb-added ``X-Forwarded-For`` value and does not fall
 back to ``REMOTE_ADDR``. Registration must remain disabled in production.
 

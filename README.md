@@ -140,9 +140,21 @@ The public application sign-in page is available at
 
 During local development, application logs are colourised in the console and are also written to the rotating `logs/aether.log` file. Logging levels can be controlled through the local environment configuration. See the [logging documentation](docs/source/development/logging.rst) for details.
 
+### Correct a registration email before verification
+
+The public `/register/correct-email/` page lets someone who entered the wrong
+email during registration supply their username, registration password and
+correct address. Only never-verified public registration accounts are eligible.
+The request is rate-limited per client IP and username, returns a neutral result
+and does not sign anyone in. If eligible, it cancels outstanding old-address
+jobs and queues a replacement verification link atomically. The page is
+available independently of the new-registration flag; production registration
+is still disabled pending additional safeguards.
+
 ### Process queued verification emails
 
-Registration and profile verification requests queue email jobs in PostgreSQL;
+Registration, profile verification, public resend and pre-verification email
+correction requests queue email jobs in PostgreSQL;
 they do not contact SMTP from HTTP requests. To process those jobs locally,
 run the independent worker in a second terminal:
 

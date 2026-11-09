@@ -59,6 +59,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_profile_verification.py
    │   │   ├── test_public_rate_limits.py
    │   │   ├── test_public_resend.py
+   │   │   ├── test_public_email_correction.py
    │   │   ├── test_public_request_counter_cleanup.py
    │   │   ├── test_registration_flow.py
    │   │   ├── test_registration_form.py
@@ -79,6 +80,8 @@ The repository currently has the following top-level structure:
    │   │       ├── registration_check_email.html
    │   │       ├── registration_resend_email.html
    │   │       ├── registration_resend_done.html
+   │   │       ├── registration_correct_email.html
+   │   │       ├── registration_correct_email_done.html
    │   │       └── profile.html
    │   ├── __init__.py
    │   ├── admin.py
@@ -305,6 +308,10 @@ alongside Django's development server.
 Implements public resend for unverified registration accounts. It locks the
 account before checking the submitted email and calling the outbox service.
 Unknown, verified and ineligible accounts do not produce a delivery job.
+The same module handles credential-checked correction of a never-verified
+registration address. It serialises changes with a user row lock, cancels
+active old-recipient jobs and queues a new job atomically; email uniqueness
+collisions and ineligible users produce neutral outcomes.
 
 ``accounts/public_rate_limits.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -313,9 +320,9 @@ Provides atomic, fixed-window PostgreSQL request accounting for registration,
 verification-email resend and correction of an unverified email address.
 Independent action and identity keys are protected using Django's keyed HMAC.
 Registration POST consumes an IP allowance. Public resend consumes IP and
-email allowances; email correction is not yet connected. The module also
-calculates the remaining time until the next fixed UTC allowance window for
-HTTP ``Retry-After`` responses.
+email allowances. Pre-verification correction consumes separate IP and
+username allowances. The module also calculates the remaining time until
+the next fixed UTC window for HTTP ``Retry-After`` responses.
 
 ``accounts/management/commands/prune_public_request_counters.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -461,6 +468,8 @@ Defines ``AetherAuthenticationForm``, extending Django's standard
 username, email, and matching passwords through the standard model and
 password validators. The form checks email uniqueness case-insensitively
 and sets the email-verification-required policy before saving.
+``AetherEmailCorrectionForm`` validates syntax for the username, existing
+password field and corrected email without looking up account membership.
 
 ``accounts/registration.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -492,6 +501,9 @@ field; job creation failures roll back the account. The token-free
 Registration POST is rate-limited before form validation using the shared
 client IP resolver; denied requests return HTTP 429, or 503 if the address
 cannot be determined. Production rejects an enabled registration flag.
+``AetherEmailCorrectionView`` enforces separate IP and username limits,
+then invokes the transactional correction service without signing in. Its
+neutral result page never discloses account existence or the submitted data.
 
 ``ProfileView`` displays the read-only profile to authenticated users.
 ``RequestEmailVerificationView`` enqueues CSRF-protected profile verification
@@ -506,7 +518,9 @@ and invokes the verification service only on POST.
 Registers application login at ``/login/``, staged registration at
 ``/register/``, the token-free ``/register/check-email/`` result page,
 public resend at ``/register/resend/`` and its neutral result page at
-``/register/resend/done/``, and POST-only logout at ``/logout/``. It also
+``/register/resend/done/``, email correction at
+``/register/correct-email/`` and its neutral result at
+``/register/correct-email/done/``, and POST-only logout at ``/logout/``. It also
 exposes the authenticated profile at ``/profile/``,
 the POST-only email request at ``/profile/verify-email/``, the public
 confirmation page at ``/email/verify/<uidb64>/<token>/``, and the token-free
@@ -518,7 +532,7 @@ remains independent.
 
 Provides the sign-in form, Django CSRF token, neutral validation messages,
 and a safe ``next`` field. It extends the shared Aether base template and
-links to the public resend form.
+links to the public resend and email-correction forms.
 
 ``accounts/templates/accounts/register.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -532,8 +546,8 @@ password values.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Displays a token-free registration result with guidance on email confirmation
-and a link to the public resend form. It never includes the recipient
-address in the page URL.
+and links to the public resend and correction forms. It never includes the
+recipient address in the page URL.
 
 ``accounts/templates/accounts/registration_resend_email.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -546,6 +560,18 @@ revealing whether the submitted address belongs to an account.
 
 Displays the same token-free outcome for unknown, verified, rate-limited
 and eligible addresses. It never repeats the submitted email.
+
+``accounts/templates/accounts/registration_correct_email.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides an anonymous, CSRF-protected username, password and corrected email
+form using the existing registration stylesheet and translated labels.
+
+``accounts/templates/accounts/registration_correct_email_done.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Shows the same token-free result for successful, unknown, incorrect-password,
+username-throttled and otherwise ineligible requests.
 
 ``accounts/templates/accounts/profile.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

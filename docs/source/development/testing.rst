@@ -125,6 +125,7 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_managers.py
        ├── test_models.py
        ├── test_profile_verification.py
+       ├── test_public_email_correction.py
        ├── test_public_rate_limits.py
        ├── test_public_request_counter_cleanup.py
        ├── test_registration_flow.py
@@ -232,6 +233,12 @@ and ``Retry-After`` responses.
 ``accounts/tests/test_public_resend.py`` also verifies that public resend
 requires a valid rightmost forwarded IP under the production header policy
 and returns HTTP 503 without a counter when that header is absent.
+
+``accounts/tests/test_public_email_correction.py`` verifies the anonymous
+CSRF-protected form, production-independent access, neutral outcomes,
+credential and account-state checks, email uniqueness handling, independent
+IP and username limits, token invalidation, active-job cancellation, worker
+delivery, and transactional rollback on outbox failure.
 
 ``accounts/tests/test_public_request_counter_cleanup.py`` checks expiry-based
 removal, bounded batches, dry-run output, empty results and invalid options

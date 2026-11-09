@@ -90,8 +90,14 @@ time for later removal by a worker or maintenance command.
 Staged registration POST uses this service to limit requests per client IP
 address, including invalid form submissions. Public resend also enforces
 separate IP and email allowances, without storing either identifier in
-plaintext. Email correction is not yet connected. Fixed UTC windows can
-permit boundary bursts; further protection is required before production.
+plaintext. Pre-verification email correction uses separate allowances of ten
+POSTs per client IP and five attempts per username per fixed UTC hour. It
+locks the eligible user, changes the address, cancels pending/processing jobs
+and enqueues the new recipient in a single transaction. Unknown, ineligible,
+password-rejected, duplicate-address and username-throttled requests share
+one neutral result. Username and IP counter keys are HMAC fingerprints.
+Fixed UTC windows can permit boundary bursts; production safeguards and
+proxy trust still require verification.
 
 A management command removes expired counters in configurable batches::
 

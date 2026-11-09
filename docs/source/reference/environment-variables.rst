@@ -87,7 +87,7 @@ Registration (staged)
    Development and test environments may set the flag to ``True`` to enable
    registration POST, verification-email delivery and the token-free
    ``/register/check-email/`` result page. Production rejects ``True`` with
-   ``ImproperlyConfigured`` pending email correction and remaining production
+   ``ImproperlyConfigured`` pending the remaining production
    safeguards. Public email resend is available independently of this flag.
 
 Email

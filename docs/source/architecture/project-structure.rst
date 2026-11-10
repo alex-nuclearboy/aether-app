@@ -665,8 +665,8 @@ The current implementation exposes a public home page at ``/``. The page
 displays the full Aether logo within the shared application layout.
 
 A fixed header links the compact Aether brand to the home page and
-provides sign-in or sign-out controls depending on authentication status.
-Authenticated users can also open their profile from the header.
+offers ``Sign in`` and ``Sign up`` links to anonymous users. Authenticated
+users see ``My profile`` and the POST-only ``Sign out`` control instead.
 A sidebar and additional navigation menus are not implemented.
 
 ``core/apps.py``
@@ -734,9 +734,12 @@ block.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides the common site header and session-aware account navigation. The
-sign-in link, authenticated profile link, and POST-only sign-out button reuse
-the shared button styles. User-visible navigation and accessibility labels
-use Django template translation tags.
+``Sign in`` and ``Sign up`` links for anonymous users, authenticated
+``My profile`` link, and POST-only ``Sign out`` button reuse the shared
+button styles. The registration link remains visible when the registration
+gate is disabled; its destination retains the disabled form and HTTP POST
+restrictions. User-visible navigation and accessibility labels use Django
+template translation tags.
 
 ``templates/components/form_field.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

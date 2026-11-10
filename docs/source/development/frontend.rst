@@ -9,7 +9,11 @@ Shared templates
 ----------------
 
 ``templates/base.html`` defines the document and stylesheet order. Shared
-navigation stays in ``templates/includes/header.html``. Form controls with
+navigation stays in ``templates/includes/header.html``. Anonymous users see
+``Sign in`` and ``Sign up`` links; authenticated users see ``My profile``
+and the POST-only ``Sign out`` button. The registration link is displayed
+even when account creation is disabled: the registration page retains its
+own submission gate. Form controls with
 identical markup use ``templates/components/form_field.html`` via Django's
 ``include`` tag. Application-specific pages remain in their Django app,
 including ``accounts/templates/accounts/login.html``.

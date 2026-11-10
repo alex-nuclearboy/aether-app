@@ -4,8 +4,11 @@ from pathlib import Path
 
 import pytest
 from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
 from django.template.loader import render_to_string
+from django.test import override_settings
+from django.urls import reverse
 
 
 class SampleForm(forms.Form):
@@ -115,3 +118,36 @@ def test_base_template_loads_shared_styles(client):
         b"css/components/form-field.css",
     ):
         assert asset in response.content
+
+
+@override_settings(REGISTRATION_ENABLED=False)
+def test_anonymous_header_links_to_login_and_registration(client):
+    """Keep both account routes visible without opening registration."""
+    response = client.get(reverse("home"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert f'href="{reverse("login")}"' in content
+    assert f'href="{reverse("register")}"' in content
+    assert "Sign in" in content
+    assert "Sign up" in content
+
+
+@pytest.mark.django_db
+def test_authenticated_header_keeps_profile_and_sign_out(client):
+    """Do not show anonymous account links after authentication."""
+    member = get_user_model().objects.create_user(
+        username="header-member",
+        email="header-member@example.test",
+        password="Synthetic-Passphrase-2026!",
+    )
+    client.force_login(member)
+    response = client.get(reverse("home"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert f'href="{reverse("profile")}"' in content
+    assert f'action="{reverse("logout")}"' in content
+    assert f'href="{reverse("login")}"' not in content
+    assert f'href="{reverse("register")}"' not in content
+    assert "Sign up" not in content

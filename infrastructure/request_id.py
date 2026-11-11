@@ -24,9 +24,10 @@ class RequestIdFilter(logging.Filter):
 def _logged_request_path(request):
     """Mask verification links even when URL resolution has not run."""
     path = request.path
-    prefix, separator, _remainder = path.partition("/email/verify/")
-    if separator:
-        return f"{prefix}{separator}<redacted>/"
+    for prefix_path in ("/email/verify/", "/password/reset/confirm/"):
+        prefix, separator, _remainder = path.partition(prefix_path)
+        if separator:
+            return f"{prefix}{separator}<redacted>/"
     return path
 
 

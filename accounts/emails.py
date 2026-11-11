@@ -3,6 +3,7 @@
 
 from datetime import timedelta
 
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -25,6 +26,37 @@ def verification_path_for_user(user: User) -> str:
         "email_verification_confirm",
         kwargs={"uidb64": uidb64, "token": token},
     )
+
+
+def password_reset_path_for_user(user: User) -> str:
+    """Build a fresh, one-time password reset confirmation path."""
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    return reverse(
+        "password_reset_confirm",
+        kwargs={"uidb64": uidb64, "token": token},
+    )
+
+
+def build_password_reset_message(
+    *, recipient: str, reset_url: str
+) -> EmailMultiAlternatives:
+    """Build plain-text and HTML reset messages for worker delivery."""
+    context = {"reset_url": reset_url}
+    message = EmailMultiAlternatives(
+        subject=_("Reset your Aether password"),
+        body=render_to_string(
+            "accounts/email/password_reset.txt", context,
+        ),
+        to=[recipient],
+    )
+    message.attach_alternative(
+        render_to_string(
+            "accounts/email/password_reset.html", context,
+        ),
+        "text/html",
+    )
+    return message
 
 
 def build_verification_message(

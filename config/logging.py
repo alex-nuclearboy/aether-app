@@ -84,6 +84,7 @@ def build_logging_config(
 
     formatters = {
         "plain": {
+            "()": "infrastructure.log_redaction.RedactingFormatter",
             "format": (
                 "{asctime} {levelname:<8} "
                 "{name} request_id={request_id}: {message}"
@@ -91,7 +92,7 @@ def build_logging_config(
             "style": "{",
         },
         "colour": {
-            "()": "colorlog.ColoredFormatter",
+            "()": "infrastructure.log_redaction.RedactingColouredFormatter",
             "format": (
                 "%(log_color)s%(asctime)s %(levelname)-8s "
                 "%(name)s request_id=%(request_id)s:%(reset)s %(message)s"

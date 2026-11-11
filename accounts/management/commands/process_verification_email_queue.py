@@ -3,79 +3,27 @@
 import logging
 from time import sleep
 
-from django.core.management.base import BaseCommand, CommandError
-from django.db import close_old_connections
+from django.core.management.base import BaseCommand
 
-from accounts.email_worker import (
-    deliver_next_verification_email,
-    validate_public_origin,
+from accounts.email_worker import deliver_next_verification_email
+from accounts.management.commands._email_queue_common import (
+    EmailQueueMixin,
 )
-
 
 logger = logging.getLogger("aether.email_worker")
 
 
-class Command(BaseCommand):
-    """Drain PostgreSQL verification jobs without running SMTP in HTTP."""
+class Command(EmailQueueMixin, BaseCommand):
+    """Drain PostgreSQL verification jobs without SMTP in HTTP."""
 
     help = "Process queued verification emails using a trusted public origin."
-
-    def add_arguments(self, parser):
-        """Require an explicit origin and accept a one-job test mode."""
-        parser.add_argument(
-            "--public-origin",
-            required=True,
-            help="Public website origin, including the HTTP(S) scheme.",
-        )
-        parser.add_argument(
-            "--once",
-            action="store_true",
-            help="Process at most one queued email and exit.",
-        )
-        parser.add_argument(
-            "--poll-seconds",
-            type=float,
-            default=5,
-            help="Idle interval in seconds (default: 5).",
-        )
+    error_message = "Verification email processing failed."
+    error_event = "verification_email.worker_iteration_failed"
+    stopped_message = "Verification email worker stopped."
 
     def handle(self, *_args, **options):
-        """Consume jobs until stopped, closing stale database connections."""
-        interval = options["poll_seconds"]
-        if not 0 < interval <= 300:
-            raise CommandError("--poll-seconds must be between 0 and 300.")
-
-        try:
-            origin = validate_public_origin(options["public_origin"])
-        except ValueError as exc:
-            raise CommandError(str(exc)) from exc
-
-        try:
-            while True:
-                try:
-                    close_old_connections()
-                    try:
-                        outcome = deliver_next_verification_email(origin)
-                    finally:
-                        close_old_connections()
-                # Infrastructure failures leave the leased job to recover.
-                except Exception as exc:  # pylint: disable=W0718
-                    if options["once"]:
-                        raise CommandError(
-                            "Verification email processing failed."
-                        ) from None
-                    logger.error(
-                        "verification_email.worker_iteration_failed "
-                        "error_type=%s",
-                        type(exc).__name__,
-                    )
-                    sleep(max(interval, 5.0))
-                    continue
-
-                if options["once"]:
-                    self.stdout.write(f"Delivery outcome: {outcome or 'idle'}")
-                    break
-                if outcome is None:
-                    sleep(interval)
-        except KeyboardInterrupt:
-            self.stdout.write("Verification email worker stopped.")
+        """Run the queue with the existing verification delivery service."""
+        self.run_worker(
+            options, deliver_next_verification_email, sleep, logger.error,
+            self.stdout.write,
+        )

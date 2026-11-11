@@ -4,6 +4,10 @@ from django.urls import path
 
 from accounts.views import (
     AetherLoginView,
+    AetherPasswordResetRequestView,
+    AetherPasswordResetDoneView,
+    AetherPasswordResetConfirmView,
+    AetherPasswordResetCompleteView,
     AetherEmailCorrectionView,
     AetherEmailCorrectionDoneView,
     AetherLogoutView,
@@ -45,6 +49,26 @@ urlpatterns = [
         "register/correct-email/done/",
         AetherEmailCorrectionDoneView.as_view(),
         name="registration_correct_email_done",
+    ),
+    path(
+        "password/reset/",
+        AetherPasswordResetRequestView.as_view(),
+        name="password_reset",
+    ),
+    path(
+        "password/reset/done/",
+        AetherPasswordResetDoneView.as_view(),
+        name="password_reset_done",
+    ),
+    path(
+        "password/reset/confirm/<uidb64>/<token>/",
+        AetherPasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
+    path(
+        "password/reset/complete/",
+        AetherPasswordResetCompleteView.as_view(),
+        name="password_reset_complete",
     ),
     path("logout/", AetherLogoutView.as_view(), name="logout"),
     path("profile/", ProfileView.as_view(), name="profile"),

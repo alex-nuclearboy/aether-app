@@ -88,25 +88,25 @@ def validate_public_origin(origin: str) -> str:
     return origin.rstrip("/")
 
 
-def claim_verification_job() -> ClaimedVerificationJob | None:
-    """Atomically claim a due or expired-lease job in PostgreSQL."""
+def claim_due_email_job(job_model, make_claim):
+    """Lease one due email job while holding a PostgreSQL row lock."""
     now = timezone.now()
     due = (
-        Q(status=VerificationEmailJob.Status.PENDING, available_at__lte=now)
+        Q(status=job_model.Status.PENDING, available_at__lte=now)
         | Q(
-            status=VerificationEmailJob.Status.PROCESSING,
+            status=job_model.Status.PROCESSING,
             lease_expires_at__lte=now,
         )
     )
     with transaction.atomic():
         jobs = (
-            VerificationEmailJob.objects.select_for_update(skip_locked=True)
+            job_model.objects.select_for_update(skip_locked=True)
             .filter(due)
             .order_by("available_at", "pk")[:MAX_CLAIM_SCAN]
         )
         for job in jobs:
             if job.attempts >= MAX_DELIVERY_ATTEMPTS:
-                job.status = VerificationEmailJob.Status.FAILED
+                job.status = job_model.Status.FAILED
                 job.lease_expires_at = None
                 job.last_error_code = "lease_expired"
                 job.save(
@@ -115,22 +115,59 @@ def claim_verification_job() -> ClaimedVerificationJob | None:
                     ]
                 )
                 continue
-
             job.attempts += 1
-            job.status = VerificationEmailJob.Status.PROCESSING
+            job.status = job_model.Status.PROCESSING
             job.lease_expires_at = now + DELIVERY_LEASE
             job.save(
                 update_fields=["attempts", "status", "lease_expires_at"]
             )
-            return ClaimedVerificationJob(
-                pk=job.pk,
-                user_id=job.user_id,
-                recipient_email=job.recipient_email,
-                attempts=job.attempts,
-                lease_expires_at=job.lease_expires_at,
-            )
-
+            return make_claim(job)
     return None
+
+
+def claimed_email_user(claim, finish_claim, cancelled_status):
+    """Get the job's user, cancelling an orphaned job if necessary."""
+    try:
+        return User.objects.get(pk=claim.user_id)
+    except User.DoesNotExist:
+        finish_claim(
+            claim,
+            status=cancelled_status,
+            lease_expires_at=None,
+            last_error_code="missing_user",
+        )
+        return None
+
+
+def mark_email_job_sent(claim, finish_claim, sent_status):
+    """Finalise delivery only if the original lease is still held."""
+    return finish_claim(
+        claim,
+        status=sent_status,
+        sent_at=timezone.now(),
+        lease_expires_at=None,
+        last_error_code="",
+    )
+
+
+def send_email_message(message):
+    """Treat a backend refusing delivery as a transport failure."""
+    if message.send() != 1:
+        raise OSError("Email backend did not accept the message.")
+
+
+def claim_verification_job() -> ClaimedVerificationJob | None:
+    """Claim a verification job using the shared outbox lease rules."""
+    return claim_due_email_job(
+        VerificationEmailJob,
+        lambda job: ClaimedVerificationJob(
+            pk=job.pk,
+            user_id=job.user_id,
+            recipient_email=job.recipient_email,
+            attempts=job.attempts,
+            lease_expires_at=job.lease_expires_at,
+        ),
+    )
 
 
 def _finish_claim(claim: ClaimedVerificationJob, **updates) -> bool:
@@ -188,8 +225,7 @@ def _send_claimed_verification_email(
         return _retry_or_fail(claim, error_code="preparation")
 
     try:
-        if message.send() != 1:
-            raise OSError("Email backend did not accept the message.")
+        send_email_message(message)
     except (OSError, SMTPException):
         return _retry_or_fail(claim)
     # An unexpected backend error is also a bounded job failure.
@@ -202,12 +238,8 @@ def _send_claimed_verification_email(
         )
         return _retry_or_fail(claim, error_code="delivery")
 
-    _finish_claim(
-        claim,
-        status=VerificationEmailJob.Status.SENT,
-        sent_at=timezone.now(),
-        lease_expires_at=None,
-        last_error_code="",
+    mark_email_job_sent(
+        claim, _finish_claim, VerificationEmailJob.Status.SENT
     )
     return DeliveryOutcome.SENT
 
@@ -219,15 +251,10 @@ def deliver_next_verification_email(origin: str) -> DeliveryOutcome | None:
     if claim is None:
         return None
 
-    try:
-        user = User.objects.get(pk=claim.user_id)
-    except User.DoesNotExist:
-        _finish_claim(
-            claim,
-            status=VerificationEmailJob.Status.CANCELLED,
-            lease_expires_at=None,
-            last_error_code="missing_user",
-        )
+    user = claimed_email_user(
+        claim, _finish_claim, VerificationEmailJob.Status.CANCELLED
+    )
+    if user is None:
         return DeliveryOutcome.CANCELLED
 
     if not user.is_active:

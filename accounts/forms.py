@@ -63,6 +63,14 @@ class AetherResendVerificationForm(forms.Form):
 
     email = forms.EmailField(label=_("Email address"), max_length=254)
 
+
+# pylint: disable-next=too-few-public-methods
+class AetherPasswordResetRequestForm(forms.Form):
+    """Validate an email address without looking up account membership."""
+
+    email = forms.EmailField(label=_("Email address"), max_length=254)
+
+
 # pylint: disable-next=too-few-public-methods
 class AetherEmailCorrectionForm(forms.Form):
     """Accept credentials without checking account existence in the form."""

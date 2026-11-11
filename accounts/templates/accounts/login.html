@@ -56,6 +56,11 @@
         <a href="{% url 'register' %}">{% trans "Create an account" %}</a>
     </p>
     <p class="login__register">
+        <a href="{% url 'password_reset' %}">
+            {% trans "Forgot your password?" %}
+        </a>
+    </p>
+    <p class="login__register">
         {% trans "Email not verified?" %}
         <a href="{% url 'registration_resend_email' %}">
             {% trans "Request another verification link" %}

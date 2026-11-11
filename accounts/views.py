@@ -3,7 +3,9 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import (
+    LoginView, LogoutView, PasswordResetConfirmView,
+)
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import redirect, render
@@ -26,8 +28,12 @@ from accounts.forms import (
     AetherEmailCorrectionForm,
     AetherRegistrationForm,
     AetherResendVerificationForm,
+    AetherPasswordResetRequestForm,
 )
 from accounts.models import User
+from accounts.password_reset import (
+    password_reset_eligible, request_password_reset_email,
+)
 from accounts.public_recovery import (
     correct_unverified_registration_email,
     request_public_verification_resend,
@@ -272,6 +278,88 @@ class AetherEmailCorrectionDoneView(TemplateView):
     """Show the same response for all valid correction submissions."""
 
     template_name = "accounts/registration_correct_email_done.html"
+
+
+@method_decorator(never_cache, name="dispatch")
+class AetherPasswordResetRequestView(TemplateView):
+    """Accept a neutral password reset request with PostgreSQL limits."""
+
+    template_name = "accounts/password_reset_request.html"
+
+    def get_context_data(self, **kwargs):
+        """Provide a blank or bound request form."""
+        context = super().get_context_data(**kwargs)
+        if "form" not in context:
+            context["form"] = AetherPasswordResetRequestForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Limit requests, enqueue eligible accounts and redirect neutrally."""
+        client_ip = get_client_ip(request)
+        if client_ip is None:
+            response = HttpResponse(
+                _("Password recovery is temporarily unavailable."),
+                status=503,
+                content_type="text/plain; charset=utf-8",
+            )
+        elif not consume_public_request(
+            PublicRequestAction.RESET_PASSWORD_IP, client_ip
+        ):
+            response = HttpResponse(
+                _("Too many requests. Please try again later."),
+                status=429,
+                content_type="text/plain; charset=utf-8",
+            )
+            response["Retry-After"] = str(public_request_retry_after(
+                PublicRequestAction.RESET_PASSWORD_IP
+            ))
+        else:
+            response = None
+        if response is not None:
+            response["Cache-Control"] = "no-store"
+            return response
+
+        form = AetherPasswordResetRequestForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+        email = form.cleaned_data["email"]
+        if consume_public_request(
+            PublicRequestAction.RESET_PASSWORD_EMAIL, email
+        ):
+            request_password_reset_email(email)
+        return redirect("password_reset_done")
+
+
+@method_decorator(never_cache, name="dispatch")
+class AetherPasswordResetDoneView(TemplateView):
+    """Provide the same response for all valid email submissions."""
+
+    template_name = "accounts/password_reset_done.html"
+
+
+class AetherPasswordResetConfirmView(PasswordResetConfirmView):
+    """Use Django's one-time token and password validation flow."""
+
+    template_name = "accounts/password_reset_confirm.html"
+    post_reset_login = False
+
+    def get_user(self, uidb64):
+        """Disallow recovery after account deactivation or email changes."""
+        user = super().get_user(uidb64)
+        return user if password_reset_eligible(user) else None
+
+    def dispatch(self, *args, **kwargs):
+        """Prevent token-bearing URL paths from reaching referrers."""
+        response = super().dispatch(*args, **kwargs)
+        response["Referrer-Policy"] = "origin"
+        return response
+
+
+@method_decorator(never_cache, name="dispatch")
+class AetherPasswordResetCompleteView(TemplateView):
+    """Show password reset completion without authenticating the user."""
+
+    template_name = "accounts/password_reset_complete.html"
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

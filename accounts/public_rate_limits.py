@@ -17,6 +17,8 @@ class PublicRequestAction(StrEnum):
     REGISTER_IP = "register.ip"
     RESEND_IP = "resend.ip"
     RESEND_EMAIL = "resend.email"
+    RESET_PASSWORD_IP = "reset_password.ip"
+    RESET_PASSWORD_EMAIL = "reset_password.email"
     CORRECT_EMAIL_IP = "correct_email.ip"
     CORRECT_EMAIL_USERNAME = "correct_email.username"
 
@@ -33,6 +35,12 @@ PUBLIC_REQUEST_LIMITS = {
     PublicRequestAction.REGISTER_IP: RequestLimit(10, timedelta(hours=1)),
     PublicRequestAction.RESEND_IP: RequestLimit(10, timedelta(hours=1)),
     PublicRequestAction.RESEND_EMAIL: RequestLimit(3, timedelta(hours=1)),
+    PublicRequestAction.RESET_PASSWORD_IP: RequestLimit(
+        10, timedelta(hours=1)
+    ),
+    PublicRequestAction.RESET_PASSWORD_EMAIL: RequestLimit(
+        3, timedelta(hours=1)
+    ),
     PublicRequestAction.CORRECT_EMAIL_IP: RequestLimit(10, timedelta(hours=1)),
     PublicRequestAction.CORRECT_EMAIL_USERNAME: RequestLimit(
         5, timedelta(hours=1)

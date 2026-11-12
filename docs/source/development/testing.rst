@@ -22,6 +22,7 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── test_django_entrypoints.py
    ├── test_logging.py
    ├── test_messages.py
+   ├── test_password_reset_logging.py
    ├── test_request.py
    ├── test_request_id.py
    ├── settings_helpers.py
@@ -94,6 +95,11 @@ The current modules have separate responsibilities:
    verification-path masking before routing (including redirects and 404s),
    and end-to-end authentication event correlation.
 
+``test_password_reset_logging.py``
+   Tests pre-routing reset-token masking, redaction of formatted Django log
+   messages, plain/coloured formatters and the production/development
+   logging configuration.
+
 ``test_request.py``
    Tests shared IP address normalisation, environment-specific client IP
    resolution, untrusted forwarded prefixes, failure-closed handling of
@@ -124,6 +130,8 @@ own ``tests/`` package. The accounts application currently uses::
        ├── test_login_ui.py
        ├── test_managers.py
        ├── test_models.py
+       ├── test_password_reset.py
+       ├── test_password_reset_worker.py
        ├── test_profile_verification.py
        ├── test_public_email_correction.py
        ├── test_public_rate_limits.py
@@ -257,8 +265,7 @@ are listed above.
 
 ``accounts/tests/test_login_ui.py`` checks that the dedicated sign-in
 layout includes the shared fixed header, its own logo, the login form,
-and the registration page link without unimplemented social sign-in or
-password-reset options.
+and the registration page link without unimplemented social sign-in.
 
 ``accounts/tests/test_views.py`` verifies the application login and logout
 routes, public login page, shared layout, username/email sign-in, safe
@@ -298,6 +305,31 @@ shared template inheritance, the full home page logo, the clickable header
 brand, and discovery of global, component-specific, and page-specific
 stylesheets, logo files, and favicon assets.
 
+
+Password recovery tests
+-----------------------
+
+``accounts/tests/test_password_reset.py`` covers the public form with
+registration disabled, neutral outcomes, PostgreSQL request limits, account
+eligibility, queued delivery without HTTP SMTP, duplicate/cooldown handling,
+Django token confirmation, password change, invalidation of old tokens and
+CSRF protection. ``accounts/tests/test_password_reset_worker.py`` covers
+retry categories, exhausted attempts, expired leases, missing and inactive
+accounts, account changes, safe log output, CLI validation and one-shot
+operation. Tests for shared queue-command behaviour also protect the
+verification worker from regressions caused by the ``EmailQueueMixin``
+refactor. ``tests/test_password_reset_logging.py`` covers the extra token
+redaction paths.
+
+These automated tests use Django's test email backend and do not contact
+SMTP. To test the **actual development console mailer**, run Django and the
+password-reset worker in separate local processes against PostgreSQL; inspect
+the resulting message in the worker terminal. See
+:doc:`../getting-started/local-development`.
+
+Run the focused password recovery tests::
+
+   uv run pytest accounts/tests/test_password_reset.py accounts/tests/test_password_reset_worker.py tests/test_password_reset_logging.py -v --no-cov
 
 Profile and verification flow
 -----------------------------
@@ -386,9 +418,10 @@ The current coverage policy:
 * reports missing lines in the terminal;
 * requires at least 90 percent overall coverage.
 
-The threshold is a minimum quality gate rather than a target. Tests should
-verify meaningful behaviour, validation paths, and integration boundaries
-rather than exist solely to increase the coverage percentage.
+The threshold is a minimum quality gate rather than a target. For new
+security-sensitive account flows, aim for complete statement and branch
+coverage, with meaningful tests of failure paths and integration boundaries.
+A 90 percent configured threshold does not itself prove complete coverage.
 
 New application packages should be added to the coverage scope when their
 production code is introduced.

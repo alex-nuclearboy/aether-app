@@ -76,9 +76,10 @@ The local ``.env.example`` configures:
 
    DJANGO_DEFAULT_FROM_EMAIL=aether@example.com
 
-Development uses Django's console email backend. Application-generated email is
-therefore printed to the terminal running Django rather than sent to an
-external mail service.
+Development uses Django's console email backend. Queued verification and
+password-reset messages are printed by their **separate worker processes**,
+not by the Django development server, and are not sent to an external service.
+The automated test suite may use Django's in-memory mail backend instead.
 
 No SMTP credentials are required for local development. Production SMTP
 configuration is intentionally not included in ``.env.example``.
@@ -146,6 +147,34 @@ contains a minimal interface built with the shared Django base template.
 
 The Django administration interface remains available at
 http://127.0.0.1:8000/admin/.
+
+Test email verification and password reset locally
+--------------------------------------------------
+
+Keep ``runserver`` open in the first terminal and PostgreSQL running. To
+process verification messages in a second terminal::
+
+   uv run python manage.py process_verification_email_queue --once --public-origin=http://127.0.0.1:8000
+
+To process password-reset messages in a separate terminal::
+
+   uv run python manage.py process_password_reset_queue --once --public-origin=http://127.0.0.1:8000
+
+The ``--once`` option processes at most one queued message. Omit it to keep a
+worker polling. Each command consumes **only its own** PostgreSQL queue.
+Messages (including the confirmation link) appear in that worker's console;
+no real email or SMTP credentials are needed locally. Avoid copying live
+tokens into application logs or bug reports.
+
+The public ``/password/reset/`` page is available even with
+``AETHER_REGISTRATION_ENABLED=False``. Request a reset for an eligible test
+account, run its worker, follow the printed link, and set a new password.
+Django first redirects a valid token-bearing link to a session-backed
+``set-password`` URL. After the password change, confirm that the previous
+link no longer works and sign in explicitly with the new password. For a
+public-registration account, the email must first be verified; existing
+accounts without ``email_verification_required`` retain their established
+sign-in and password-recovery policy.
 
 Stop the local environment
 --------------------------

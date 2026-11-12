@@ -13,8 +13,10 @@ The independent worker generates current verification links, renders
 plain-text and HTML messages, and sends them using Django's default mailer.
 No worker is deployed automatically: a running worker is required for
 delivery. Public resend and pre-verification email correction use the same
-queue and worker. Production registration remains disabled pending other
-production safeguards.
+verification queue and worker. Password recovery uses a **separate**
+``PasswordResetEmailJob`` queue and ``process_password_reset_queue`` worker;
+it also sends multipart messages using Django's configured mailer. Production
+registration remains disabled pending other production safeguards.
 
 Aether connects to Mailjet through Django's standard SMTP backend rather than
 through a Mailjet-specific SDK or API integration. The application therefore
@@ -29,8 +31,10 @@ application email-sending code.
 Runtime behaviour
 -----------------
 
-Development and test environments use Django's console email backend and do
-not contact Mailjet.
+Development and test environments configure Django's console email backend;
+local verification and password-reset workers print their messages to their
+own consoles and do not contact Mailjet. Django's automated test runner may
+substitute an in-memory mail backend.
 
 Production uses Django's SMTP backend through the ``default`` entry in the
 Django ``MAILERS`` setting.

@@ -32,6 +32,8 @@ The repository currently has the following top-level structure:
    │   │   ├── __init__.py
    │   │   └── commands/
    │   │       ├── __init__.py
+   │   │       ├── _email_queue_common.py
+   │   │       ├── process_password_reset_queue.py
    │   │       ├── prune_public_request_counters.py
    │   │       └── process_verification_email_queue.py
    │   ├── migrations/
@@ -56,6 +58,8 @@ The repository currently has the following top-level structure:
    │   │   ├── test_login_ui.py
    │   │   ├── test_managers.py
    │   │   ├── test_models.py
+   │   │   ├── test_password_reset.py
+   │   │   ├── test_password_reset_worker.py
    │   │   ├── test_profile_verification.py
    │   │   ├── test_public_rate_limits.py
    │   │   ├── test_public_resend.py
@@ -71,11 +75,17 @@ The repository currently has the following top-level structure:
    │   ├── templates/
    │   │   └── accounts/
    │   │       ├── email/
+   │   │       │   ├── password_reset.html
+   │   │       │   ├── password_reset.txt
    │   │       │   ├── verification.html
    │   │       │   └── verification.txt
    │   │       ├── email_verification_confirm.html
    │   │       ├── email_verification_result.html
    │   │       ├── login.html
+   │   │       ├── password_reset_complete.html
+   │   │       ├── password_reset_confirm.html
+   │   │       ├── password_reset_done.html
+   │   │       ├── password_reset_request.html
    │   │       ├── register.html
    │   │       ├── registration_check_email.html
    │   │       ├── registration_resend_email.html
@@ -91,6 +101,8 @@ The repository currently has the following top-level structure:
    │   ├── email_outbox.py
    │   ├── email_worker.py
    │   ├── email_verification.py
+   │   ├── password_reset.py
+   │   ├── password_reset_worker.py
    │   ├── public_recovery.py
    │   ├── emails.py
    │   ├── forms.py
@@ -142,6 +154,7 @@ The repository currently has the following top-level structure:
    │   └── README.md
    ├── infrastructure/
    │   ├── __init__.py
+   │   ├── log_redaction.py
    │   ├── request.py
    │   └── request_id.py
    ├── static/
@@ -180,6 +193,7 @@ The repository currently has the following top-level structure:
    │   ├── test_frontend.py
    │   ├── test_logging.py
    │   ├── test_messages.py
+   │   ├── test_password_reset_logging.py
    │   ├── test_request.py
    │   ├── test_request_id.py
    │   ├── settings_helpers.py
@@ -270,6 +284,11 @@ a snapshot of the intended recipient, retry and lease metadata, and a partial
 PostgreSQL uniqueness constraint for active jobs. It stores neither rendered
 messages nor verification tokens and is not registered in Django Admin.
 
+The separate ``PasswordResetEmailJob`` model stores password-reset delivery
+jobs with a recipient snapshot and keyed account-state signature, retry and
+lease metadata, and its own active-job uniqueness constraint. Neither reset
+tokens nor rendered messages are stored in the outbox.
+
 ``accounts/email_outbox.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -302,6 +321,38 @@ type, pauses and retries polling. ``--public-origin`` is mandatory, and a
 production worker refuses HTTP origins. It does not run automatically
 alongside Django's development server.
 
+``accounts/password_reset.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the privacy-preserving service that decides account eligibility and
+atomically reserves a password-reset email job, with active-job deduplication,
+a one-minute request cooldown, and an HMAC signature of relevant account state.
+It does not perform delivery or sign the requester in.
+
+``accounts/password_reset_worker.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Claims and delivers password-reset jobs using the shared lease and retry
+helpers in ``accounts.email_worker``. It cancels jobs for missing, inactive,
+ineligible or changed accounts, creates the token only at delivery time, and
+uses multipart email templates. The worker never stores tokens or URLs.
+
+``accounts/management/commands/_email_queue_common.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines ``EmailQueueMixin``, shared by the two concrete worker management
+commands. It validates polling parameters and the trusted public origin,
+closes stale database connections, and handles ``--once`` and continuous
+polling errors. The mixin does not subclass ``BaseCommand``; concrete
+commands do and implement ``handle()``.
+
+``accounts/management/commands/process_password_reset_queue.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Runs the independent password-reset queue worker. Like verification delivery,
+it requires a trusted ``--public-origin`` and supports ``--once`` and
+continuous operation; it does not process verification messages.
+
 ``accounts/public_recovery.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -317,8 +368,8 @@ collisions and ineligible users produce neutral outcomes.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides atomic, fixed-window PostgreSQL request accounting for registration,
-verification-email resend and correction of an unverified email address.
-Independent action and identity keys are protected using Django's keyed HMAC.
+verification-email resend, password recovery and correction of an unverified
+email address. Independent action and identity keys are protected using Django's keyed HMAC.
 Registration POST consumes an IP allowance. Public resend consumes IP and
 email allowances. Pre-verification correction consumes separate IP and
 username allowances. The module also calculates the remaining time until
@@ -362,10 +413,9 @@ caller's transaction and is used by the outbox reservation service.
 ``accounts/emails.py``
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Provides ``verification_path_for_user()`` for generating a fresh token and
-confirmation path, and ``build_verification_message()`` for rendering
-plain-text and HTML messages. The outbox worker uses these helpers and sends
-the message through Django's configured mailer. This module no longer has a
+Provides both verification and password-reset token/path builders and
+plain-text/HTML multipart email message builders. The corresponding outbox
+workers use these helpers and send messages through Django's configured mailer. This module no longer has a
 synchronous HTTP delivery service.
 
 ``accounts/backends.py``
@@ -464,6 +514,8 @@ without creating an additional database model or extending the deadline.
 
 Defines ``AetherAuthenticationForm``, extending Django's standard
 ``AuthenticationForm`` with a username-or-email label and neutral errors.
+``AetherPasswordResetRequestForm`` provides a translatable email-only request
+form for password recovery.
 ``AetherRegistrationForm`` extends Django's ``UserCreationForm`` to validate
 username, email, and matching passwords through the standard model and
 password validators. The form checks email uniqueness case-insensitively
@@ -504,6 +556,10 @@ cannot be determined. Production rejects an enabled registration flag.
 ``AetherEmailCorrectionView`` enforces separate IP and username limits,
 then invokes the transactional correction service without signing in. Its
 neutral result page never discloses account existence or the submitted data.
+The password-reset request view enforces IP/email limits, validates its form,
+queues eligible accounts and redirects to a neutral result. The confirmation
+view uses Django's reset token and password form, while the completion view
+returns to sign-in without creating a session.
 
 ``ProfileView`` displays the read-only profile to authenticated users.
 ``RequestEmailVerificationView`` enqueues CSRF-protected profile verification
@@ -520,7 +576,10 @@ Registers application login at ``/login/``, staged registration at
 public resend at ``/register/resend/`` and its neutral result page at
 ``/register/resend/done/``, email correction at
 ``/register/correct-email/`` and its neutral result at
-``/register/correct-email/done/``, and POST-only logout at ``/logout/``. It also
+``/register/correct-email/done/``, password reset at
+``/password/reset/`` with ``/password/reset/done/`` and
+``/password/reset/confirm/<uidb64>/<token>/``, the completion page at
+``/password/reset/complete/``, and POST-only logout at ``/logout/``. It also
 exposes the authenticated profile at ``/profile/``,
 the POST-only email request at ``/profile/verify-email/``, the public
 confirmation page at ``/email/verify/<uidb64>/<token>/``, and the token-free
@@ -532,7 +591,14 @@ remains independent.
 
 Provides the sign-in form, Django CSRF token, neutral validation messages,
 and a safe ``next`` field. It extends the shared Aether base template and
-links to the public resend and email-correction forms.
+links to password recovery, registration, public resend and email correction.
+
+``accounts/templates/accounts/password_reset_*.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Four public pages handle request, neutral result, Django password-reset
+confirmation and completion. They reuse shared form markup and the
+registration stylesheet. A successful reset does not authenticate the user.
 
 ``accounts/templates/accounts/register.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -583,7 +649,8 @@ CSRF-protected POST form.
 ``accounts/templates/accounts/email/``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Contains the plain-text and HTML templates for verification emails.
+Contains the plain-text and HTML templates for verification and password-reset
+emails. Both message types are rendered by their respective workers.
 
 ``accounts/templates/accounts/email_verification_confirm.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -602,9 +669,9 @@ Displays the result after confirmation at a URL that contains no token.
 Contains database migrations for the accounts application. The custom user
 model is introduced in ``0001_initial.py``, while later migrations evolve the
 account identifier rules, database constraints, email verification state, and
-verification-message cooldown. Later migrations add request counters and
-the verification email outbox. Migration files are generated with Django's
-``makemigrations`` command.
+verification-message cooldown. Later migrations add request counters, the verification email outbox and the
+password-reset email outbox (``0009_passwordresetemailjob.py``). Migration
+files are generated with Django's ``makemigrations`` command.
 
 ``accounts/tests/``
 ~~~~~~~~~~~~~~~~~~~
@@ -634,6 +701,9 @@ Contains automated tests specific to the accounts application, including:
 * worker lease recovery, bounded retries, unexpected preparation and backend
   errors, safe exception logging, stale-recipient cancellation,
   public-origin validation and continuous worker error recovery;
+* password-reset neutral responses, request limits, eligibility, token
+  confirmation and invalidation, independent delivery and shared worker
+  commands, with reset URL masking at the logging boundary;
 * persistent public rate-limit counters and concurrent request accounting;
 * staged registration POST throttling, response headers and failure-closed
   handling of unresolved client IP addresses;
@@ -863,7 +933,7 @@ The file currently handles:
 * explicit runtime environment classification;
 * validation of required and production-sensitive configuration;
 * a default-off registration feature gate that cannot be enabled in
-  production until public recovery and abuse controls are available;
+  production pending the remaining deployment and abuse safeguards;
 * Django security settings;
 * environment-specific client IP resolution and proxy policy;
 * installed applications and middleware;
@@ -976,9 +1046,18 @@ and returns it through the ``X-Request-ID`` response header. A logging filter
 adds the request ID to console and file log records. The middleware also
 records HTTP responses through ``aether.http`` before the request context is
 cleared, using ``INFO`` for ordinary responses, ``WARNING`` for HTTP 429, and
-``ERROR`` for HTTP 5xx. The application HTTP logger masks the entire suffix
-after ``/email/verify/`` without relying on URL resolution, including for
-security redirects and unresolved confirmation paths.
+``ERROR`` for HTTP 5xx. The application HTTP logger masks the entire suffix after
+``/email/verify/`` and ``/password/reset/confirm/`` without relying on
+URL resolution, including for security redirects and unresolved paths.
+
+``infrastructure/log_redaction.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines plain and colour-preserving logging formatters that redact
+verification and password-reset URL paths after formatting, including
+interpolated arguments and Django exception tracebacks. The configured
+application/Django handlers use these formatters; external access logs are
+not covered.
 
 ``infrastructure/request.py``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

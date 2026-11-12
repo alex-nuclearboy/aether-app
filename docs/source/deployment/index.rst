@@ -16,27 +16,31 @@ Production must explicitly declare ``AETHER_ENVIRONMENT=production``. The
 current settings then require Django debug mode to be disabled, require a
 non-wildcard allowed-host configuration, and require secure session and CSRF
 cookies. The current configuration also rejects
-``AETHER_REGISTRATION_ENABLED=True`` in production, pending public email
-recovery and anti-abuse controls. The setting defaults to ``False``.
+``AETHER_REGISTRATION_ENABLED=True`` in production, pending the remaining
+deployment and anti-abuse safeguards. The setting defaults to ``False``.
 Registration POST is available only under an explicit development/test
 flag and enforces PostgreSQL-backed per-IP limits. The account and outbox job
 are created atomically; authenticated profile requests also enqueue jobs.
 Public resend and pre-verification email correction are implemented with
-independent PostgreSQL-backed limits. Verification of the Koyeb-only ingress
-trust boundary and scheduled counter cleanup remain incomplete. Production client-IP resolution now
-requires the final Koyeb-added ``X-Forwarded-For`` value and does not fall
-back to ``REMOTE_ADDR``. Registration must remain disabled in production.
+independent PostgreSQL-backed limits. Verification of the Koyeb-only ingress trust boundary and scheduled counter
+cleanup remain incomplete. Production client-IP resolution now requires the
+last Koyeb-added ``X-Forwarded-For`` value and does not fall back to
+``REMOTE_ADDR``. Registration must remain disabled in production.
 
-The independent verification email worker supports PostgreSQL leases,
-retries, lease recovery and an explicit public origin. SMTP no longer runs
-in registration or profile HTTP requests. The worker is **not** started by
-the web process: delivery requires a separately deployed and monitored worker.
-Before production use, configure a verified HTTPS public origin and test SMTP
-failures, template and backend exceptions, worker restarts, lease recovery and
-retention of failed jobs. The continuous command logs an exception type and
-pauses for at least five seconds after unexpected infrastructure failures;
-the ``--once`` mode fails visibly instead. Provision monitoring for repeated
-worker errors and terminally failed jobs before enabling production delivery.
+Two independent email queues are implemented: verification and password reset.
+Both use PostgreSQL leases, bounded retries, lease recovery and an explicit
+trusted public origin. HTTP requests enqueue the messages without SMTP; the
+web process does **not** start either worker. Production requires separately
+supervised ``process_verification_email_queue`` and
+``process_password_reset_queue`` processes. Running one command does not
+process jobs from the other queue.
+Before production use, configure a verified HTTPS public origin for each
+command and test SMTP failures, template and backend exceptions, worker
+restarts, lease recovery and retention of failed jobs in both queues.
+Each continuous command logs an exception type and pauses for at least five
+seconds after unexpected infrastructure failures; the ``--once`` mode fails
+visibly instead. Provision monitoring for repeated errors, stalled jobs and
+terminally failed jobs in **both** workers before enabling production delivery.
 
 The production runtime also requires email delivery configuration: a default
 sender address together with a configured SMTP host and authentication

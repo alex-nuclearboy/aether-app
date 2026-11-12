@@ -16,7 +16,7 @@ The implemented foundation consists of:
 * production safety validation for debug mode, allowed hosts, and secure
   session and CSRF cookies;
 * a default-off ``AETHER_REGISTRATION_ENABLED`` setting, with production
-  activation rejected until public recovery and abuse controls are ready;
+  activation rejected pending remaining operational and anti-abuse safeguards;
 * shared client IP resolution with environment-specific proxy handling
   and IPv4/IPv6 normalisation;
 * PostgreSQL access through Psycopg 3;
@@ -41,6 +41,11 @@ The implemented foundation consists of:
 * a PostgreSQL verification email outbox and an independent worker with
   leases, bounded retries and explicit public origins; registration and
   authenticated profile views enqueue jobs without performing SMTP;
+* a separate PostgreSQL password-reset outbox, independent worker and
+  neutral public request flow, with email/IP limits, one-minute account
+  cooldown, Django reset tokens and no automatic sign-in;
+* shared email job leasing and retry helpers, with the queue-specific
+  commands using ``EmailQueueMixin`` and separate polling processes;
 * persistent per-account email verification state, initially unverified and
   matched against the current email independently from account activation;
 * a per-account sign-in policy that requires current email verification only
@@ -65,7 +70,7 @@ The implemented foundation consists of:
 * a ``core`` Django application providing a public home page with the
   full Aether logo;
 * a shared base template with a fixed header, clickable brand link,
-  and session-aware sign-in/sign-out controls;
+  anonymous ``Sign in``/``Sign up`` actions and authenticated profile/sign-out controls;
 * translation-ready Python feedback and template labels, with active-language
   HTML metadata; the application still uses one configured language without
   a language switch or project translation catalogues;
@@ -75,7 +80,7 @@ The implemented foundation consists of:
 * automated testing through ``pytest`` and ``pytest-django``;
 * branch coverage reporting and enforcement through ``pytest-cov``;
 * configurable application logging with coloured development output through
-  ``colorlog``;
+  ``colorlog`` and masking of verification and password-reset URL tokens;
 * environment-specific email delivery through Django ``MAILERS``, using the
   console backend in development and test environments and authenticated SMTP
   in production;

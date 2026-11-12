@@ -89,6 +89,27 @@ origins in production. Registration and authenticated profile views enqueue
 jobs themselves; the worker performs SMTP delivery. Tokens and recipient
 addresses must not be logged.
 
+Password-reset email worker
+---------------------------
+
+Process at most one queued password-reset email, displaying the message in
+the local worker console::
+
+   uv run python manage.py process_password_reset_queue --once --public-origin=http://127.0.0.1:8000
+
+Run the password-reset worker continuously in its own terminal or process::
+
+   uv run python manage.py process_password_reset_queue --public-origin=http://127.0.0.1:8000
+
+The verification and password-reset workers use different PostgreSQL queues;
+start **both** processes when both email flows are required. Use a trusted
+public HTTPS origin for each command in production, and supervise each worker
+independently. ``--once`` reports ``idle`` if there is no due job, and exits
+with an error if infrastructure processing fails. Continuous mode recovers
+from unexpected polling errors and uses a configurable
+``--poll-seconds`` interval (default five seconds, valid range above zero
+through 300 seconds).
+
 Application
 -----------
 

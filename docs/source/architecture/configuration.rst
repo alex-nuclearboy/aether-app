@@ -163,9 +163,18 @@ Email configuration
 Email delivery is environment-specific while the application-level SMTP
 configuration remains provider-neutral.
 
-Development and test environments use Django's console email backend. Messages
-are written to the process output instead of being delivered through an
-external service.
+Development and test environments configure Django's console email backend.
+In ordinary local operation, the queue worker is the sending process, so a
+verification message appears in the verification worker terminal and a
+password-reset message appears in the password-reset worker terminal, not in
+the ``runserver`` terminal. Automated Django tests can substitute their
+in-memory email backend. No external SMTP connection is made in development.
+
+Email verification and password recovery use independent PostgreSQL outboxes
+and commands, ``process_verification_email_queue`` and
+``process_password_reset_queue``. Both commands require ``--public-origin``;
+a production origin must use HTTPS. The two workers must be deployed and
+supervised independently of the web process.
 
 Production uses Django's SMTP email backend. The SMTP host, port, username,
 password, and connection timeout are supplied through environment variables.

@@ -4,7 +4,7 @@
 
 Aether is an early-stage personal digital environment built with Django. It is intended to provide a common layer for organising information, tasks, knowledge, files, integrations, and automation without coupling the core application to a single external service.
 
-The current foundation provides a reproducible development and deployment-oriented setup with environment-based Django configuration, explicit runtime environment classification and production safety validation, a custom Django user model with mandatory validated email for managed user creation and database-level email presence constraints, username-or-email authentication with brute-force protection, authentication audit logging, request correlation IDs, and lockout timing helpers, a branded home page with a fixed header, shared Django templates, and separate global, component, and page-specific CSS, PostgreSQL, Docker Compose, `uv` dependency management, automated testing with coverage enforcement, configurable logging with colourised development output, Pylint, Sphinx documentation, GitHub Actions with cross-version Python compatibility checks and dependency vulnerability auditing, and Dependabot security monitoring.
+The current foundation includes environment-driven Django configuration, PostgreSQL, a custom user model, protected username-or-email sign-in, staged registration and email verification, pre-verification email correction, and a public password-reset flow. Verification and password-reset messages use separate PostgreSQL outboxes, independently operated workers, and shared leasing and retry infrastructure; both use console delivery in development. The project also provides authentication auditing, request IDs and sensitive-URL redaction, responsive shared templates, Docker Compose, `uv`, automated tests with branch coverage, Pylint, Sphinx documentation, GitHub Actions and Dependabot security monitoring.
 
 ## Requirements
 
@@ -136,7 +136,7 @@ The interface does not yet include a sidebar or additional navigation menus.
 The Django administration site remains available at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
 
 The public application sign-in page is available at
-[http://127.0.0.1:8000/login/](http://127.0.0.1:8000/login/). Enter a username or email address and the account password. Signed-in users can sign out using the button in the shared header. Both application login and Django Admin use the same brute-force protection and authentication audit.
+[http://127.0.0.1:8000/login/](http://127.0.0.1:8000/login/). Enter a username or email address and the account password. Anonymous users see **Sign in** and **Sign up** in the shared header; authenticated users see **My profile** and a POST-only **Sign out** control. The sign-in page also links to **Forgot your password?**. Registration remains disabled by default, independently of password recovery. Application login and Django Admin share brute-force protection and authentication auditing.
 
 During local development, application logs are colourised in the console and are also written to the rotating `logs/aether.log` file. Logging levels can be controlled through the local environment configuration. See the [logging documentation](docs/source/development/logging.rst) for details.
 
@@ -151,6 +151,35 @@ jobs and queues a replacement verification link atomically. The page is
 available independently of the new-registration flag; production registration
 is still disabled pending additional safeguards.
 
+### Reset a forgotten password
+
+The public [password-reset request page](http://127.0.0.1:8000/password/reset/)
+accepts an email address independently of the registration gate. Valid requests
+show a neutral result whether or not an eligible account exists. Eligible active
+accounts must have a usable password and, when email verification is required,
+a verified current address. PostgreSQL enforces independent per-IP and per-email
+limits (10 and 3 POSTs per fixed UTC hour respectively), plus deduplication and
+a one-minute account cooldown. The HTTP request creates an outbox job; it does
+**not** send a message or sign the visitor in.
+
+Run the separate password-reset worker in another terminal:
+
+```console
+uv run python manage.py process_password_reset_queue --public-origin=http://127.0.0.1:8000
+```
+
+Or process at most one job using `--once`. In development, this worker prints
+the plain-text and HTML email to its own console, without external SMTP. Open
+the link, follow Django's token-free intermediate URL, and set a new password.
+A successful reset invalidates the old token but does **not** sign the user in.
+The login page remains the entry point afterwards. An outstanding reset job is
+removed when its user is deleted (by database cascade), or cancelled by the
+worker if the account becomes ineligible or its password, email or login state
+changes before delivery.
+
+Password-reset jobs use their **own** PostgreSQL queue and worker. Starting
+`process_verification_email_queue` does not process password resets.
+
 ### Process queued verification emails
 
 Registration, profile verification, public resend and pre-verification email
@@ -162,7 +191,7 @@ run the independent worker in a second terminal:
 uv run python manage.py process_verification_email_queue --public-origin=http://127.0.0.1:8000
 ```
 
-The development mailer writes messages to the worker console. Stop the worker
+The development mailer writes messages to this worker console. Stop the worker
 with `Ctrl+C`, or pass `--once` to process at most one job. Failed delivery
 uses bounded retries, including unexpected rendering and mail-backend errors.
 The continuous worker also resumes polling after unexpected infrastructure

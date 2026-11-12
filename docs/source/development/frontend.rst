@@ -101,8 +101,9 @@ The page includes its own logo, a sign-in panel, reusable form fields,
 and compact validation feedback. Authentication uses Django's standard
 session mechanism and CSRF protection.
 
-The sign-in page links to registration. Social sign-in and password-reset
-links remain absent because those features are not implemented.
+The sign-in page links to registration, public verification resend,
+pre-verification email correction, and ``Forgot your password?`` at
+``/password/reset/``. Social sign-in is not implemented.
 
 Registration layout (staged)
 ----------------------------
@@ -128,6 +129,25 @@ holder to supply their registration username, password and corrected email.
 It uses the same shared form components and stylesheet, and redirects to a
 neutral result without disclosing account eligibility or sending HTTP SMTP.
 Production registration remains disabled.
+
+Password-reset pages
+--------------------
+
+``accounts/templates/accounts/password_reset_request.html`` presents a
+CSRF-protected email-only form with shared form fields and
+``static/css/pages/register.css``. The public page remains available while
+new registration is disabled. Valid requests redirect to the neutral
+``password_reset_done.html`` page; it confirms only that a reset message
+**may** be sent, not that a user or delivery exists.
+
+``password_reset_confirm.html`` presents Django's standard new-password
+fields and password validation. A valid token is exchanged by Django on GET
+for a session-backed intermediate ``set-password`` URL before the form is
+shown; the original bearer token is not retained in the visible form URL.
+``password_reset_complete.html`` links back to sign-in without logging the
+user in. Both emails have translated plain-text and HTML templates in
+``accounts/templates/accounts/email/``. The existing registration stylesheet
+is deliberately reused, with no new page-specific CSS layer.
 
 Profile and email verification pages
 ------------------------------------

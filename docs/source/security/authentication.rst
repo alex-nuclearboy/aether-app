@@ -228,6 +228,62 @@ fingerprints. Verification email delivery remains asynchronous through the
 existing outbox worker. Production registration is still disabled pending
 separate deployment safeguards.
 
+Forgotten-password recovery
+---------------------------
+
+The anonymous, CSRF-protected ``/password/reset/`` form accepts a valid email
+address even while registration is disabled. Its HTTP POST handler consumes a
+PostgreSQL-backed allowance of ten requests per client IP per fixed UTC hour
+before validating the form; missing or untrusted client IP information returns
+HTTP 503, and an exhausted IP allowance returns HTTP 429 with
+``Retry-After``. Valid email submissions consume a separate allowance of
+three requests per address per fixed UTC hour. Exceeding the email allowance,
+an unknown address and an ineligible account all lead to the same neutral
+``/password/reset/done/`` page. These controls reduce abuse but do not
+establish that any given account exists.
+
+Only active users with usable passwords are eligible. For accounts with
+``email_verification_required=True``, the **current** email must be verified.
+Legacy/Admin/CLI accounts with the default
+``email_verification_required=False`` retain their existing policy: current
+email verification is not an additional prerequisite for resetting a password.
+This is a deliberate compatibility boundary; it should be revisited before
+changing email-ownership requirements for existing accounts.
+
+``accounts.password_reset.request_password_reset_email()`` uses a user row
+lock to reserve a ``PasswordResetEmailJob`` without sending during the HTTP
+request or disclosing account membership. It avoids duplicate active jobs
+and imposes a one-minute cooldown after the previous reset request.
+``PasswordResetEmailJob`` stores a recipient snapshot and keyed account-state
+signature alongside retry metadata, but never a reset token, complete URL or
+rendered message. A separate ``process_password_reset_queue`` worker checks
+eligibility and the recorded state again, cancelling obsolete work before
+creating a fresh Django reset token and multipart message. The worker shares
+lease, retry and origin validation utilities with the verification worker,
+but neither worker processes the other's queue. Both are required for full
+email functionality; development uses console delivery.
+
+The reset email links to
+``/password/reset/confirm/<uidb64>/<token>/``. Django's
+``PasswordResetConfirmView`` validates the token and redirects a valid GET to
+a session-backed intermediate URL containing ``set-password`` rather than
+the bearer token; the subsequent POST is CSRF-protected and uses Django's
+configured password validators. On success the password changes and the
+original token becomes invalid. The completion page at
+``/password/reset/complete/`` does not authenticate the user. Links also
+become invalid when relevant account state changes, including a password
+change; queued work is cancelled if the user's password, email or login
+state changes before the worker sends it.
+
+``never_cache`` protects the request and result views. The confirmation view
+sets ``Referrer-Policy: origin``. ``aether.http`` masks the complete suffix
+of reset confirmation URLs; configured plain and coloured log formatters
+also redact these paths from Django/application messages. Worker logs contain
+only non-sensitive error categories, job IDs and exception types. External
+proxy, server and hosting access logs require their own protection; the
+console backend intentionally displays the complete email only in local
+worker output.
+
 Password verification
 ---------------------
 
@@ -365,9 +421,10 @@ with lazy translations; standard Django authentication error translations
 remain unchanged. See :doc:`../development/internationalisation`.
 
 The sign-in page also links to ``/register/``, which accepts registration
-POST only behind the development/test flag. The shared fixed header offers a
-sign-in link to anonymous visitors and a CSRF-protected sign-out form to
-authenticated users.
+POST only behind the development/test flag. The shared fixed header offers
+``Sign in`` and ``Sign up`` links to anonymous visitors, and ``My profile``
+plus a CSRF-protected ``Sign out`` form to authenticated users.
+
 ``AetherLogoutView`` extends Django's ``LogoutView``, accepts POST
 requests only, invalidates the session, redirects to ``home``, and
 creates a one-time success message. The public home page remains
@@ -378,8 +435,7 @@ Django Admin and the application login share the Axes failure counters,
 Authentication forms do not duplicate those mechanisms. Registration POST
 is available only under the development/test flag. Public resend and
 registration-specific IP throttling and pre-verification email correction
-are implemented; password reset and dedicated lockout-status pages remain
-pending.
+are implemented; dedicated lockout-status pages remain pending.
 
 
 Profile and email confirmation
@@ -391,8 +447,9 @@ can request a verification email through a CSRF-protected POST to
 ``/profile/verify-email/``. The server always uses the current account email
 address rather than accepting an arbitrary recipient from the form.
 
-The sending service uses the existing token generator and Django's configured
-mailer to send both plain-text and HTML versions of the message. A durable
+The verification outbox worker uses the existing token generator and Django's
+configured mailer to send both plain-text and HTML versions of the message.
+A durable
 ``email_verification_sent_at`` timestamp in PostgreSQL enforces a 60-second
 resend cooldown per account. It does not affect the verification state.
 
@@ -402,8 +459,9 @@ existing verification service and redirects to the token-free
 ``/email/verification-result/`` page. Confirmation responses prevent caching
 and use ``Referrer-Policy: origin`` to avoid exposing the token in referrer
 paths. The ``aether.http`` logger masks confirmation URL components even
-when URL resolution has not completed. Framework, proxy and hosting logs
-require independent protection.
+when URL resolution has not completed. Configured Django application log
+formatters also redact the paths; proxy and hosting logs require independent
+protection.
 
 The profile currently has no editing controls. Changing account data or
 email, and production-ready public registration, remain separate work.
@@ -490,7 +548,9 @@ The current implementation provides validated email requirements for account
 creation, username-or-email authentication, application login and logout,
 read-only profiles, and user-requested email verification, together with
 brute-force protection through django-axes. Django Admin and the application
-use the same protected authentication flow. Registration POST and email
-delivery are currently gated to development and tests. Production registration and production hardening, authenticated profile
-editing, password reset and dedicated lockout-status pages remain outside
-the current scope.
+use the same protected authentication flow. Registration POST is gated to
+development and tests; recovery requests and verification/resend views are
+available independently. Production email delivery requires deployed workers
+and validated SMTP settings. Enabling public production registration,
+production hardening, authenticated profile editing and a dedicated
+lockout-status page remain outside the current scope.

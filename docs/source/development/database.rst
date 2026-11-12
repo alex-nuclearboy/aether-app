@@ -90,8 +90,13 @@ time for later removal by a worker or maintenance command.
 Staged registration POST uses this service to limit requests per client IP
 address, including invalid form submissions. Public resend also enforces
 separate IP and email allowances, without storing either identifier in
-plaintext. Pre-verification email correction uses separate allowances of ten
-POSTs per client IP and five attempts per username per fixed UTC hour. It
+plaintext. Password-reset POST uses separate fixed-hour allowances of ten
+requests per client IP and three per submitted email address. An unresolved
+client IP fails closed with HTTP 503; IP exhaustion produces HTTP 429 and
+``Retry-After``. An exhausted per-email allowance receives the same neutral
+result as any other syntactically valid reset request.
+Pre-verification email correction uses separate allowances of ten POSTs per
+client IP and five attempts per username per fixed UTC hour. It
 locks the eligible user, changes the address, cancels pending/processing jobs
 and enqueues the new recipient in a single transaction. Unknown, ineligible,
 password-rejected, duplicate-address and username-throttled requests share
@@ -152,6 +157,47 @@ or claim-finalisation error leaves the current lease in place; the continuous
 management command logs the exception type, waits at least five seconds,
 and resumes polling. A leased job can be reclaimed after lease expiry. The
 ``--once`` command instead exits with an error for such infrastructure faults.
+
+Password-reset outbox and shared queue infrastructure
+-----------------------------------------------------
+
+``accounts.PasswordResetEmailJob`` is a **separate** PostgreSQL model, not a
+verification job subtype. It records a recipient snapshot, a keyed account
+state signature, job status, attempts, scheduling and lease timestamps, and a
+non-sensitive error category. It never stores a reset token, full reset URL,
+or rendered message. A conditional uniqueness constraint prevents more than
+one active job for the same user and recipient.
+
+``accounts.password_reset.request_password_reset_email()`` locks an eligible
+user row before creating a job. The account must be active, have a usable
+password and, if ``email_verification_required=True``, have its current
+address verified. Existing active jobs and a one-minute cooldown after a
+previous request prevent rapid duplicates. For legacy accounts without the
+verification requirement, an unverified address alone does not make the
+account ineligible; this reflects the implemented policy.
+
+``accounts.password_reset_worker`` claims reset jobs using the shared
+``claim_due_email_job()`` helper in ``accounts.email_worker``. Both workers
+use PostgreSQL ``SELECT FOR UPDATE SKIP LOCKED``, a five-minute lease, up to
+five attempts, and delays of 30 seconds, 2 minutes, 10 minutes and 30 minutes
+between retries. Processing and sending occur outside the claim transaction.
+The worker re-reads the user and rejects missing, ineligible or changed
+accounts, including changes to their password, email or last-login state.
+It then creates a fresh Django password-reset token at delivery time and
+sends a plain-text/HTML message through ``MAILERS``. The token is not
+persisted in the outbox. Delivery is at least once; a crash after email
+acceptance can lead to repeated delivery.
+
+Both management commands use the shared ``EmailQueueMixin`` for origin
+validation, polling, database-connection cleanup and one-shot versus
+continuous error handling, while retaining separate queue-specific delivery
+services and messages. A fault in the database can interrupt one ``--once``
+invocation; continuous operation catches the failure, logs the exception
+type without sensitive details, pauses and retries polling.
+
+The password-reset migration is part of the committed schema. When models
+change in future, use Django's ``makemigrations accounts`` to generate the
+new migration rather than writing or renumbering migration files by hand.
 
 Useful commands
 ---------------

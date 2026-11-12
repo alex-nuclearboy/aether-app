@@ -75,9 +75,9 @@ token is removed from the visible browser address. Verification pages are not
 cached and set ``Referrer-Policy: origin``. The project's HTTP request
 logger masks the user identifier and token in confirmation paths, including
 requests redirected before URL resolution and malformed confirmation paths.
-This is specific to the ``aether.http`` logger; Django diagnostics, reverse
-proxies and hosting access logs require separate protection against sensitive
-paths.
+Configured Django and application log formatters also redact sensitive
+confirmation paths in formatted messages. Reverse proxies, unmanaged servers
+and hosting access logs require separate protection against sensitive paths.
 
 Confirming an email address never changes ``is_active``, permissions, or the
 user's authenticated session. Existing accounts created through Django Admin

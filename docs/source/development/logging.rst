@@ -93,15 +93,21 @@ The logger is configured independently at ``INFO`` level in all
 environments. Ordinary responses are logged at ``INFO``, HTTP 429
 responses at ``WARNING``, and HTTP 5xx responses at ``ERROR``.
 
-Verification confirmation paths are masked before they reach ``aether.http``
-regardless of URL resolution. The logger replaces the entire suffix after
-``/email/verify/`` with ``<redacted>/``, including both the user identifier
-and token. This also covers security redirects issued before route resolution
-and malformed confirmation URLs that produce HTTP 404. Other paths retain
-their original path. Query strings are not included in these HTTP records.
-This protection is scoped to Aether's ``aether.http`` records; Django
-framework diagnostics, web-server and hosting-platform access logs require
-separate sanitisation or configuration before production deployment.
+Both verification and password-reset confirmation paths are masked before
+they reach ``aether.http`` regardless of URL resolution. The middleware
+replaces the entire suffix after ``/email/verify/`` or
+``/password/reset/confirm/`` with ``<redacted>/``, including identifiers and
+tokens. This also covers early redirects and unresolved paths that return
+HTTP 404. Other paths remain unchanged; these HTTP records do not include
+query strings.
+
+``infrastructure.log_redaction`` provides ``RedactingFormatter`` and
+``RedactingColouredFormatter``. Configured Django and Aether handlers use
+these formatters to mask the same paths **after message formatting**, including
+interpolated arguments and exception tracebacks in ``django.request`` logs.
+This covers the application's configured logging pipeline, not arbitrary
+third-party, reverse-proxy, application-server or hosting-platform access
+logs. Production ingress and platform logging require separate verification.
 
 Routine ``django.server`` access messages are suppressed to avoid
 duplicate HTTP records. Django may still emit diagnostic messages
@@ -329,12 +335,17 @@ Logs must never contain:
 Debug logging does not remove this requirement. Sensitive values must not be
 logged even during local development.
 
-Verification email delivery uses the ``aether.email_worker`` logger.
-Unexpected template, token and mail-backend errors are logged with a job ID
-and exception type; the error message and traceback are deliberately omitted
-because they might include a verification URL. Unexpected polling or database
-errors are logged with the exception type only. No rendered email bodies,
-recipient addresses or verification tokens are logged by this worker.
+The ``process_verification_email_queue`` and
+``process_password_reset_queue`` workers use the
+``aether.email_worker`` logger. Unexpected template, token and mail-backend
+errors record a job ID and exception type, not the exception message or
+traceback, which might contain a sensitive URL. Unexpected polling or
+database errors also log only the exception type. Neither worker logs
+recipient addresses, rendered email bodies, verification tokens or reset
+tokens. In local development the console email backend deliberately prints
+the complete message, including the link, to the **sending worker terminal**;
+this is distinct from application logging and must not be enabled for
+production delivery.
 
 See :doc:`../security/secrets` for the general secret-handling policy.
 
@@ -343,6 +354,9 @@ Testing
 -------
 
 The logging configuration is covered by ``tests/test_logging.py``.
+``tests/test_password_reset_logging.py`` verifies both URL masking layers,
+plain and coloured formatters and configured handlers. HTTP middleware
+coverage in ``tests/test_request_id.py`` includes pre-routing masking.
 
 The tests verify:
 

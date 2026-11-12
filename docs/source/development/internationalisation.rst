@@ -49,7 +49,8 @@ button labels, navigation, ARIA labels, and visible email copy.
 pluralisation. Brand names (``Aether``), CSS classes, URL names, form field
 identifiers, and user-supplied content are not translated.
 
-``templates/base.html`` and the verification email HTML template use
+``templates/base.html`` and the verification and password-reset email HTML
+templates use
 ``{% get_current_language as CURRENT_LANGUAGE %}`` to populate the HTML
 ``lang`` attribute. This keeps document metadata aligned with the active
 translation context. Email bodies and subjects use Django's active language
@@ -72,8 +73,9 @@ email check and transactional uniqueness-race handler reuse the lazy
 ``unique``. These errors remain attached to the corresponding form fields.
 
 Test error codes and field placement rather than hard-coded English wording.
-The staged registration result template marks its title, queue-status guidance
-and links with ``{% trans %}``. Profile feedback for queued, already queued,
+The staged registration result and password-reset pages mark their titles,
+queue-status guidance and links with ``{% trans %}``. Profile feedback for
+queued, already queued,
 cooldown and verified states uses ``gettext`` in the request view. The current
 English-only interface is unchanged; future Aether translation catalogues
 must include project-defined validation and queue feedback messages.

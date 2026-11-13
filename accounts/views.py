@@ -4,11 +4,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import (
-    LoginView, LogoutView, PasswordResetConfirmView,
+    LoginView, LogoutView, PasswordChangeView, PasswordResetConfirmView,
 )
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
@@ -360,6 +361,22 @@ class AetherPasswordResetCompleteView(TemplateView):
     """Show password reset completion without authenticating the user."""
 
     template_name = "accounts/password_reset_complete.html"
+
+
+@method_decorator(never_cache, name="dispatch")
+class AetherPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
+    """Let signed-in users change passwords without ending their session."""
+
+    template_name = "accounts/password_change.html"
+    success_url = reverse_lazy("profile")
+
+    def form_valid(self, form):
+        """Keep Django's password and session handling intact."""
+        response = super().form_valid(form)
+        messages.success(
+            self.request, _("Your password has been changed successfully."),
+        )
+        return response
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

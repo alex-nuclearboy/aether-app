@@ -180,6 +180,17 @@ changes before delivery.
 Password-reset jobs use their **own** PostgreSQL queue and worker. Starting
 `process_verification_email_queue` does not process password resets.
 
+### Change your password while signed in
+
+Open [My profile](http://127.0.0.1:8000/profile/) and select **Change password**,
+or open `/profile/change-password/` directly. This authenticated, CSRF-protected
+form requires the existing password, a new password and its confirmation.
+Django's password validators apply. A successful change returns to the
+profile with a translated confirmation message, preserves the current session
+and makes other sessions and previously issued password-reset tokens invalid.
+The worker will cancel a queued password-reset email if the password has
+changed before delivery. No email is sent for an ordinary password change.
+
 ### Process queued verification emails
 
 Registration, profile verification, public resend and pre-verification email

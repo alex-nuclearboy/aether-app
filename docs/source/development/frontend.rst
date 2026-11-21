@@ -140,6 +140,10 @@ new registration is disabled. Valid requests redirect to the neutral
 ``password_reset_done.html`` page; it confirms only that a reset message
 **may** be sent, not that a user or delivery exists.
 
+Both ``password_reset_request.html`` and ``password_reset_confirm.html``
+use the shared ``register__form`` grid for consistent field spacing and
+validation layout.
+
 ``password_reset_confirm.html`` presents Django's standard new-password
 fields and password validation. A valid token is exchanged by Django on GET
 for a session-backed intermediate ``set-password`` URL before the form is
@@ -152,9 +156,14 @@ is deliberately reused, with no new page-specific CSS layer.
 Profile and email verification pages
 ------------------------------------
 
-``accounts/templates/accounts/profile.html`` is a read-only authenticated
-page. Its styles are defined in ``static/css/pages/profile.css``. It reuses
-the shared header, buttons, alerts, design tokens, and CSRF support.
+``accounts/templates/accounts/profile.html`` displays read-only account
+details and a separate ``Change password`` link for authenticated users. Its
+styles are defined in ``static/css/pages/profile.css``. The change form lives
+in ``accounts/templates/accounts/password_change.html`` and reuses the account
+form grid, the shared field component, CSRF protection and the stylesheet
+``static/css/pages/register.css``. It requires the old password, new password
+and confirmation. Neither profile data nor email ownership changes through
+this form.
 
 The confirmation and result pages use dedicated account templates and
 ``static/css/pages/email-verification.css``. Email messages have separate

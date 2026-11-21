@@ -228,6 +228,20 @@ fingerprints. Verification email delivery remains asynchronous through the
 existing outbox worker. Production registration is still disabled pending
 separate deployment safeguards.
 
+Authenticated password change
+-----------------------------
+
+The separate ``/profile/change-password/`` route requires a signed-in user.
+It uses Django's ``PasswordChangeView`` and its standard old-password and
+new-password validation, including CSRF protection. The initiating session
+is preserved by Django's ``update_session_auth_hash()`` behaviour. Other
+previously authenticated sessions fail their password hash check, and earlier
+password-reset tokens are invalidated by the changed password hash. Queued
+reset messages created before the password change are cancelled by the reset
+worker if their recorded account-state signature no longer matches. No
+outbox job or email is created by the password-change form. The separate
+public Password Reset flow remains available to eligible account holders.
+
 Forgotten-password recovery
 ---------------------------
 

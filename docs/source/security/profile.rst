@@ -6,9 +6,11 @@ Scope
 
 The authenticated account profile is available at ``/profile/``. The page
 shows the current username and email address and the computed
-``is_email_verified`` status. It is deliberately read-only: changing email,
-username, password, and other account details will be introduced separately.
-Registration POST is available only when the development/test flag is
+``is_email_verified`` status. The account details remain read-only: editing
+username and email is not implemented. A separate authenticated
+``Change password`` action links to ``/profile/change-password/``; it does
+not edit profile data inline. Registration POST is available only when the
+development/test flag is
 enabled. Authenticated users can request verification from their profiles;
 public registration remains disabled in production. Public email resend and
 pre-verification correction are available independently of the registration
@@ -16,6 +18,20 @@ gate. Neither route grants a signed-in session or edits a verified profile.
 
 The shared header links to the profile only for authenticated users.
 Django Admin retains its standard appearance and account management UI.
+
+Password change
+---------------
+
+Authenticated users can follow ``Change password`` from their profile to
+``/profile/change-password/``. The CSRF-protected Django
+``PasswordChangeView`` checks the current password, validates the new one
+with the configured password validators, and requires confirmation. A
+successful change returns to the profile with a translated success message.
+Django preserves the initiating session, while other existing sessions become
+invalid because they retain the previous password-authentication hash.
+Previously generated password-reset tokens become invalid when the password
+changes, and queued reset jobs are cancelled if their recorded account state
+no longer matches at delivery. This action does not send an email.
 
 Email delivery
 --------------

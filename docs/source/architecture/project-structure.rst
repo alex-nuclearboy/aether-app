@@ -58,6 +58,7 @@ The repository currently has the following top-level structure:
    │   │   ├── test_login_ui.py
    │   │   ├── test_managers.py
    │   │   ├── test_models.py
+   │   │   ├── test_password_change.py
    │   │   ├── test_password_reset.py
    │   │   ├── test_password_reset_worker.py
    │   │   ├── test_profile_verification.py
@@ -82,6 +83,7 @@ The repository currently has the following top-level structure:
    │   │       ├── email_verification_confirm.html
    │   │       ├── email_verification_result.html
    │   │       ├── login.html
+   │   │       ├── password_change.html
    │   │       ├── password_reset_complete.html
    │   │       ├── password_reset_confirm.html
    │   │       ├── password_reset_done.html
@@ -559,9 +561,11 @@ neutral result page never discloses account existence or the submitted data.
 The password-reset request view enforces IP/email limits, validates its form,
 queues eligible accounts and redirects to a neutral result. The confirmation
 view uses Django's reset token and password form, while the completion view
-returns to sign-in without creating a session.
+returns to sign-in without creating a session. The authenticated
+``AetherPasswordChangeView`` uses Django's current-password validation and
+preserves the initiating session after changing the password.
 
-``ProfileView`` displays the read-only profile to authenticated users.
+``ProfileView`` displays read-only account details and links to password change.
 ``RequestEmailVerificationView`` enqueues CSRF-protected profile verification
 requests and reports queued, already queued, cooldown or verified states.
 ``EmailVerificationConfirmView`` provides a public confirmation page on GET
@@ -580,8 +584,9 @@ public resend at ``/register/resend/`` and its neutral result page at
 ``/password/reset/`` with ``/password/reset/done/`` and
 ``/password/reset/confirm/<uidb64>/<token>/``, the completion page at
 ``/password/reset/complete/``, and POST-only logout at ``/logout/``. It also
-exposes the authenticated profile at ``/profile/``,
-the POST-only email request at ``/profile/verify-email/``, the public
+exposes the authenticated profile at ``/profile/`` and password change at
+``/profile/change-password/``, the POST-only email request at
+``/profile/verify-email/``, the public
 confirmation page at ``/email/verify/<uidb64>/<token>/``, and the token-free
 result page at ``/email/verification-result/``. Django Admin authentication
 remains independent.
@@ -592,6 +597,12 @@ remains independent.
 Provides the sign-in form, Django CSRF token, neutral validation messages,
 and a safe ``next`` field. It extends the shared Aether base template and
 links to password recovery, registration, public resend and email correction.
+
+``accounts/templates/accounts/password_change.html``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the authenticated, CSRF-protected current-password and new-password
+form using the shared registration styles. Success returns to the profile.
 
 ``accounts/templates/accounts/password_reset_*.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

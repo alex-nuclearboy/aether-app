@@ -331,6 +331,21 @@ Run the focused password recovery tests::
 
    uv run pytest accounts/tests/test_password_reset.py accounts/tests/test_password_reset_worker.py tests/test_password_reset_logging.py -v --no-cov
 
+Authenticated password change tests
+-----------------------------------
+
+``accounts/tests/test_password_change.py`` checks the protected route and
+form, old-password validation, confirmation, configured validators and CSRF.
+Its integration tests also cover the profile link, preservation of the
+initiating login, invalidation of another session and a previously issued
+Django reset token, and cancellation of a queued reset job after password
+change. ``accounts/tests/test_profile_verification.py`` checks that the
+profile offers the separate account action without permitting inline editing.
+
+Run the focused suite::
+
+   uv run pytest accounts/tests/test_password_change.py accounts/tests/test_profile_verification.py -v --no-cov
+
 Profile and verification flow
 -----------------------------
 

@@ -29,11 +29,12 @@ def test_login_links_to_registration_page(client):
     assert "Create an account" in content
 
 
-def test_login_does_not_offer_unimplemented_sign_in_options(client):
-    """Avoid unused social providers and password-reset links."""
+def test_login_links_to_password_reset_without_social_sign_in(client):
+    """Expose password recovery without inventing social sign-in routes."""
     response = client.get(reverse("login"))
     content = response.content.decode()
 
+    assert f'href="{reverse("password_reset")}"' in content
+    assert "Forgot your password?" in content
     assert "Continue with Google" not in content
     assert "Continue with Apple" not in content
-    assert "Forgot password" not in content

@@ -9,7 +9,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.test import Client, override_settings
 from django.urls import reverse
+from django.utils.encoding import force_bytes
 from django.utils.functional import Promise
+from django.utils.http import urlsafe_base64_encode
 
 from accounts.forms import AetherPasswordResetRequestForm
 from accounts.models import PasswordResetEmailJob, PublicRequestCounter, User
@@ -264,3 +266,27 @@ def test_reset_confirmation_is_csrf_protected(client, verified_member):
     assert response.status_code == 403
     verified_member.refresh_from_db()
     assert verified_member.check_password(PASSWORD)
+
+
+def test_password_reset_request_uses_shared_form_grid(client):
+    """Keep recovery page spacing aligned with other account forms."""
+    response = client.get(reverse("password_reset"))
+    assert response.status_code == 200
+    assert b'class="register__form"' in response.content
+
+
+def test_password_reset_confirm_uses_shared_form_grid(client, verified_member):
+    """Apply the shared grid after Django accepts a genuine reset token."""
+    token = default_token_generator.make_token(verified_member)
+    url = reverse(
+        "password_reset_confirm",
+        kwargs={
+            "uidb64": urlsafe_base64_encode(force_bytes(verified_member.pk)),
+            "token": token,
+        },
+    )
+    intermediate = client.get(url)
+    assert intermediate.status_code == 302
+    response = client.get(intermediate.url)
+    assert response.status_code == 200
+    assert b'class="register__form"' in response.content

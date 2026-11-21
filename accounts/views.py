@@ -380,7 +380,7 @@ class AetherPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
-    """Present account details without exposing edit controls yet."""
+    """Show read-only account details and separate security actions."""
 
     template_name = "accounts/profile.html"
 

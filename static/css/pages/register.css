@@ -1,4 +1,4 @@
-/* Staged registration layout, aligned with the sign-in page. */
+/* Shared account form layout for registration and password flows. */
 
 .register {
     width: min(100%, 460px);

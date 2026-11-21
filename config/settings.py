@@ -300,7 +300,8 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
-# Until public resend and abuse controls exist, registration stays gated.
+# Public resend and abuse controls exist; keep registration gated until
+# production ingress, delivery and security safeguards are verified.
 REGISTRATION_ENABLED = env.bool(
     "AETHER_REGISTRATION_ENABLED",
     default=False,

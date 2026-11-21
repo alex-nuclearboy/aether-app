@@ -1,5 +1,5 @@
 
-"""Render account verification emails for the outbox worker."""
+"""Render verification and password-reset messages for email workers."""
 
 from datetime import timedelta
 

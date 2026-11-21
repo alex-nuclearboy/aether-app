@@ -1,4 +1,4 @@
-/* Read-only profile; future editing forms remain separate features. */
+/* Read-only account details with separate account security actions. */
 
 .profile {
     width: min(100%, 680px);
@@ -40,7 +40,8 @@
     font-weight: 600;
 }
 
-.profile__verification {
+.profile__verification,
+.profile__security {
     margin-top: var(--space-5);
     padding-top: var(--space-5);
     border-top: 1px solid var(--colour-border);

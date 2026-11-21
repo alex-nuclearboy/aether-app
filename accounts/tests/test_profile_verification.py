@@ -66,6 +66,7 @@ def test_profile_is_read_only_with_unverified_email(client, member):
     assert b"Change email" not in response.content
     assert b"css/pages/profile.css" in response.content
     assert b'href="/profile/"' in response.content
+    assert f'href="{reverse("password_change")}"'.encode() in response.content
 
 
 def test_verified_profile_has_no_request_form(client, member):

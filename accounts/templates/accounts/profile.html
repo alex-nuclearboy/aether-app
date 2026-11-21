@@ -41,6 +41,12 @@
             </form>
             {% endif %}
         </div>
+        <div class="profile__security">
+            <h2>{% trans "Security" %}</h2>
+            <a class="button button--quiet" href="{% url 'password_change' %}">
+                {% trans "Change password" %}
+            </a>
+        </div>
     </div>
 </section>
 {% endblock content %}

@@ -8,3 +8,10 @@
              var(--content-gutter)
              var(--content-gutter);
 }
+
+/* On mobile the wrapping header is sticky and stays in document flow. */
+@media (max-width: 639px) {
+    #main-content {
+        padding-top: var(--content-gutter);
+    }
+}

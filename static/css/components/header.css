@@ -54,3 +54,68 @@
 .site-navigation__action {
     white-space: nowrap;
 }
+
+.site-language-form {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: var(--space-2);
+}
+
+.site-language-form__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.site-language-form__select {
+    min-width: 0;
+    max-width: 11rem;
+    min-height: var(--control-min-height);
+    padding-inline: var(--space-2);
+    border: 1px solid var(--colour-input-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--colour-surface);
+    color: var(--colour-text);
+    font: inherit;
+}
+
+.site-language-form__submit {
+    padding-inline: var(--space-2);
+}
+
+/* Keep the language control usable with long labels and high zoom. */
+@media (max-width: 639px) {
+    .site-header {
+        position: sticky;
+        height: auto;
+        min-height: var(--header-height);
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        padding-block: var(--space-2);
+    }
+
+    .site-brand,
+    .site-navigation {
+        height: auto;
+    }
+
+    .site-navigation,
+    .site-language-form {
+        flex-wrap: wrap;
+    }
+
+    .site-language-form {
+        flex: 1 0 100%;
+        justify-content: flex-end;
+        margin-left: 0;
+    }
+
+    .site-language-form__select {
+        max-width: 100%;
+    }
+}

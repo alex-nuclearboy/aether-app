@@ -31,4 +31,26 @@
         </a>
         {% endif %}
     </nav>
+    <form class="site-language-form" method="post" action="{% url 'set_language' %}">
+        {% csrf_token %}
+        {% get_current_language as CURRENT_LANGUAGE %}
+        {% get_available_languages as AVAILABLE_LANGUAGES %}
+        <label class="site-language-form__label" for="site-language">
+            {% trans "Language" %}
+        </label>
+        <select
+            class="site-language-form__select"
+            id="site-language"
+            name="language"
+        >
+            {% for language_code, language_name in AVAILABLE_LANGUAGES %}
+            <option value="{{ language_code }}"{% if language_code == CURRENT_LANGUAGE %} selected{% endif %}>
+                {{ language_name }}
+            </option>
+            {% endfor %}
+        </select>
+        <button class="button button--quiet site-language-form__submit" type="submit">
+            {% trans "Apply" %}
+        </button>
+    </form>
 </header>

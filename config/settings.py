@@ -321,6 +321,7 @@ MIDDLEWARE = [
     "infrastructure.request_id.request_id_middleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -466,6 +467,15 @@ LANGUAGE_CODE = env(
     "DJANGO_LANGUAGE_CODE",
     default="en-gb",
 )
+
+# Language names remain recognisable in their own languages.
+LANGUAGES = [
+    ("en-gb", "English (UK)"),
+    ("uk", "Українська"),
+    ("pl", "Polski"),
+]
+
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
 TIME_ZONE = env(
     "DJANGO_TIME_ZONE",

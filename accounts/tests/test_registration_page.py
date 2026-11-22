@@ -9,7 +9,6 @@ from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import Client, override_settings
 from django.urls import reverse
-from django.utils import translation
 
 from accounts.forms import AetherRegistrationForm
 from accounts.models import User, VerificationEmailJob
@@ -37,9 +36,10 @@ def test_anonymous_registration_page_displays_existing_form(client):
 
 
 def test_registration_page_uses_active_language(client):
-    """Prepare new labels for translation without enabling a switcher."""
-    with translation.override("pl"):
-        response = client.get(reverse("register"))
+    """Use the selected request language on the registration page."""
+    response = client.get(
+        reverse("register"), HTTP_ACCEPT_LANGUAGE="pl"
+    )
 
     assert response.status_code == 200
     assert b'<html lang="pl">' in response.content
@@ -206,9 +206,10 @@ def test_registration_post_redirects_signed_in_user(client):
 
 
 def test_check_email_page_is_generic_and_translatable(client):
-    """Do not expose the newly created address through the result URL."""
-    with translation.override("pl"):
-        response = client.get(reverse("registration_check_email"))
+    """Do not expose an address in the locale-aware result page."""
+    response = client.get(
+        reverse("registration_check_email"), HTTP_ACCEPT_LANGUAGE="pl"
+    )
     assert response.status_code == 200
     assert b'<html lang="pl">' in response.content
     assert b'member@example.com' not in response.content

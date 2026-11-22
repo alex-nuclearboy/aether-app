@@ -10,10 +10,12 @@ from django.utils import translation
 
 
 @pytest.mark.parametrize("language", ["en-gb", "pl", "uk"])
-def test_document_language_tracks_active_translation(client, language):
-    """Keep the document language in sync with Django's active language."""
-    with translation.override(language):
-        response = client.get(reverse("login"))
+def test_document_language_tracks_request_language(client, language):
+    """LocaleMiddleware chooses the HTML language from request headers."""
+    response = client.get(
+        reverse("login"),
+        HTTP_ACCEPT_LANGUAGE=language,
+    )
 
     assert response.status_code == 200
     assert f'<html lang="{language}">'.encode() in response.content

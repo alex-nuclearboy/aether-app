@@ -20,6 +20,7 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── test_frontend.py
    ├── test_database.py
    ├── test_django_entrypoints.py
+   ├── test_language_switch.py
    ├── test_logging.py
    ├── test_messages.py
    ├── test_password_reset_logging.py
@@ -27,6 +28,7 @@ Project-level tests are stored in the root ``tests/`` package::
    ├── test_request_id.py
    ├── settings_helpers.py
    ├── test_settings.py
+   ├── test_settings_i18n.py
    ├── test_settings_database.py
    ├── test_settings_email.py
    ├── test_settings_registration.py
@@ -44,8 +46,16 @@ The current modules have separate responsibilities:
    thresholds, and base-template stylesheet inclusion.
 
 ``test_template_translations.py``
-   Checks HTML language attributes on rendered pages and verification email
-   templates, as well as translation markers in shared UI templates.
+   Checks HTML language attributes from HTTP request languages and active
+   language rendering in email templates, plus translation markers.
+
+``test_language_switch.py``
+   Exercises the standard POST language selector, cookie persistence,
+   CSRF protection, safe redirects, and authenticated-session retention.
+
+``test_settings_i18n.py``
+   Checks supported language choices, locale paths, middleware order, and
+   unchanged token-bearing account routes.
 
 ``test_messages.py``
    Tests semantic Django message rendering, shared alert styles,
@@ -264,7 +274,7 @@ lockout responses. The separate project-level template translation tests
 are listed above.
 
 ``accounts/tests/test_login_ui.py`` checks that the dedicated sign-in
-layout includes the shared fixed header, its own logo, the login form,
+layout includes the shared site header, its own logo, the login form,
 and the registration page link without unimplemented social sign-in.
 
 ``accounts/tests/test_views.py`` verifies the application login and logout

@@ -6,6 +6,8 @@ Aether is an early-stage personal digital environment built with Django. It is i
 
 The current foundation includes environment-driven Django configuration, PostgreSQL, a custom user model, protected username-or-email sign-in, staged registration and email verification, pre-verification email correction, and a public password-reset flow. Verification and password-reset messages use separate PostgreSQL outboxes, independently operated workers, and shared leasing and retry infrastructure; both use console delivery in development. The project also provides authentication auditing, request IDs and sensitive-URL redaction, responsive shared templates, Docker Compose, `uv`, automated tests with branch coverage, Pylint, Sphinx documentation, GitHub Actions and Dependabot security monitoring.
 
+Language support: **English (UK)** (default), **Українська**, and **Polski** are selectable from the header. The selector currently enables Django's language machinery; Aether's full Ukrainian and Polish message catalogues and language-aware queued emails are planned in separate steps. See ``docs/source/development/internationalisation.rst`` for implementation and testing details.
+
 ## Requirements
 
 For local development, you need:
@@ -129,7 +131,7 @@ Start the Django development server:
 uv run python manage.py runserver
 ```
 
-The public home page is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). It displays the full Aether logo in the centre of the main content area, beneath a fixed header containing a compact logo and a link to the home page.
+The public home page is available at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). It displays the full Aether logo in the centre of the main content area, beneath a fixed desktop header (sticky on mobile) with a compact logo and navigation.
 
 The interface does not yet include a sidebar or additional navigation menus.
 

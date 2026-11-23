@@ -435,9 +435,10 @@ with lazy translations; standard Django authentication error translations
 remain unchanged. See :doc:`../development/internationalisation`.
 
 The sign-in page also links to ``/register/``, which accepts registration
-POST only behind the development/test flag. The shared fixed header offers
+POST only behind the development/test flag. The shared header offers
 ``Sign in`` and ``Sign up`` links to anonymous visitors, and ``My profile``
-plus a CSRF-protected ``Sign out`` form to authenticated users.
+plus a CSRF-protected ``Sign out`` form to authenticated users. An independent
+CSRF-protected language switch does not change authentication state.
 
 ``AetherLogoutView`` extends Django's ``LogoutView``, accepts POST
 requests only, invalidates the session, redirects to ``home``, and

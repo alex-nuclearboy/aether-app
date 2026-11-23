@@ -149,11 +149,14 @@ See :doc:`../development/logging` for the complete logging behaviour.
 Internationalisation
 --------------------
 
-``DJANGO_LANGUAGE_CODE`` sets the current single application language
-(default ``en-gb``), and ``USE_I18N`` remains enabled. Django Admin is not
-customised for language selection, and the site does not yet provide a
-language switch. Application strings are marked for future translation;
-actual non-English Aether translations require locale catalogues.
+``DJANGO_LANGUAGE_CODE`` sets the default application language (``en-gb``),
+while ``LANGUAGES`` explicitly enables ``en-gb``, ``uk`` and ``pl``. The
+standard Django language-selection view persists the choice in a cookie.
+``USE_I18N`` remains enabled. The shared header provides language selection
+for the public and authenticated interfaces. Django Admin is not customised
+beyond Django's standard localisation. Application strings are marked for
+translation, but complete non-English Aether messages require reviewed
+project locale catalogues.
 
 See :doc:`../development/internationalisation` for coding conventions.
 

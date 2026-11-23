@@ -4,17 +4,29 @@ Internationalisation and translation
 Current scope
 -------------
 
-Aether's application-facing strings are marked for translation, but the
-application currently operates in one configured language. The default is
-``en-gb`` (``DJANGO_LANGUAGE_CODE``). ``USE_I18N`` is enabled. There is no
-language switch, ``LocaleMiddleware``, project translation catalogue, or
-stored user language preference yet. The standard Django Admin remains
-unchanged and uses the configured Django language.
+Aether supports three selectable request languages:
 
-Marking a message for translation does **not** translate it into Polish,
-Ukrainian, or another language automatically. Django ships translations
-for its own standard messages. Aether-specific translations will need
-project catalogues when additional languages are introduced.
+* ``en-gb`` — English (UK), the default;
+* ``uk`` — Українська;
+* ``pl`` — Polski.
+
+``LANGUAGES`` and ``LOCALE_PATHS`` are configured in ``config/settings.py``.
+``LocaleMiddleware`` runs after ``SessionMiddleware`` and before
+``CommonMiddleware``. Users choose a language through the CSRF-protected
+``POST /i18n/setlang/`` form in the shared header. Django stores the choice
+in its language cookie. The choice is browser-specific, not a database-backed
+user preference. A localised request does not sign a user out.
+
+Existing account and token URLs are deliberately **not** prefixed with a
+language. There is no ``i18n_patterns`` wrapper around ``accounts.urls``.
+
+**Language selection does not mean full translation yet.** Aether's own
+interface messages are already marked for translation but the Ukrainian and
+Polish project catalogues are not included in this infrastructure step.
+Django may display its own framework messages in those languages. Complete
+project catalogues, email language persistence and translations are separate
+steps that must be implemented and tested before claiming a fully translated
+interface.
 
 Python strings
 --------------
@@ -32,7 +44,8 @@ messages, HTTP response bodies, and email subjects::
    from django.utils.translation import gettext as _
 
 The login/logout messages, Axes HTTP 429 response, and registration
-rate-limit responses are translated at response creation time. Django's
+rate-limit responses use the active request language at response creation
+time once their translations are available. Django's
 ``AuthenticationForm`` and password validators retain their native lazy
 translation behaviour.
 
@@ -53,8 +66,10 @@ identifiers, and user-supplied content are not translated.
 templates use
 ``{% get_current_language as CURRENT_LANGUAGE %}`` to populate the HTML
 ``lang`` attribute. This keeps document metadata aligned with the active
-translation context. Email bodies and subjects use Django's active language
-at the time of sending; they are not yet based on recipient preferences.
+translation context. Email bodies and subjects currently use the worker's
+active language, not a persisted recipient preference. Do not claim
+translated worker emails
+until the outbox language policy and translation catalogues are implemented.
 
 The existing field component renders labels and validation messages supplied
 by Django forms. Do not hard-code replacements for the standard validation
@@ -75,34 +90,33 @@ email check and transactional uniqueness-race handler reuse the lazy
 Test error codes and field placement rather than hard-coded English wording.
 The staged registration result and password-reset pages mark their titles,
 queue-status guidance and links with ``{% trans %}``. Profile feedback for
-queued, already queued,
-cooldown and verified states uses ``gettext`` in the request view. The current
-English-only interface is unchanged; future Aether translation catalogues
-must include project-defined validation and queue feedback messages.
+queued, already queued, cooldown and verified states uses ``gettext`` in the
+request view. Complete Ukrainian and Polish catalogues must include these
+project-defined validation and feedback messages.
 
-Adding languages later
-----------------------
+Building project translation catalogues
+---------------------------------------
 
-When the application supports more than one language, separately design:
+The project ``locale/`` directory is now configured. For the next step,
+extract the Aether messages to editable catalogues from the project root::
 
-* the supported-language list and language-selection behaviour;
-* a persisted user preference or other language selection policy;
-* the interaction of ``LocaleMiddleware`` with authentication and the
-  standard Django Admin;
-* locale catalogues for Aether's own messages, and their compilation.
-
-First create a project ``locale/`` directory and configure
-``LOCALE_PATHS = [BASE_DIR / "locale"]`` in ``config/settings.py``.
-Then, from the project root, use Django's extraction tools::
-
-   uv run python manage.py makemessages -l pl
    uv run python manage.py makemessages -l uk
+   uv run python manage.py makemessages -l pl
+
+Review and translate each ``msgstr`` in the resulting ``django.po`` files,
+including plural forms. Translation files are human-reviewed project
+artifacts, not machine-generated truth. Compile them with::
+
    uv run python manage.py compilemessages
 
-These commands require GNU gettext utilities (``xgettext``, ``msgfmt``).
-They are **not** required for the present English-only interface. A
-translation catalogue and actual translated content should be reviewed before
-a language is made available to users.
+Extraction and compilation require GNU gettext utilities (including
+``xgettext`` and ``msgfmt``). Source ``.po`` files should be committed;
+compiled ``.mo`` files are ignored by the existing ``.gitignore``.
+
+In the following step, account for asynchronous verification and password
+reset emails by recording a language preference alongside queued work.
+That change must be designed against the current workers and any required
+migration must be generated through Django.
 
 Verification
 ------------
@@ -112,6 +126,9 @@ markers for forms/models and runtime translation of user-visible HTTP and
 feedback messages. ``tests/test_template_translations.py`` checks the active
 HTML language and translation markers in shared interface templates.
 
-Language override tests use ``translation.override(...)`` to exercise the
-mechanism without enabling language switching or requiring a complete
-application translation catalogue.
+HTTP language tests use request headers and Django's language cookie.
+Direct ``translation.override(...)`` remains useful for rendering email
+templates outside middleware. ``tests/test_language_switch.py`` covers
+cookie persistence, CSRF, allowed hosts, account routes and authenticated
+sessions; ``tests/test_settings_i18n.py`` covers settings and middleware
+ordering.

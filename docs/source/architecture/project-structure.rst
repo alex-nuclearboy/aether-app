@@ -140,6 +140,8 @@ The repository currently has the following top-level structure:
    │   ├── models.py
    │   ├── urls.py
    │   └── views.py
+   ├── locale/
+   │   └── .gitkeep
    ├── docs/
    │   ├── source/
    │   │   ├── architecture/
@@ -193,6 +195,7 @@ The repository currently has the following top-level structure:
    │   ├── test_database.py
    │   ├── test_django_entrypoints.py
    │   ├── test_frontend.py
+   │   ├── test_language_switch.py
    │   ├── test_logging.py
    │   ├── test_messages.py
    │   ├── test_password_reset_logging.py
@@ -200,6 +203,7 @@ The repository currently has the following top-level structure:
    │   ├── test_request_id.py
    │   ├── settings_helpers.py
    │   ├── test_settings.py
+   │   ├── test_settings_i18n.py
    │   ├── test_settings_database.py
    │   ├── test_settings_email.py
    │   ├── test_settings_registration.py
@@ -745,9 +749,11 @@ a specific application domain.
 The current implementation exposes a public home page at ``/``. The page
 displays the full Aether logo within the shared application layout.
 
-A fixed header links the compact Aether brand to the home page and
-offers ``Sign in`` and ``Sign up`` links to anonymous users. Authenticated
-users see ``My profile`` and the POST-only ``Sign out`` control instead.
+The header links the compact Aether brand to the home page and offers
+``Sign in`` and ``Sign up`` to anonymous users. Authenticated users see
+``My profile`` and the POST-only ``Sign out`` control. The language selector
+is available in either state; the header is fixed on desktop and sticky on
+mobile.
 A sidebar and additional navigation menus are not implemented.
 
 ``core/apps.py``
@@ -873,7 +879,7 @@ forms.
 ``static/css/components/header.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines the fixed header layout and site branding, using responsive tokens.
+Defines the header branding, language selector and mobile wrapping layout.
 
 ``static/css/pages/home.css``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

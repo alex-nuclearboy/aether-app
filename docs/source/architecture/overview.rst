@@ -69,11 +69,12 @@ The implemented foundation consists of:
   PostgreSQL-backed request cooldown, and a public POST-only confirmation;
 * a ``core`` Django application providing a public home page with the
   full Aether logo;
-* a shared base template with a fixed header, clickable brand link,
-  anonymous ``Sign in``/``Sign up`` actions and authenticated profile/sign-out controls;
-* translation-ready Python feedback and template labels, with active-language
-  HTML metadata; the application still uses one configured language without
-  a language switch or project translation catalogues;
+* a shared base template with a fixed desktop header (sticky on mobile),
+  a clickable brand link, anonymous ``Sign in``/``Sign up`` actions and
+  authenticated profile/sign-out controls;
+* translation-ready Python feedback and template labels, active-language
+  HTML metadata and a CSRF-protected three-language selector; reviewed
+  project translation catalogues are planned separately;
 * shared Django form-field markup, reusable button and input styling,
   centralised light-only design tokens, and mobile-first responsive gutters;
 * page-specific CSS, brand images, favicons, and Google Fonts typography;

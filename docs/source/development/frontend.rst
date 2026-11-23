@@ -174,9 +174,20 @@ than added to the current read-only profile.
 Internationalisation
 --------------------
 
+The shared header includes a CSRF-protected ``POST /i18n/setlang/`` form
+for English (UK), Ukrainian and Polish. Django stores the selected language
+in a browser cookie; switching languages preserves the existing account
+session. The responsive header permits the language form to wrap below the
+account navigation at narrow widths or high browser zoom.
+
+This stage adds the selector and localisation plumbing only. Aether-defined
+Polish and Ukrainian translations and language-aware background emails are
+not yet provided.
+
+
 User-visible page titles, navigation, buttons, notifications, and ARIA labels
 are marked with Django template ``{% trans %}``. The shared base template
 and verification email HTML set their ``lang`` attribute from the active
 Django translation language. See :doc:`internationalisation` for Python
-message conventions, standard Django validation messages, and the limits
-of the current single-language configuration.
+message conventions, standard Django validation messages, and the current
+limits of project-specific translations.

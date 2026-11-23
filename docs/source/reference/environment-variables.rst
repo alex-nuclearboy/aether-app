@@ -185,7 +185,8 @@ Locale
 ------
 
 ``DJANGO_LANGUAGE_CODE``
-   Django language code. Defaults to ``en-gb``.
+   Default Django language code (``en-gb``). The header offers
+   ``en-gb``, ``uk``, and ``pl`` via a language cookie.
 
 ``DJANGO_TIME_ZONE``
    Django time zone. Defaults to ``UTC``.

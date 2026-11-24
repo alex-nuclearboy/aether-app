@@ -18,7 +18,7 @@ def test_language_switch_sets_cookie_and_html_language(client, language):
     )
 
     assert response.status_code == 302
-    assert response["Location"] == home
+    assert response["Location"] == f"http://testserver{home}"
     assert response.cookies[settings.LANGUAGE_COOKIE_NAME].value == language
     page = client.get(home)
     assert f'<html lang="{language}">'.encode() in page.content
@@ -56,7 +56,7 @@ def test_switch_does_not_redirect_to_another_host(client):
     )
 
     assert response.status_code == 302
-    assert response["Location"] == reverse("home")
+    assert response["Location"] == f"http://testserver{reverse('home')}"
 
 
 def test_unsupported_cookie_language_falls_back(client):

@@ -36,7 +36,7 @@
         {% get_current_language as CURRENT_LANGUAGE %}
         {% get_available_languages as AVAILABLE_LANGUAGES %}
         <label class="site-language-form__label" for="site-language">
-            {% trans "Language" %}
+            {% trans "Language (changes immediately)" %}
         </label>
         <select
             class="site-language-form__select"
@@ -49,8 +49,10 @@
             </option>
             {% endfor %}
         </select>
-        <button class="button button--quiet site-language-form__submit" type="submit">
-            {% trans "Apply" %}
-        </button>
+        <noscript>
+            <button class="button button--quiet site-language-form__submit" type="submit">
+                {% trans "Apply" %}
+            </button>
+        </noscript>
     </form>
 </header>

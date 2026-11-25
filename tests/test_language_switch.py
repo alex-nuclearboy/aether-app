@@ -1,8 +1,11 @@
 """Exercise real HTTP language selection and its security boundaries."""
 
+from pathlib import Path
+
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles import finders
 from django.test import Client
 from django.urls import reverse
 
@@ -118,3 +121,21 @@ def test_language_selection_uses_native_labels(client):
 
     for label in ("English (UK)", "Українська", "Polski"):
         assert label in html
+
+
+def test_language_picker_auto_submits_without_visible_apply_button(client):
+    """Use a change event to submit while retaining a no-JS fallback."""
+    html = client.get(reverse("home")).content.decode()
+
+    assert 'js/language-switch.js' in html
+    assert 'defer></script>' in html
+    assert 'Language (changes immediately)' in html
+    assert '<noscript>' in html
+    assert '</noscript>' in html
+    assert 'onchange=' not in html
+
+    asset = finders.find('js/language-switch.js')
+    assert asset is not None
+    script = Path(asset).read_text(encoding='utf-8')
+    assert 'addEventListener("change"' in script
+    assert 'requestSubmit()' in script

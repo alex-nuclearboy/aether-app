@@ -43,8 +43,8 @@ not validate complete email syntax: ``save()``, ``objects.create()``, and
 ``QuerySet.update()`` do not automatically run model field validation.
 
 Model field labels, project-defined validation messages, and the additional
-Django Admin fieldset label use Django's translation mechanisms to support
-future interface localisation.
+Django Admin fieldset label use Django's translation mechanisms; extracted
+project messages are translated through the Ukrainian and Polish catalogues.
 
 These checks validate address format and presence, **not ownership**. Email
 ownership is confirmed separately using a verification link and a

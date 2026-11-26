@@ -184,9 +184,10 @@ switching languages preserves the existing account session and returns to
 the current page. The responsive header permits the language form to wrap
 below the account navigation at narrow widths or high browser zoom.
 
-This stage adds the selector and localisation plumbing only. Aether-defined
-Polish and Ukrainian translations and language-aware background emails are
-not yet provided.
+The Ukrainian and Polish project catalogues provide translations for
+currently extracted Aether messages. Text not marked for translation may
+still appear in English. Background email workers do not yet preserve the
+language chosen in the originating request.
 
 
 User-visible page titles, navigation, buttons, notifications, and ARIA labels

@@ -23,13 +23,17 @@ A localised request does not sign a user out.
 Existing account and token URLs are deliberately **not** prefixed with a
 language. There is no ``i18n_patterns`` wrapper around ``accounts.urls``.
 
-**Language selection does not mean full translation yet.** Aether's own
-interface messages are already marked for translation but the Ukrainian and
-Polish project catalogues are not included in this infrastructure step.
-Django may display its own framework messages in those languages. Complete
-project catalogues, email language persistence and translations are separate
-steps that must be implemented and tested before claiming a fully translated
-interface.
+The project maintains one shared gettext catalogue per translated language:
+``locale/uk/LC_MESSAGES/django.po`` and
+``locale/pl/LC_MESSAGES/django.po``. Both have matching compiled ``django.mo``
+files. English (UK) is the source language and does not require an additional
+project catalogue. Identical ``msgid`` values are translated once for all
+modules, unless a distinct gettext context is used. Django's built-in
+translations remain available for framework validation messages.
+
+These catalogues cover messages currently extracted from marked source strings;
+this does not establish that every user-facing English literal has been marked
+or that all translations have completed linguistic review.
 
 Python strings
 --------------
@@ -48,7 +52,7 @@ messages, HTTP response bodies, and email subjects::
 
 The login/logout messages, Axes HTTP 429 response, and registration
 rate-limit responses use the active request language at response creation
-time once their translations are available. Django's
+time through the compiled project catalogues. Django's
 ``AuthenticationForm`` and password validators retain their native lazy
 translation behaviour.
 
@@ -69,10 +73,11 @@ identifiers, and user-supplied content are not translated.
 templates use
 ``{% get_current_language as CURRENT_LANGUAGE %}`` to populate the HTML
 ``lang`` attribute. This keeps document metadata aligned with the active
-translation context. Email bodies and subjects currently use the worker's
-active language, not a persisted recipient preference. Do not claim
-translated worker emails
-until the outbox language policy and translation catalogues are implemented.
+translation context. Email subjects and bodies can be translated when rendered with an active
+translation context. Background workers currently use their own active
+language, not a language saved when the recipient requested the email.
+Do not claim per-recipient email localisation until the queue language policy
+and worker language activation are implemented and tested.
 
 The existing field component renders labels and validation messages supplied
 by Django forms. Do not hard-code replacements for the standard validation
@@ -94,27 +99,51 @@ Test error codes and field placement rather than hard-coded English wording.
 The staged registration result and password-reset pages mark their titles,
 queue-status guidance and links with ``{% trans %}``. Profile feedback for
 queued, already queued, cooldown and verified states uses ``gettext`` in the
-request view. Complete Ukrainian and Polish catalogues must include these
-project-defined validation and feedback messages.
+request view. The shared project catalogues include the currently marked
+validation and feedback messages; newly introduced strings must also be
+extracted, translated and tested.
 
-Building project translation catalogues
----------------------------------------
+Maintaining the project translation catalogues
+-----------------------------------------------
 
-The project ``locale/`` directory is now configured. For the next step,
-extract the Aether messages to editable catalogues from the project root::
+The ``django.po`` files are editable translation sources; their ``django.mo``
+counterparts are generated binaries used at runtime. Do not create separate
+catalogues for ``accounts`` and ``core``: both applications use the shared
+project ``LOCALE_PATHS``. Do not install Babel or a Django translation plugin.
 
-   uv run python manage.py makemessages -l uk
-   uv run python manage.py makemessages -l pl
+On Windows, GNU gettext is an **external development tool**, not a Python
+project dependency. Install it in Windows and ensure ``xgettext``,
+``msgmerge``, ``msguniq`` and ``msgfmt`` are on ``PATH``. The standard Django
+workflow is run from the repository root (``E:\Projects\aether-app`` on
+the current Windows development machine)::
 
-Review and translate each ``msgstr`` in the resulting ``django.po`` files,
-including plural forms. Translation files are human-reviewed project
-artifacts, not machine-generated truth. Compile them with::
+   uv run python manage.py makemessages -l uk -l pl --ignore=".venv/*" --ignore="docs/_build/*"
 
-   uv run python manage.py compilemessages
+``makemessages`` extracts strings marked by gettext or the Django template
+translation tags, updates the shared ``django.po`` files and preserves
+matching translations where possible. It does **not** translate strings.
+Review new and obsolete entries, ``fuzzy`` flags, plural forms, placeholders
+and ``msgstr`` fields. Maintain accurate catalogue headers, including
+``Language``, without changing ``msgid`` values independently of source code.
 
-Extraction and compilation require GNU gettext utilities (including
-``xgettext`` and ``msgfmt``). Source ``.po`` files should be committed;
-compiled ``.mo`` files are ignored by the existing ``.gitignore``.
+After reviewing and translating both files, compile the catalogues::
+
+   uv run python manage.py compilemessages -l uk -l pl
+
+Then run the Django checks and automated tests::
+
+   uv run python manage.py check
+   uv run pytest
+
+Restart the development server and check pages in all three languages.
+Commit the edited ``.po`` files and regenerated ``.mo`` files together.
+If Git ignores an untracked ``.mo`` file, add it explicitly with
+``git add -f locale/uk/LC_MESSAGES/django.mo locale/pl/LC_MESSAGES/django.mo``;
+already tracked compiled files can be updated normally.
+
+Only marked messages are extracted. A separate review must identify any
+unmarked user-facing strings; the asynchronous verification and password
+reset workers also need explicit language persistence and tests.
 
 In the following step, account for asynchronous verification and password
 reset emails by recording a language preference alongside queued work.
@@ -130,8 +159,10 @@ feedback messages. ``tests/test_template_translations.py`` checks the active
 HTML language and translation markers in shared interface templates.
 
 HTTP language tests use request headers and Django's language cookie.
-Direct ``translation.override(...)`` remains useful for rendering email
-templates outside middleware. ``tests/test_language_switch.py`` covers
-cookie persistence, CSRF, allowed hosts, account routes and authenticated
-sessions; ``tests/test_settings_i18n.py`` covers settings and middleware
-ordering.
+Direct ``translation.override(...)`` is useful for testing email rendering
+outside middleware, but does not prove language persistence in queued work.
+``tests/test_language_switch.py`` covers cookie persistence, CSRF, safe
+redirects, account routes and authenticated sessions;
+``tests/test_settings_i18n.py`` covers settings and middleware ordering.
+The tests above do not by themselves guarantee that every extracted source
+message has a non-empty, correct translation.

@@ -48,6 +48,8 @@ The current modules have separate responsibilities:
 ``test_template_translations.py``
    Checks HTML language attributes from HTTP request languages and active
    language rendering in email templates, plus translation markers.
+   Translation markers alone do not prove that a compiled catalogue contains
+   a translated entry for every user-facing string.
 
 ``test_language_switch.py``
    Exercises the standard POST language selector, cookie persistence,

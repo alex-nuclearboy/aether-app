@@ -72,9 +72,9 @@ The implemented foundation consists of:
 * a shared base template with a fixed desktop header (sticky on mobile),
   a clickable brand link, anonymous ``Sign in``/``Sign up`` actions and
   authenticated profile/sign-out controls;
-* translation-ready Python feedback and template labels, active-language
-  HTML metadata and a CSRF-protected three-language selector; reviewed
-  project translation catalogues are planned separately;
+* a CSRF-protected three-language selector, translated project messages
+  through shared Ukrainian and Polish gettext catalogues, and active-language
+  HTML metadata; queued emails still lack a persisted language choice;
 * shared Django form-field markup, reusable button and input styling,
   centralised light-only design tokens, and mobile-first responsive gutters;
 * page-specific CSS, brand images, favicons, and Google Fonts typography;

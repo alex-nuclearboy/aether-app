@@ -141,7 +141,15 @@ The repository currently has the following top-level structure:
    │   ├── urls.py
    │   └── views.py
    ├── locale/
-   │   └── .gitkeep
+   │   ├── .gitkeep
+   │   ├── uk/
+   │   │   └── LC_MESSAGES/
+   │   │       ├── django.po
+   │   │       └── django.mo
+   │   └── pl/
+   │       └── LC_MESSAGES/
+   │           ├── django.po
+   │           └── django.mo
    ├── docs/
    │   ├── source/
    │   │   ├── architecture/

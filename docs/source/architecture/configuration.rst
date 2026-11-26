@@ -154,9 +154,10 @@ while ``LANGUAGES`` explicitly enables ``en-gb``, ``uk`` and ``pl``. The
 standard Django language-selection view persists the choice in a cookie.
 ``USE_I18N`` remains enabled. The shared header provides language selection
 for the public and authenticated interfaces. Django Admin is not customised
-beyond Django's standard localisation. Application strings are marked for
-translation, but complete non-English Aether messages require reviewed
-project locale catalogues.
+beyond Django's standard localisation. Aether's Ukrainian and Polish
+translations are maintained in the shared project ``locale/`` directory as
+editable ``django.po`` and compiled ``django.mo`` files. The worker outboxes
+do not yet persist a recipient's selected language.
 
 See :doc:`../development/internationalisation` for coding conventions.
 

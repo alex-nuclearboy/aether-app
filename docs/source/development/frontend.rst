@@ -175,10 +175,14 @@ Internationalisation
 --------------------
 
 The shared header includes a CSRF-protected ``POST /i18n/setlang/`` form
-for English (UK), Ukrainian and Polish. Django stores the selected language
-in a browser cookie; switching languages preserves the existing account
-session. The responsive header permits the language form to wrap below the
-account navigation at narrow widths or high browser zoom.
+for English (UK), Ukrainian and Polish. Changing the selected option
+immediately submits the form using ``static/js/language-switch.js``; no
+separate confirmation button is shown when JavaScript is enabled. A
+``<noscript>`` fallback provides an ``Apply`` button when JavaScript is
+unavailable. Django stores the selected language in a browser cookie;
+switching languages preserves the existing account session and returns to
+the current page. The responsive header permits the language form to wrap
+below the account navigation at narrow widths or high browser zoom.
 
 This stage adds the selector and localisation plumbing only. Aether-defined
 Polish and Ukrainian translations and language-aware background emails are

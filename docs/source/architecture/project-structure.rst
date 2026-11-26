@@ -179,9 +179,11 @@ The repository currently has the following top-level structure:
    │   │   ├── base.css
    │   │   └── layout.css
    │   ├── favicons/
-   │   └── images/
-   │       ├── aether_logo.png
-   │       └── aether_logo_full.png
+   │   ├── images/
+   │   │   ├── aether_logo.png
+   │   │   └── aether_logo_full.png
+   │   └── js/
+   │       └── language-switch.js
    ├── templates/
    │   ├── components/
    │   │   ├── form_field.html
@@ -908,6 +910,12 @@ Defines the read-only account profile layout and verification status styling.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Defines the confirmation form and token-free result page layouts.
+
+``static/js/language-switch.js``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Submits the header language-selection form when its selected value changes.
+The form retains Django's CSRF protection and a no-JavaScript fallback.
 
 For the component and viewport rules, see :doc:`../development/frontend`.
 

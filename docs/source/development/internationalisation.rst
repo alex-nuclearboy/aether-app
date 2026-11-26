@@ -12,10 +12,13 @@ Aether supports three selectable request languages:
 
 ``LANGUAGES`` and ``LOCALE_PATHS`` are configured in ``config/settings.py``.
 ``LocaleMiddleware`` runs after ``SessionMiddleware`` and before
-``CommonMiddleware``. Users choose a language through the CSRF-protected
-``POST /i18n/setlang/`` form in the shared header. Django stores the choice
-in its language cookie. The choice is browser-specific, not a database-backed
-user preference. A localised request does not sign a user out.
+``CommonMiddleware``. The shared header uses Django's CSRF-protected
+``POST /i18n/setlang/`` view. Selecting a language automatically submits the
+form through ``static/js/language-switch.js``, without an additional button
+when JavaScript is enabled. A ``<noscript>`` ``Apply`` button provides a
+non-JavaScript fallback. Django stores the choice in its language cookie.
+The choice is browser-specific, not a database-backed user preference.
+A localised request does not sign a user out.
 
 Existing account and token URLs are deliberately **not** prefixed with a
 language. There is no ``i18n_patterns`` wrapper around ``accounts.urls``.

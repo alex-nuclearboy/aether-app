@@ -52,6 +52,8 @@ The current modules have separate responsibilities:
 ``test_language_switch.py``
    Exercises the standard POST language selector, cookie persistence,
    CSRF protection, safe redirects, and authenticated-session retention.
+   Also checks the automatic-submission script, the absence of inline
+   ``onchange`` handlers, and the ``<noscript>`` confirmation fallback.
 
 ``test_settings_i18n.py``
    Checks supported language choices, locale paths, middleware order, and

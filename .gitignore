@@ -167,6 +167,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Local editor settings (Cursor / VS Code)
+/.vscode/
+
 # Spyder project settings
 .spyderproject
 .spyproject

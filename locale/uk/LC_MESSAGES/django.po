@@ -1,0 +1,601 @@
+# Ukrainian translations for Aether.
+# Copyright (C) 2026 Aether contributors
+# This file is distributed under the same licence as the Aether project (AGPL-3.0-only).
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Aether 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-26 18:36+0100\n"
+"PO-Revision-Date: 2026-11-26 18:51+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != "
+"11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % "
+"100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || "
+"(n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+
+#: .\accounts\admin.py:16
+msgid "Personal info"
+msgstr "Особиста інформація"
+
+#: .\accounts\emails.py:47
+#: .\accounts\templates\accounts\email\password_reset.html:3
+#: .\accounts\templates\accounts\email\password_reset.html:5
+#: .\accounts\templates\accounts\email\password_reset.txt:1
+msgid "Reset your Aether password"
+msgstr "Скинути пароль Aether"
+
+#: .\accounts\emails.py:68
+#: .\accounts\templates\accounts\email\verification.html:3
+#: .\accounts\templates\accounts\email\verification.html:5
+#: .\accounts\templates\accounts\email\verification.txt:1
+msgid "Verify your Aether email address"
+msgstr "Підтвердьте адресу електронної пошти в Aether"
+
+#: .\accounts\forms.py:17 .\accounts\forms.py:20
+msgid "Please enter a valid username or email and password."
+msgstr "Уведіть правильне ім’я користувача або адресу електронної пошти та пароль."
+
+#: .\accounts\forms.py:27
+msgid "Username or email"
+msgstr "Ім’я користувача або адреса електронної пошти"
+
+#: .\accounts\forms.py:64 .\accounts\forms.py:71
+#: .\accounts\templates\accounts\profile.html:21
+msgid "Email address"
+msgstr "Адреса електронної пошти"
+
+#: .\accounts\forms.py:79 .\accounts\templates\accounts\profile.html:17
+msgid "Username"
+msgstr "Ім’я користувача"
+
+#: .\accounts\forms.py:83
+msgid "Password"
+msgstr "Пароль"
+
+#: .\accounts\forms.py:86
+#: .\accounts\templates\accounts\registration_correct_email.html:27
+msgid "Correct email address"
+msgstr "Виправити адресу електронної пошти"
+
+#: .\accounts\lockout_responses.py:33
+msgid "Too many failed login attempts. Please try again later."
+msgstr "Забагато невдалих спроб входу. Спробуйте пізніше."
+
+#: .\accounts\managers.py:15 .\accounts\models.py:88
+msgid "An email address is required."
+msgstr "Необхідно вказати адресу електронної пошти."
+
+#: .\accounts\models.py:19
+msgid "username"
+msgstr "ім’я користувача"
+
+#: .\accounts\models.py:23
+msgid ""
+"Required. 3–32 characters. ASCII letters, digits, periods, underscores, and "
+"hyphens only. Must start and end with a letter or digit."
+msgstr ""
+"Обов’язкове поле. Від 3 до 32 символів. Дозволено лише латинські "
+"літери ASCII, цифри, крапки, символи підкреслення та дефіси. Ім’я "
+"користувача має починатися й закінчуватися літерою або цифрою."
+
+#: .\accounts\models.py:29 .\accounts\models.py:95
+msgid "A user with that username already exists."
+msgstr "Користувач із таким іменем уже існує."
+
+#: .\accounts\models.py:34
+msgid "email address"
+msgstr "адреса електронної пошти"
+
+#: .\accounts\models.py:37 .\accounts\models.py:102
+msgid "A user with that email address already exists."
+msgstr "Користувач із такою адресою електронної пошти вже існує."
+
+#: .\accounts\models.py:42
+msgid "verified email"
+msgstr "підтверджена адреса електронної пошти"
+
+#: .\accounts\models.py:49
+msgid "email verification required for sign-in"
+msgstr "підтвердження адреси електронної пошти, необхідне для входу"
+
+#: .\accounts\models.py:55
+msgid "email verification last requested at"
+msgstr "час останнього запиту на підтвердження адреси електронної пошти"
+
+#: .\accounts\models.py:71
+msgid "user"
+msgstr "користувач"
+
+#: .\accounts\models.py:72
+msgid "users"
+msgstr "користувачі"
+
+#: .\accounts\models.py:80
+msgid "Enter a valid username."
+msgstr "Уведіть правильне ім’я користувача."
+
+#: .\accounts\models.py:114 .\accounts\models.py:195
+msgid "pending"
+msgstr "очікує"
+
+#: .\accounts\models.py:115 .\accounts\models.py:196
+msgid "processing"
+msgstr "обробляється"
+
+#: .\accounts\models.py:116 .\accounts\models.py:197
+msgid "sent"
+msgstr "надіслано"
+
+#: .\accounts\models.py:117 .\accounts\models.py:198
+msgid "cancelled"
+msgstr "скасовано"
+
+#: .\accounts\models.py:118 .\accounts\models.py:199
+msgid "failed"
+msgstr "помилка"
+
+#: .\accounts\models.py:125 .\accounts\models.py:208
+msgid "recipient email at request time"
+msgstr "адреса електронної пошти одержувача на момент запиту"
+
+#: .\accounts\models.py:128
+msgid "account state signature"
+msgstr "підпис стану облікового запису"
+
+#: .\accounts\models.py:131 .\accounts\models.py:212
+msgid "delivery status"
+msgstr "стан доставлення"
+
+#: .\accounts\models.py:135 .\accounts\models.py:219
+msgid "delivery attempts"
+msgstr "кількість спроб доставлення"
+
+#: .\accounts\models.py:138 .\accounts\models.py:224
+msgid "next delivery attempt"
+msgstr "час наступної спроби доставлення"
+
+#: .\accounts\models.py:142 .\accounts\models.py:229
+msgid "worker lease expiry"
+msgstr "час завершення резервування завдання обробником"
+
+#: .\accounts\models.py:145 .\accounts\models.py:235
+msgid "created at"
+msgstr "створено"
+
+#: .\accounts\models.py:148 .\accounts\models.py:240
+msgid "sent at"
+msgstr "надіслано о"
+
+#: .\accounts\models.py:151 .\accounts\models.py:246
+msgid "last delivery error category"
+msgstr "категорія останньої помилки доставлення"
+
+#: .\accounts\models.py:156
+msgid "password reset email delivery"
+msgstr "доставлення листа для скидання пароля"
+
+#: .\accounts\models.py:157
+msgid "password reset email deliveries"
+msgstr "доставлення листів для скидання пароля"
+
+#: .\accounts\models.py:185
+msgid "public request counter"
+msgstr "лічильник публічних запитів"
+
+#: .\accounts\models.py:186
+msgid "public request counters"
+msgstr "лічильники публічних запитів"
+
+#: .\accounts\models.py:254
+msgid "verification email delivery"
+msgstr "доставлення листа з підтвердженням адреси електронної пошти"
+
+#: .\accounts\models.py:255
+msgid "verification email deliveries"
+msgstr "доставлення листів із підтвердженням адреси електронної пошти"
+
+#: .\accounts\templates\accounts\email\password_reset.html:6
+#: .\accounts\templates\accounts\email\password_reset.txt:3
+msgid "To reset your password, open this link:"
+msgstr "Щоб скинути пароль, відкрийте це посилання:"
+
+#: .\accounts\templates\accounts\email\password_reset.html:7
+#: .\accounts\templates\accounts\password_reset_request.html:4
+msgid "Reset password"
+msgstr "Скинути пароль"
+
+#: .\accounts\templates\accounts\email\password_reset.html:8
+#: .\accounts\templates\accounts\email\password_reset.txt:6
+msgid "If you did not request a password reset, you can ignore this message."
+msgstr "Якщо ви не запитували скидання пароля, можете проігнорувати цей лист."
+
+#: .\accounts\templates\accounts\email\verification.html:6
+#: .\accounts\templates\accounts\email\verification.txt:3
+msgid "To confirm your email address, open this link:"
+msgstr "Щоб підтвердити адресу електронної пошти, відкрийте це посилання:"
+
+#: .\accounts\templates\accounts\email\verification.html:7
+#: .\accounts\templates\accounts\email_verification_confirm.html:4
+#: .\accounts\templates\accounts\email_verification_confirm.html:12
+#: .\accounts\templates\accounts\email_verification_confirm.html:18
+msgid "Confirm email"
+msgstr "Підтвердити адресу електронної пошти"
+
+#: .\accounts\templates\accounts\email\verification.html:8
+#: .\accounts\templates\accounts\email\verification.txt:6
+msgid "If you did not request this message, you can ignore it."
+msgstr "Якщо ви не запитували цей лист, можете його проігнорувати."
+
+#: .\accounts\templates\accounts\email_verification_confirm.html:14
+msgid "Confirm that you want to verify this email address."
+msgstr "Підтвердьте, що ця адреса електронної пошти належить вам."
+
+#: .\accounts\templates\accounts\email_verification_confirm.html:22
+#: .\accounts\views.py:456
+msgid "This verification link is invalid or has expired."
+msgstr ""
+"Це посилання для підтвердження адреси електронної пошти недійсне або "
+"його термін дії минув."
+
+#: .\accounts\templates\accounts\email_verification_result.html:4
+#: .\accounts\templates\accounts\email_verification_result.html:12
+#: .\accounts\templates\accounts\profile.html:26
+msgid "Email verification"
+msgstr "Підтвердження адреси електронної пошти"
+
+#: .\accounts\templates\accounts\email_verification_result.html:13
+msgid "You can return to the application."
+msgstr "Можете повернутися до застосунку."
+
+#: .\accounts\templates\accounts\email_verification_result.html:15
+#: .\accounts\templates\accounts\password_change.html:32
+#: .\accounts\templates\accounts\profile.html:4
+#: .\accounts\templates\accounts\profile.html:12
+#: .\templates\includes\header.html:17
+msgid "My profile"
+msgstr "Мій профіль"
+
+#: .\accounts\templates\accounts\email_verification_result.html:17
+#: .\accounts\templates\accounts\login.html:4
+#: .\accounts\templates\accounts\login.html:49
+#: .\accounts\templates\accounts\password_reset_complete.html:11
+#: .\accounts\templates\accounts\password_reset_request.html:22
+#: .\accounts\templates\accounts\register.html:63
+#: .\accounts\templates\accounts\registration_check_email.html:32
+#: .\accounts\templates\accounts\registration_correct_email_done.html:20
+#: .\accounts\templates\accounts\registration_resend_done.html:20
+#: .\accounts\templates\accounts\registration_resend_email.html:35
+#: .\templates\includes\header.html:27
+msgid "Sign in"
+msgstr "Увійти"
+
+#: .\accounts\templates\accounts\login.html:12
+#: .\accounts\templates\accounts\register.html:13
+msgid "Aether home"
+msgstr "Головна сторінка Aether"
+
+#: .\accounts\templates\accounts\login.html:21
+msgid "Sign in to Aether"
+msgstr "Увійти до Aether"
+
+#: .\accounts\templates\accounts\login.html:55
+msgid "Don't have an account?"
+msgstr "Ще не маєте облікового запису?"
+
+#: .\accounts\templates\accounts\login.html:56
+#: .\accounts\templates\accounts\register.html:4
+msgid "Create an account"
+msgstr "Створити обліковий запис"
+
+#: .\accounts\templates\accounts\login.html:60
+msgid "Forgot your password?"
+msgstr "Забули пароль?"
+
+#: .\accounts\templates\accounts\login.html:64
+msgid "Email not verified?"
+msgstr "Адресу електронної пошти не підтверджено?"
+
+#: .\accounts\templates\accounts\login.html:66
+#: .\accounts\templates\accounts\registration_correct_email.html:33
+#: .\accounts\templates\accounts\registration_resend_email.html:13
+msgid "Request another verification link"
+msgstr "Запросити ще одне посилання для підтвердження"
+
+#: .\accounts\templates\accounts\login.html:70
+msgid "Wrong email on your unverified account?"
+msgstr ""
+"У непідтвердженому обліковому записі вказано неправильну адресу "
+"електронної пошти?"
+
+#: .\accounts\templates\accounts\login.html:72
+#: .\accounts\templates\accounts\registration_correct_email.html:4
+msgid "Correct registration email"
+msgstr "Виправити адресу електронної пошти, указану під час реєстрації"
+
+#: .\accounts\templates\accounts\password_change.html:4
+#: .\accounts\templates\accounts\password_change.html:12
+#: .\accounts\templates\accounts\password_change.html:27
+#: .\accounts\templates\accounts\profile.html:47
+msgid "Change password"
+msgstr "Змінити пароль"
+
+#: .\accounts\templates\accounts\password_reset_complete.html:3
+#: .\accounts\templates\accounts\password_reset_complete.html:9
+msgid "Password updated"
+msgstr "Пароль оновлено"
+
+#: .\accounts\templates\accounts\password_reset_complete.html:10
+msgid "Your password has been updated. You can now sign in."
+msgstr "Ваш пароль оновлено. Тепер можете увійти."
+
+#: .\accounts\templates\accounts\password_reset_confirm.html:3
+#: .\accounts\templates\accounts\password_reset_confirm.html:9
+msgid "Set a new password"
+msgstr "Установити новий пароль"
+
+#: .\accounts\templates\accounts\password_reset_confirm.html:22
+msgid "Save new password"
+msgstr "Зберегти новий пароль"
+
+#: .\accounts\templates\accounts\password_reset_confirm.html:27
+msgid "This password reset link is invalid or has expired."
+msgstr "Це посилання для скидання пароля недійсне або його термін дії минув."
+
+#: .\accounts\templates\accounts\password_reset_confirm.html:28
+msgid "Request a new link"
+msgstr "Запросити нове посилання"
+
+#: .\accounts\templates\accounts\password_reset_done.html:3
+msgid "Reset link requested"
+msgstr "Запит на скидання пароля прийнято"
+
+#: .\accounts\templates\accounts\password_reset_done.html:9
+#: .\accounts\templates\accounts\registration_check_email.html:4
+#: .\accounts\templates\accounts\registration_check_email.html:13
+#: .\accounts\templates\accounts\registration_correct_email_done.html:4
+#: .\accounts\templates\accounts\registration_correct_email_done.html:13
+#: .\accounts\templates\accounts\registration_resend_done.html:4
+#: .\accounts\templates\accounts\registration_resend_done.html:13
+msgid "Check your email"
+msgstr "Перевірте електронну пошту"
+
+#: .\accounts\templates\accounts\password_reset_done.html:10
+msgid "If an eligible account exists, a password reset link will be sent."
+msgstr ""
+"Якщо існує обліковий запис, що відповідає умовам, буде надіслано "
+"посилання для скидання пароля."
+
+#: .\accounts\templates\accounts\password_reset_done.html:11
+msgid "Back to sign in"
+msgstr "Назад до входу"
+
+#: .\accounts\templates\accounts\password_reset_request.html:10
+msgid "Reset your password"
+msgstr "Скинути пароль"
+
+#: .\accounts\templates\accounts\password_reset_request.html:11
+msgid "Enter the email address linked to your account."
+msgstr "Уведіть адресу електронної пошти, пов’язану з вашим обліковим записом."
+
+#: .\accounts\templates\accounts\password_reset_request.html:18
+msgid "Request reset link"
+msgstr "Запросити посилання для скидання пароля"
+
+#: .\accounts\templates\accounts\profile.html:14
+msgid "Account information"
+msgstr "Інформація про обліковий запис"
+
+#: .\accounts\templates\accounts\profile.html:29
+msgid "Verified"
+msgstr "Підтверджено"
+
+#: .\accounts\templates\accounts\profile.html:33
+msgid "Not verified"
+msgstr "Не підтверджено"
+
+#: .\accounts\templates\accounts\profile.html:35
+msgid "Confirm your email address to verify that it belongs to you."
+msgstr ""
+"Підтвердьте свою адресу електронної пошти, щоб засвідчити, що вона "
+"належить вам."
+
+#: .\accounts\templates\accounts\profile.html:39
+msgid "Send verification email"
+msgstr "Надіслати лист для підтвердження адреси електронної пошти"
+
+#: .\accounts\templates\accounts\profile.html:45
+msgid "Security"
+msgstr "Безпека"
+
+#: .\accounts\templates\accounts\register.html:23
+msgid "Create your Aether account"
+msgstr "Створіть обліковий запис Aether"
+
+#: .\accounts\templates\accounts\register.html:26
+msgid "You must verify your email address before signing in."
+msgstr "Перед входом необхідно підтвердити адресу електронної пошти."
+
+#: .\accounts\templates\accounts\register.html:47
+#: .\accounts\templates\accounts\register.html:52
+msgid "Create account"
+msgstr "Створити обліковий запис"
+
+#: .\accounts\templates\accounts\register.html:55
+msgid "Registration is not available yet."
+msgstr "Реєстрація поки недоступна."
+
+#: .\accounts\templates\accounts\register.html:62
+msgid "Already have an account?"
+msgstr "Уже маєте обліковий запис?"
+
+#: .\accounts\templates\accounts\registration_check_email.html:17
+msgid ""
+"If you have just registered, your verification email has been queued. When "
+"it arrives, open the link to confirm your address before signing in."
+msgstr ""
+"Якщо ви щойно зареєструвалися, лист для підтвердження адреси "
+"електронної пошти додано до черги надсилання. Коли він надійде, "
+"відкрийте посилання, щоб підтвердити адресу перед входом."
+
+#: .\accounts\templates\accounts\registration_check_email.html:20
+msgid "No verification email?"
+msgstr "Не отримали листа для підтвердження адреси?"
+
+#: .\accounts\templates\accounts\registration_check_email.html:22
+msgid "Request another link"
+msgstr "Запросити ще одне посилання"
+
+#: .\accounts\templates\accounts\registration_check_email.html:26
+#: .\accounts\templates\accounts\registration_resend_email.html:31
+msgid "Entered the wrong email address?"
+msgstr "Указали неправильну адресу електронної пошти?"
+
+#: .\accounts\templates\accounts\registration_check_email.html:28
+msgid "Correct it before verification"
+msgstr "Виправити її перед підтвердженням"
+
+#: .\accounts\templates\accounts\registration_correct_email.html:13
+msgid "Correct your registration email"
+msgstr "Виправте адресу електронної пошти, указану під час реєстрації"
+
+#: .\accounts\templates\accounts\registration_correct_email.html:16
+msgid ""
+"If you entered the wrong email before verifying your account, enter your "
+"username, registration password and correct address."
+msgstr ""
+"Якщо ви вказали неправильну адресу електронної пошти до підтвердження "
+"облікового запису, уведіть ім’я користувача, пароль, який "
+"використовували під час реєстрації, та правильну адресу."
+
+#: .\accounts\templates\accounts\registration_correct_email_done.html:17
+msgid ""
+"If the account is eligible and the details are correct, a verification link "
+"has been queued for the new address."
+msgstr ""
+"Якщо обліковий запис відповідає умовам, а дані правильні, посилання "
+"для підтвердження адреси електронної пошти додано до черги надсилання "
+"на нову адресу."
+
+#: .\accounts\templates\accounts\registration_resend_done.html:17
+msgid ""
+"If an eligible unverified account uses that address, a verification email "
+"will be queued for delivery."
+msgstr ""
+"Якщо за цією адресою зареєстровано непідтверджений обліковий запис, "
+"що відповідає умовам, лист для підтвердження буде додано до черги "
+"надсилання."
+
+#: .\accounts\templates\accounts\registration_resend_email.html:4
+msgid "Request verification email"
+msgstr "Запросити лист для підтвердження адреси електронної пошти"
+
+#: .\accounts\templates\accounts\registration_resend_email.html:16
+msgid "Enter the email address used to register your account."
+msgstr "Уведіть адресу електронної пошти, використану під час реєстрації."
+
+#: .\accounts\templates\accounts\registration_resend_email.html:25
+msgid "Request verification link"
+msgstr "Запросити посилання для підтвердження адреси електронної пошти"
+
+#: .\accounts\validators.py:14
+msgid ""
+"Enter a username 3–32 characters long using only ASCII letters, digits, "
+"periods, underscores, and hyphens. The username must start and end with a "
+"letter or digit."
+msgstr ""
+"Уведіть ім’я користувача завдовжки від 3 до 32 символів, "
+"використовуючи лише латинські літери ASCII, цифри, крапки, символи "
+"підкреслення та дефіси. Ім’я користувача має починатися й "
+"закінчуватися літерою або цифрою."
+
+#: .\accounts\views.py:61
+msgid "You have signed in successfully."
+msgstr "Ви успішно увійшли."
+
+#: .\accounts\views.py:71
+msgid "You have signed out successfully."
+msgstr "Ви успішно вийшли."
+
+#: .\accounts\views.py:100
+msgid "Registration is temporarily unavailable."
+msgstr "Реєстрація тимчасово недоступна."
+
+#: .\accounts\views.py:110
+msgid "Too many registration attempts. Please try again later."
+msgstr "Забагато спроб реєстрації. Спробуйте пізніше."
+
+#: .\accounts\views.py:169
+msgid "Email recovery is temporarily unavailable."
+msgstr "Відновлення доступу за допомогою електронної пошти тимчасово недоступне."
+
+#: .\accounts\views.py:177 .\accounts\views.py:243 .\accounts\views.py:310
+msgid "Too many requests. Please try again later."
+msgstr "Забагато запитів. Спробуйте пізніше."
+
+#: .\accounts\views.py:235
+msgid "Email correction is temporarily unavailable."
+msgstr "Виправлення адреси електронної пошти тимчасово недоступне."
+
+#: .\accounts\views.py:302
+msgid "Password recovery is temporarily unavailable."
+msgstr "Відновлення пароля тимчасово недоступне."
+
+#: .\accounts\views.py:377
+msgid "Your password has been changed successfully."
+msgstr "Ваш пароль успішно змінено."
+
+#: .\accounts\views.py:397
+msgid "A verification email has been queued for delivery."
+msgstr "Лист для підтвердження адреси електронної пошти додано до черги надсилання."
+
+#: .\accounts\views.py:402
+msgid "A verification email is already queued for your address."
+msgstr ""
+"Лист для підтвердження адреси електронної пошти вже перебуває в черзі "
+"надсилання."
+
+#: .\accounts\views.py:407
+msgid "Please wait before requesting another email."
+msgstr "Зачекайте, перш ніж запитувати ще один лист."
+
+#: .\accounts\views.py:410
+msgid "Your email is already verified."
+msgstr "Вашу адресу електронної пошти вже підтверджено."
+
+#: .\accounts\views.py:452
+msgid "Your email has been verified."
+msgstr "Вашу адресу електронної пошти підтверджено."
+
+#: .\core\templates\core\home.html:4
+msgid "Home"
+msgstr "Головна"
+
+#: .\templates\components\messages.html:3
+msgid "Notifications"
+msgstr "Сповіщення"
+
+#: .\templates\includes\header.html:14
+msgid "Account"
+msgstr "Обліковий запис"
+
+#: .\templates\includes\header.html:22
+msgid "Sign out"
+msgstr "Вийти"
+
+#: .\templates\includes\header.html:30
+msgid "Sign up"
+msgstr "Зареєструватися"
+
+#: .\templates\includes\header.html:39
+msgid "Language (changes immediately)"
+msgstr "Мова (змінюється одразу)"
+
+#: .\templates\includes\header.html:54
+msgid "Apply"
+msgstr "Застосувати"

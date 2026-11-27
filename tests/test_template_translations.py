@@ -9,9 +9,16 @@ from django.urls import reverse
 from django.utils import translation
 
 
-@pytest.mark.parametrize("language", ["en-gb", "pl", "uk"])
-def test_document_language_tracks_request_language(client, language):
-    """LocaleMiddleware chooses the HTML language from request headers."""
+@pytest.mark.parametrize(
+    ("language", "heading"),
+    [
+        ("en-gb", "Sign in to Aether"),
+        ("pl", "Zaloguj się do Aether"),
+        ("uk", "Увійти до Aether"),
+    ],
+)
+def test_document_language_tracks_request_language(client, language, heading):
+    """Render the requested HTML language and a project-specific string."""
     response = client.get(
         reverse("login"),
         HTTP_ACCEPT_LANGUAGE=language,
@@ -19,11 +26,21 @@ def test_document_language_tracks_request_language(client, language):
 
     assert response.status_code == 200
     assert f'<html lang="{language}">'.encode() in response.content
+    assert heading in response.content.decode()
 
 
-@pytest.mark.parametrize("language", ["en-gb", "pl", "uk"])
-def test_verification_email_language_tracks_active_translation(language):
-    """Set the email HTML language without hard-coding English."""
+@pytest.mark.parametrize(
+    ("language", "heading"),
+    [
+        ("en-gb", "Verify your Aether email address"),
+        ("pl", "Potwierdź swój adres e-mail w Aether"),
+        ("uk", "Підтвердьте адресу електронної пошти в Aether"),
+    ],
+)
+def test_verification_email_language_tracks_active_translation(
+    language, heading
+):
+    """Render the email HTML and text in the active language."""
     with translation.override(language):
         html = render_to_string(
             "accounts/email/verification.html",
@@ -31,6 +48,7 @@ def test_verification_email_language_tracks_active_translation(language):
         )
 
     assert f'<html lang="{language}">' in html
+    assert f"<h1>{heading}</h1>" in html
 
 
 @pytest.mark.parametrize(

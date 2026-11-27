@@ -82,6 +82,28 @@ jobs:
       - name: Verify dependency environment
         run: uv pip check
 
+      - name: Install GNU gettext
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends gettext
+
+      - name: Check translation catalogues
+        shell: bash
+        run: |
+          for language in uk pl; do
+            catalogue="locale/$language/LC_MESSAGES/django.po"
+            fuzzy=$(msgattrib --only-fuzzy --no-obsolete "$catalogue")
+            untranslated=$(msgattrib --untranslated --no-obsolete "$catalogue")
+            if [[ -n "$fuzzy" || -n "$untranslated" ]]; then
+              echo "Incomplete translations in $catalogue"
+              printf '%s\n' "$fuzzy" "$untranslated"
+              exit 1
+            fi
+          done
+
+      - name: Compile translation catalogues
+        run: uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
+
       - name: Run Django system checks
         run: uv run python manage.py check
 
@@ -144,6 +166,14 @@ jobs:
 
       - name: Verify dependency environment
         run: uv pip check
+
+      - name: Install GNU gettext
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends gettext
+
+      - name: Compile translation catalogues
+        run: uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
 
       - name: Run Django system checks
         run: uv run python manage.py check

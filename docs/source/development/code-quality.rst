@@ -3,8 +3,9 @@ Code quality
 
 Aether currently uses lock-file validation, installed-dependency consistency
 checks, dependency vulnerability auditing, Django system checks, migration
-validation, static file collection checks, automated tests with coverage
-enforcement, Pylint, and a strict Sphinx build as its baseline quality checks.
+validation, static file collection checks, translation catalogue validation
+and compilation, automated tests with coverage enforcement, Pylint, and a
+strict Sphinx build as its baseline quality checks.
 
 Lock file
 ---------
@@ -73,8 +74,42 @@ Verify that model changes have not been left without migrations::
 
    uv run python manage.py makemigrations --check --dry-run
 
+Translation catalogue checks
+----------------------------
+
+GNU gettext must be installed and available on ``PATH``. See
+:doc:`internationalisation` for platform-specific installation instructions.
+With valid Django environment configuration, run the following commands from
+the repository root to inspect both catalogues for active untranslated and
+fuzzy entries::
+
+   msgattrib --untranslated --no-obsolete locale/uk/LC_MESSAGES/django.po
+   msgattrib --untranslated --no-obsolete locale/pl/LC_MESSAGES/django.po
+   msgattrib --only-fuzzy --no-obsolete locale/uk/LC_MESSAGES/django.po
+   msgattrib --only-fuzzy --no-obsolete locale/pl/LC_MESSAGES/django.po
+
+These commands work in Windows PowerShell and on Linux when GNU gettext is
+available. Each should exit successfully without reporting any matching
+entries. They inspect the catalogues without modifying them. Resolve any
+reported entries before compilation. These checks do not detect user-facing
+strings that have not been extracted into the catalogues.
+
+Compile the project catalogues before the first test run after a fresh
+checkout and after changes to the translation sources::
+
+   uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
+
+The generated ``.mo`` files are ignored by Git. The canonical CI quality job
+checks both catalogues for untranslated and fuzzy entries; all test-oriented
+CI jobs compile the catalogues before testing. See
+:doc:`continuous-integration` for the automated workflow.
+
 Automated tests
 ---------------
+
+Ensure the project translation catalogues have been compiled as described
+above and that the local PostgreSQL service is available for
+database-dependent tests.
 
 Run the complete automated test suite::
 
@@ -82,8 +117,6 @@ Run the complete automated test suite::
 
 The command also collects branch coverage and enforces the minimum coverage
 threshold configured in ``pyproject.toml``.
-
-Database-dependent tests require the local PostgreSQL service to be available.
 
 See :doc:`testing` for the test structure, PostgreSQL testing approach, and
 coverage policy.

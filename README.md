@@ -8,7 +8,7 @@ The current foundation includes environment-driven Django configuration, Postgre
 
 Aether supports three interface languages: **British English (`en-gb`)** (default), **Ukrainian (`uk`)**, and **Polish (`pl`)**.
 
-The shared header provides automatic language switching without an additional confirmation button. Ukrainian and Polish translations are maintained in the project-level `locale/` directory using Django's standard gettext workflow (`makemessages` → editing `.po` → `compilemessages`).
+The shared header provides automatic language switching without an additional confirmation button when JavaScript is enabled. Ukrainian and Polish translations are maintained in the project-level `locale/` directory using Django's standard gettext workflow (`makemessages` → editing `.po` → `compilemessages`). The `.po` sources are tracked in Git; the compiled `.mo` files are generated locally and in CI and are not tracked.
 
 The catalogues cover messages currently marked for translation. Unmarked interface strings may still appear in English, and asynchronous email workers do not yet preserve the language selected by the user.
 
@@ -22,6 +22,7 @@ For local development, you need:
 - `uv`
 - Docker with Docker Compose support
 - Git
+- GNU gettext (a system-level tool, not a Python dependency; see [installation instructions](docs/source/development/internationalisation.rst#installing-gnu-gettext))
 
 Aether currently supports Python 3.12–3.14.
 
@@ -129,6 +130,16 @@ uv run python manage.py createsuperuser
 
 Django will prompt you for a username, email address, and password. Email is required and validated; creating a superuser does not send an email verification message. The superuser account is intended for local administration and development; do not reuse production credentials.
 
+### Compile translations
+
+From the repository root, compile the Ukrainian and Polish catalogues after configuring `.env` and before the first application or test run:
+
+```console
+uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
+```
+
+Repeat this command after catalogue changes, including changes received through Git. Restart any running Django server or email worker to load the updated translations.
+
 ### Run the application
 
 Start the Django development server:
@@ -228,6 +239,8 @@ The named database volume is preserved.
 
 ## Development checks
 
+With GNU gettext available on `PATH` and the local PostgreSQL service running, check both translation catalogues for active untranslated and fuzzy entries as described in the [code quality guide](docs/source/development/code-quality.rst#translation-catalogue-checks). Resolve any reported entries before compilation.
+
 Run the current project checks before committing changes:
 
 ```console
@@ -237,6 +250,7 @@ uv audit --preview-features audit-command --locked
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
 uv run python manage.py collectstatic --noinput --dry-run
+uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
 uv run pytest
 uv run pylint config accounts core infrastructure tests manage.py docs/source/conf.py
 uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html
@@ -244,7 +258,7 @@ uv run sphinx-build -E -a -W -n -T -b html docs/source docs/_build/html
 
 GitHub Actions runs the full project checks against the preferred Python version defined in `.python-version`, verifies compatibility with Python 3.12 and 3.13, runs Django deployment checks against a synthetic production-shaped configuration, and audits the locked dependency graph for Python 3.12–3.14 on Linux.
 
-The compatibility jobs use a temporary PostgreSQL 18 instance and run the Django checks, committed migrations, and automated test suite against the additional supported Python versions.
+The canonical quality job installs GNU gettext, checks both translation catalogues for active untranslated and fuzzy entries, and compiles them before testing. The compatibility jobs also install GNU gettext and compile the catalogues, use a temporary PostgreSQL 18 instance, and run the Django checks, committed migrations, and automated test suite against the additional supported Python versions.
 
 GitHub Dependabot provides an additional dependency-security layer. Dependabot alerts monitor supported dependencies for known vulnerabilities, and Dependabot security updates can open remediation pull requests when a compatible security fix is available.
 

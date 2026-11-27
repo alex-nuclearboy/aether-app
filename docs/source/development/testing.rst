@@ -46,10 +46,11 @@ The current modules have separate responsibilities:
    thresholds, and base-template stylesheet inclusion.
 
 ``test_template_translations.py``
-   Checks HTML language attributes from HTTP request languages and active
-   language rendering in email templates, plus translation markers.
-   Translation markers alone do not prove that a compiled catalogue contains
-   a translated entry for every user-facing string.
+   Checks HTML language attributes, representative translated sign-in and
+   verification-email HTML headings, and translation markers in shared
+   templates. The heading checks exercise the compiled project catalogues
+   in British English, Ukrainian and Polish without duplicating every
+   translation in the test suite.
 
 ``test_language_switch.py``
    Exercises the standard POST language selector, cookie persistence,
@@ -384,9 +385,24 @@ Run these integration tests with::
 Running tests
 -------------
 
+Install GNU gettext and configure the local environment as described in
+:doc:`../getting-started/local-development` and :doc:`internationalisation`.
+For complete local quality validation, check the catalogues for active
+untranslated and fuzzy entries using :doc:`code-quality`.
+
+Compile the project catalogues before testing a fresh checkout or after
+changes to their translation sources::
+
+   uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
+
+The compiled catalogues are required for tests that exercise actual project
+translations. Recompilation is not necessary before every unchanged test run.
+
 Start the local PostgreSQL service before running database-dependent tests::
 
    docker compose up -d
+
+Wait until PostgreSQL reports a healthy status (``docker compose ps``).
 
 Run the complete test suite::
 
@@ -480,6 +496,9 @@ Continuous integration
 ----------------------
 
 GitHub Actions runs the pytest suite against temporary PostgreSQL instances.
+All test-oriented jobs install GNU gettext and compile the project catalogues
+before pytest. The canonical quality job also checks for active untranslated
+and fuzzy entries in both catalogues.
 
 The canonical ``quality`` job uses the preferred Python version defined in
 ``.python-version``. Separate compatibility jobs run the same test suite on

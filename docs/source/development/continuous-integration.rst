@@ -47,6 +47,9 @@ It performs the complete project validation:
 #. checks that ``uv.lock`` is current;
 #. installs the locked runtime and development dependencies;
 #. verifies the installed dependency environment with ``uv pip check``;
+#. installs GNU gettext on the Ubuntu runner;
+#. checks both catalogues for active untranslated and fuzzy entries;
+#. compiles the Ukrainian and Polish translation catalogues;
 #. runs Django system checks;
 #. checks static file collection in dry-run mode;
 #. checks for missing migrations;
@@ -58,6 +61,21 @@ It performs the complete project validation:
 The static file check verifies Django's ability to discover and collect the
 configured static resources without copying them to the collection directory.
 It does not configure or verify production static file serving.
+
+Translation catalogue validation uses ``msgattrib`` with
+``--untranslated --no-obsolete`` and ``--only-fuzzy --no-obsolete`` for
+both ``locale/uk/LC_MESSAGES/django.po`` and
+``locale/pl/LC_MESSAGES/django.po``. A matching entry fails the step.
+These checks inspect existing catalogue entries; they do not detect messages
+that have not been extracted from the source code.
+
+The test-oriented jobs generate the compiled catalogues with::
+
+   uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
+
+The generated ``.mo`` files are local to each runner and are not tracked in
+Git. See :doc:`code-quality` for the equivalent local checks and
+:doc:`internationalisation` for the translation workflow.
 
 This is the canonical CI environment for the project.
 
@@ -76,6 +94,8 @@ Each compatibility job:
 #. installs the locked dependencies for the selected Python version;
 #. reports the actual Python version used by the job;
 #. verifies the installed dependency environment with ``uv pip check``;
+#. installs GNU gettext on the Ubuntu runner;
+#. compiles the Ukrainian and Polish translation catalogues;
 #. runs Django system checks;
 #. applies the committed migrations to PostgreSQL;
 #. runs the automated test suite with coverage enforcement.
@@ -83,6 +103,8 @@ Each compatibility job:
 Pylint and Sphinx are not repeated in the compatibility matrix because they
 are already validated by the canonical ``quality`` job. The purpose of the
 matrix is runtime compatibility rather than duplicate code-quality checks.
+The compatibility jobs compile the catalogues for their own test runs but do
+not repeat the canonical catalogue completeness checks.
 
 
 Shared test environment
@@ -125,6 +147,9 @@ checks; they do not define the final Koyeb production configuration.
 No real deployment credentials are used. Database and SMTP credentials in this
 job are disposable CI-only values, and the job does not connect to PostgreSQL
 or the configured SMTP server.
+
+The deployment and dependency-audit jobs do not render translated pages or
+run pytest, so they do not install gettext or compile the catalogues.
 
 The deployment check validates Django's production-oriented system checks,
 including the production mailer configuration. This complements the normal

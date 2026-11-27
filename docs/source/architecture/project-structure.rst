@@ -144,12 +144,10 @@ The repository currently has the following top-level structure:
    │   ├── .gitkeep
    │   ├── uk/
    │   │   └── LC_MESSAGES/
-   │   │       ├── django.po
-   │   │       └── django.mo
+   │   │       └── django.po
    │   └── pl/
    │       └── LC_MESSAGES/
-   │           ├── django.po
-   │           └── django.mo
+   │           └── django.po
    ├── docs/
    │   ├── source/
    │   │   ├── architecture/
@@ -1312,8 +1310,9 @@ The current package contains:
    CSS files, breakpoint declarations, and base-template stylesheet inclusion.
 
 ``tests/test_template_translations.py``
-   Tests active-language HTML attributes on application pages and verification
-   email templates, and translation markers in shared interface templates.
+   Tests active-language HTML attributes, representative translated sign-in
+   and verification-email HTML headings, and translation markers in shared
+   interface templates.
 
 ``tests/test_request_id.py``
    Verifies request ID generation, uniqueness, context isolation and cleanup,
@@ -1545,6 +1544,12 @@ Important examples include:
 
 ``docs/_build/``
    Generated Sphinx documentation.
+
+``locale/<language>/LC_MESSAGES/django.mo``
+   Compiled GNU gettext catalogues generated locally and in CI from the
+   tracked ``django.po`` sources for Ukrainian and Polish. These binaries
+   and any generated ``.pot`` files are ignored by Git. See
+   :doc:`../development/internationalisation` for the translation workflow.
 
 ``.pytest_cache/``
    Local pytest cache generated during test execution.

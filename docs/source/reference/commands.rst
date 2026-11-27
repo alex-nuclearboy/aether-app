@@ -127,8 +127,30 @@ Check static file collection without copying the files::
 This command verifies the static file collection process. Core tests
 separately verify the discovery of individual required assets.
 
+Translations
+------------
+
+With GNU gettext available on ``PATH`` and valid Django configuration, update
+both shared source catalogues after changing marked source messages::
+
+   uv run python manage.py makemessages -l uk -l pl --ignore=".venv/*" --ignore="docs/_build/*"
+
+Review and translate new or changed entries, then validate both catalogues
+using the commands in :doc:`../development/code-quality`.
+
+Compile the catalogues after a fresh checkout and after translation changes::
+
+   uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
+
+Only ``.po`` sources are tracked in Git; generated ``.mo`` and ``.pot`` files
+are ignored. See :doc:`../development/internationalisation` for installation
+and maintenance instructions.
+
 Testing
 -------
+
+Prepare the compiled translation catalogues and local PostgreSQL service as
+described in :doc:`../development/testing` before running the full suite.
 
 Run the complete test suite with coverage::
 

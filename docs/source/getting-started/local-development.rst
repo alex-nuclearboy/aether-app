@@ -9,7 +9,9 @@ The recommended local environment requires:
 * Python 3.14;
 * ``uv``;
 * Docker with Docker Compose support;
-* Git.
+* Git;
+* GNU gettext, installed separately from the Python environment (see
+  :doc:`../development/internationalisation`).
 
 Aether currently supports Python 3.12 through 3.14.
 
@@ -132,6 +134,20 @@ Create a local superuser for Django administration::
 Django prompts for a username, email address, and password. The local
 superuser is for development and administration only; do not reuse production
 credentials.
+
+Compile translations
+--------------------
+
+With GNU gettext installed and the local ``.env`` configured, compile the
+project catalogues from the repository root before the first application or
+test run::
+
+   uv run python manage.py compilemessages -l uk -l pl --ignore=.venv
+
+Repeat after changes to the ``.po`` sources, including changes received
+through Git. Restart running Django servers and email workers after
+recompilation. The generated ``.mo`` files are ignored by Git. See
+:doc:`../development/internationalisation` for catalogue maintenance.
 
 Run the application
 -------------------
